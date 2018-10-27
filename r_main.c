@@ -39,17 +39,16 @@ static const char rcsid[] = "$Id: r_main.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 
 #include "r_local.h"
 #include "r_sky.h"
-
-
+#include "d_player.h"
+#include "Angle.hh"
 
 
 
 // Fineangles in the SCREENWIDTH wide window.
-#define FIELDOFVIEW		2048	
-
-
-
-int			viewangleoffset;
+#define FIELDOFVIEW		2048 //2048	
+namespace {
+    const Angle ANGLEOFVIEW(Angle::A90);
+}
 
 // increment every time a check is made
 int			validcount = 1;		
@@ -61,9 +60,9 @@ extern lighttable_t**	walllights;
 int			centerx;
 int			centery;
 
-fixed_t			centerxfrac;
-fixed_t			centeryfrac;
-fixed_t			projection;
+double			ccenterxfrac;
+double			ccenteryfrac;
+double			pprojection;
 
 // just for profiling purposes
 int			framecount;	
@@ -72,24 +71,21 @@ int			sscount;
 int			linecount;
 int			loopcount;
 
-fixed_t			viewx;
-fixed_t			viewy;
-fixed_t			viewz;
+double vviewx;
+double vviewy;
+double vviewz;
 
-angle_t			viewangle;
+Angle vviewangle;
 
-fixed_t			viewcos;
-fixed_t			viewsin;
+double vviewcos;
+double vviewsin;
 
 player_t*		viewplayer;
-
-// 0 = high, 1 = low
-int			detailshift;	
 
 //
 // precalculated math tables
 //
-angle_t			clipangle;
+Angle cclipangle;
 
 // The viewangletox[viewangle + FINEANGLES/4] lookup
 // maps the visible view angles to screen X coordinates,
@@ -100,7 +96,7 @@ int			viewangletox[FINEANGLES/2];
 // The xtoviewangleangle[] table maps a screen pixel
 // to the lowest viewangle that maps back to x ranges
 // from clipangle to -clipangle.
-angle_t			xtoviewangle[SCREENWIDTH+1];
+Angle xxtoviewangle[SCREENWIDTH+1];
 
 
 // UNUSED.
@@ -110,7 +106,7 @@ angle_t			xtoviewangle[SCREENWIDTH+1];
 // fixed_t		finetangent[FINEANGLES/2];
 
 // fixed_t		finesine[5*FINEANGLES/4];
-fixed_t*		finecosine = &finesine[FINEANGLES/4];
+//fixed_t*		finecosine = &finesine[FINEANGLES/4];
 
 
 lighttable_t*		scalelight[LIGHTLEVELS][MAXLIGHTSCALE];
@@ -128,30 +124,6 @@ void (*fuzzcolfunc) (void);
 void (*transcolfunc) (void);
 void (*spanfunc) (void);
 
-
-
-//
-// R_AddPointToBox
-// Expand a given bbox
-// so that it encloses a given point.
-//
-void
-R_AddPointToBox
-( int		x,
-  int		y,
-  fixed_t*	box )
-{
-    if (x< box[BOXLEFT])
-	box[BOXLEFT] = x;
-    if (x> box[BOXRIGHT])
-	box[BOXRIGHT] = x;
-    if (y< box[BOXBOTTOM])
-	box[BOXBOTTOM] = y;
-    if (y> box[BOXTOP])
-	box[BOXTOP] = y;
-}
-
-
 //
 // R_PointOnSide
 // Traverse BSP (sub) tree,
@@ -159,87 +131,75 @@ R_AddPointToBox
 // Returns side 0 (front) or 1 (back).
 //
 int
-R_PointOnSide
-( fixed_t	x,
-  fixed_t	y,
-  node_t*	node )
+R_PointOnSide( 
+    double x,
+    double y,
+    BspNode* node)
 {
-    fixed_t	dx;
-    fixed_t	dy;
-    fixed_t	left;
-    fixed_t	right;
+    double dx;
+    double dy;
+    double left;
+    double right;
 	
+    //@todo how does this one work really
+
     if (!node->dx)
     {
-	if (x <= node->x)
-	    return node->dy > 0;
+        if (x <= node->x)
+            return node->dy > 0;
 	
-	return node->dy < 0;
+        return node->dy < 0;
     }
+
     if (!node->dy)
     {
-	if (y <= node->y)
-	    return node->dx < 0;
-	
-	return node->dx > 0;
+        if (y <= node->y)
+            return node->dx < 0;
+        
+        return node->dx > 0;
     }
 	
+    //Assuming the points are (Ax,Ay) (Bx,By) and (Cx,Cy), you need to compute:
+    // (Bx - Ax) * (Cy - Ay) - (By - Ay) * (Cx - Ax)
+
+
     dx = (x - node->x);
     dy = (y - node->y);
 	
-    // Try to quickly decide by looking at sign bits.
-    if ( (node->dy ^ node->dx ^ dx ^ dy)&0x80000000 )
-    {
-	if  ( (node->dy ^ dx) & 0x80000000 )
-	{
-	    // (left is negative)
-	    return 1;
-	}
-	return 0;
-    }
+    left = node->dy * dx;
+    right = dy * node->dx;
 
-    left = FixedMul ( node->dy>>FRACBITS , dx );
-    right = FixedMul ( dy , node->dx>>FRACBITS );
-	
+    int result = 1;
+
     if (right < left)
     {
-	// front side
-	return 0;
+        //front side
+        result = 0;
     }
     // back side
-    return 1;			
+    return result;			
 }
 
 
 int
-R_PointOnSegSide
-( fixed_t	x,
-  fixed_t	y,
-  seg_t*	line )
+RR_PointOnSegSide(double x,
+                  double y,
+                  seg_t* line)
 {
-    fixed_t	lx;
-    fixed_t	ly;
-    fixed_t	ldx;
-    fixed_t	ldy;
-    fixed_t	dx;
-    fixed_t	dy;
-    fixed_t	left;
-    fixed_t	right;
+    double lx = line->v1->xx;
+    double ly = line->v1->yy;
 	
-    lx = line->v1->x;
-    ly = line->v1->y;
+    double ldx = line->v2->xx - lx;
+    double ldy = line->v2->yy - ly;
 	
-    ldx = line->v2->x - lx;
-    ldy = line->v2->y - ly;
-	
-    if (!ldx)
+    if (ldx == 0.0)
     {
 	if (x <= lx)
 	    return ldy > 0;
 	
 	return ldy < 0;
     }
-    if (!ldy)
+    else if (ldy == 0.0)
     {
 	if (y <= ly)
 	    return ldx < 0;
@@ -247,22 +207,24 @@ R_PointOnSegSide
 	return ldx > 0;
     }
 	
-    dx = (x - lx);
-    dy = (y - ly);
+    double dx = (x - lx);
+    double dy = (y - ly);
 	
-    // Try to quickly decide by looking at sign bits.
-    if ( (ldy ^ ldx ^ dx ^ dy)&0x80000000 )
-    {
-	if  ( (ldy ^ dx) & 0x80000000 )
-	{
-	    // (left is negative)
-	    return 1;
-	}
-	return 0;
-    }
-
-    left = FixedMul ( ldy>>FRACBITS , dx );
-    right = FixedMul ( dy , ldx>>FRACBITS );
+    // // Try to quickly decide by looking at sign bits.
+    // if ( (ldy ^ ldx ^ dx ^ dy)&0x80000000 )
+    // {
+    //     if  ( (ldy ^ dx) & 0x80000000 )
+    //     {
+    //         // (left is negative)
+    //         return 1;
+    //     }
+    //     return 0;
+    // }
+    
+    // @todo understand why the fractionl part needs
+    // be removed?
+    double left = static_cast<int>(ldy) * dx ;
+    double right = dy  * static_cast<int>(ldx);
 	
     if (right < left)
     {
@@ -274,150 +236,165 @@ R_PointOnSegSide
 }
 
 
-//
+// //
+// // R_PointToAngle
+// // To get a global angle from cartesian coordinates,
+// //  the coordinates are flipped until they are in
+// //  the first octant of the coordinate system, then
+// //  the y (<=x) is scaled and divided by x to get a
+// //  tangent (slope) value which is looked up in the
+// //  tantoangle[] table.
+// angle_t
 // R_PointToAngle
-// To get a global angle from cartesian coordinates,
-//  the coordinates are flipped until they are in
-//  the first octant of the coordinate system, then
-//  the y (<=x) is scaled and divided by x to get a
-//  tangent (slope) value which is looked up in the
-//  tantoangle[] table.
-
-//
-
-
-
-
-angle_t
-R_PointToAngle
-( fixed_t	x,
-  fixed_t	y )
-{	
-    x -= viewx;
-    y -= viewy;
+// ( fixed_t	x,
+//   fixed_t	y )
+// {	
+//     x -= double_to_fixed(vviewx);
+//     y -= double_to_fixed(vviewy);
     
-    if ( (!x) && (!y) )
-	return 0;
-
-    if (x>= 0)
-    {
-	// x >=0
-	if (y>= 0)
-	{
-	    // y>= 0
-
-	    if (x>y)
-	    {
-		// octant 0
-		return tantoangle[ SlopeDiv(y,x)];
-	    }
-	    else
-	    {
-		// octant 1
-		return ANG90-1-tantoangle[ SlopeDiv(x,y)];
-	    }
-	}
-	else
-	{
-	    // y<0
-	    y = -y;
-
-	    if (x>y)
-	    {
-		// octant 8
-		return -tantoangle[SlopeDiv(y,x)];
-	    }
-	    else
-	    {
-		// octant 7
-		return ANG270+tantoangle[ SlopeDiv(x,y)];
-	    }
-	}
-    }
-    else
-    {
-	// x<0
-	x = -x;
-
-	if (y>= 0)
-	{
-	    // y>= 0
-	    if (x>y)
-	    {
-		// octant 3
-		return ANG180-1-tantoangle[ SlopeDiv(y,x)];
-	    }
-	    else
-	    {
-		// octant 2
-		return ANG90+ tantoangle[ SlopeDiv(x,y)];
-	    }
-	}
-	else
-	{
-	    // y<0
-	    y = -y;
-
-	    if (x>y)
-	    {
-		// octant 4
-		return ANG180+tantoangle[ SlopeDiv(y,x)];
-	    }
-	    else
-	    {
-		 // octant 5
-		return ANG270-1-tantoangle[ SlopeDiv(x,y)];
-	    }
-	}
-    }
-    return 0;
-}
-
-
-angle_t
-R_PointToAngle2
-( fixed_t	x1,
-  fixed_t	y1,
-  fixed_t	x2,
-  fixed_t	y2 )
-{	
-    viewx = x1;
-    viewy = y1;
+//     if ( (!x) && (!y) )
+//         return 0;
     
-    return R_PointToAngle (x2, y2);
-}
+//     if (x>= 0)
+//     {
+//         // x >=0
+//         if (y>= 0)
+//         {
+//             // y>= 0
+            
+//             if (x>y)
+//             {
+//                 // octant 0
+//                 return tantoangle[ SlopeDiv(y,x)];
+//             }
+//             else
+//             {
+//                 // octant 1
+//                 return ANG90-1-tantoangle[ SlopeDiv(x,y)];
+//             }
+//         }
+//         else
+//         {
+//             // y<0
+//             y = -y;
+            
+//             if (x>y)
+//             {
+//                 // octant 8
+//                 return -tantoangle[SlopeDiv(y,x)];
+//             }
+//             else
+//             {
+//                 // octant 7
+//                 return ANG270+tantoangle[ SlopeDiv(x,y)];
+//             }
+//         }
+//     }
+//     else
+//     {
+//         // x<0
+//         x = -x;
+        
+//         if (y>= 0)
+//         {
+//             // y>= 0
+//             if (x>y)
+//             {
+//                 // octant 3
+//                 return ANG180-1-tantoangle[ SlopeDiv(y,x)];
+//             }
+//             else
+//             {
+//                 // octant 2
+//                 return ANG90+ tantoangle[ SlopeDiv(x,y)];
+//             }
+//         }
+//         else
+//         {
+//             // y<0
+//             y = -y;
+            
+//             if (x>y)
+//             {
+//                 // octant 4
+//                 return ANG180+tantoangle[ SlopeDiv(y,x)];
+//             }
+//             else
+//             {
+//                 // octant 5
+//                 return ANG270-1-tantoangle[ SlopeDiv(x,y)];
+//             }
+//         }
+//     }
+//     return 0;
+// }
 
 
-fixed_t
-R_PointToDist
-( fixed_t	x,
-  fixed_t	y )
+// angle_t
+// R_PointToAngle2
+// ( fixed_t	x1,
+//   fixed_t	y1,
+//   fixed_t	x2,
+//   fixed_t	y2 )
+// {	
+//     viewx = x1;
+//     viewy = y1;
+    
+//     return R_PointToAngle (x2, y2);
+// }
+
+// Returns an angle between a point and the view coordinates
+double
+RR_PointToAngle(double x, double y)
 {
-    int		angle;
-    fixed_t	dx;
-    fixed_t	dy;
-    fixed_t	temp;
-    fixed_t	dist;
-	
-    dx = abs(x - viewx);
-    dy = abs(y - viewy);
-	
-    if (dy>dx)
-    {
-	temp = dx;
-	dx = dy;
-	dy = temp;
-    }
-	
-    angle = (tantoangle[ FixedDiv(dy,dx)>>DBITS ]+ANG90) >> ANGLETOFINESHIFT;
-
-    // use as cosine
-    dist = FixedDiv (dx, finesine[angle] );	
-	
-    return dist;
+    return R_PointsToAngle(x, y,
+                           vviewx, vviewy);
 }
 
+//returns angle used in polar coordinates
+double 
+R_PointsToAngle(double x1, double y1, double x2, double y2)
+{
+    double x = x2 - x1;
+    double y = y2 - y1;
+    double result;
+    if (y >= 0) { 
+        if (x == 0) {
+            result = Angle::A90;
+        } else {
+            if (x > 0) {
+                result = atan(y/x);
+            } else {
+                x *= -1;
+                result = Angle::A180;
+                result -= atan(y/x);
+            }
+        }
+    } else {        
+        if (x == 0) {
+            result = Angle::A270;
+        } else {
+            y *= -1;
+            if (x < 0) {
+                x *= -1;
+                result = Angle::A180;
+                result += atan(y/x);
+            } else {
+                result = Angle::A360;
+                result -= atan(y/x);
+            }
+        }
+    }
+    return result;
+}
 
+double
+RR_PointToDist(double x, double y)
+{
+    double dx = x - vviewx;
+    double dy = y - vviewy;
+    return sqrt((dx * dx) + (dy * dy));
+}
 
 
 //
@@ -443,64 +420,29 @@ void R_InitPointToAngle (void)
 }
 
 
-//
-// R_ScaleFromGlobalAngle
-// Returns the texture mapping scale
-//  for the current line (horizontal span)
-//  at the given angle.
-// rw_distance must be calculated first.
-//
-fixed_t R_ScaleFromGlobalAngle (angle_t visangle)
+double
+RR_ScaleFromGlobalAngle(Angle visangle)
 {
-    fixed_t		scale;
-    int			anglea;
-    int			angleb;
-    int			sinea;
-    int			sineb;
-    fixed_t		num;
-    int			den;
+    double scale;
 
-    // UNUSED
-#if 0
-{
-    fixed_t		dist;
-    fixed_t		z;
-    fixed_t		sinv;
-    fixed_t		cosv;
-	
-    sinv = finesine[(visangle-rw_normalangle)>>ANGLETOFINESHIFT];	
-    dist = FixedDiv (rw_distance, sinv);
-    cosv = finecosine[(viewangle-visangle)>>ANGLETOFINESHIFT];
-    z = abs(FixedMul (dist, cosv));
-    scale = FixedDiv(projection, z);
-    return scale;
-}
-#endif
-
-    anglea = ANG90 + (visangle-viewangle);
-    angleb = ANG90 + (visangle-rw_normalangle);
+    Angle anglea(Angle::A90 + (visangle - vviewangle));
+    Angle angleb(Angle::A90 + (visangle - rrw_normalangle));
 
     // both sines are allways positive
-    sinea = finesine[anglea>>ANGLETOFINESHIFT];	
-    sineb = finesine[angleb>>ANGLETOFINESHIFT];
-    num = FixedMul(projection,sineb)<<detailshift;
-    den = FixedMul(rw_distance,sinea);
-
-    if (den > num>>16)
-    {
-	scale = FixedDiv (num, den);
-
-	if (scale > 64*FRACUNIT)
-	    scale = 64*FRACUNIT;
-	else if (scale < 256)
-	    scale = 256;
+    double sinea = sin(anglea);	
+    double sineb = sin(angleb);
+    double num = pprojection * sineb;
+    double den = fixed_to_double(rw_distance) * sinea;
+    scale = num / den;
+    if (scale > 64)
+        scale = 64;
+    else if (scale < fixed_to_double(256)) {
+        // @todo this seems to be a unnessasary if branch
+        printf("******** fixing scale *******%f\n", scale);
+        scale = fixed_to_double(256);
     }
-    else
-	scale = 64*FRACUNIT;
-	
     return scale;
 }
-
 
 
 //
@@ -536,6 +478,26 @@ void R_InitTables (void)
 
 }
 
+int
+R_ViewAngleToX(const Angle& a)
+{
+    double focalLength = SCREENWIDTH / (2 * tan(((double)ANGLEOFVIEW)/2));
+    double t = tan(a);
+    int x;
+    if (t > Angle::A90)
+        x = 0;
+    else if (t < -Angle::A90)
+        x = SCREENWIDTH + 1;
+    else {
+        x = centerx - (t * focalLength) + 1;
+        if (x > SCREENWIDTH)
+            x = SCREENWIDTH;
+        else if (x < 0)
+            x = 0;
+    }
+    return x;
+}
+
 
 
 //
@@ -546,7 +508,7 @@ void R_InitTextureMapping (void)
     int			i;
     int			x;
     int			t;
-    fixed_t		focallength;
+//    fixed_t		focallength;
     
     // Use tangent table to generate viewangletox:
     //  viewangletox will give the next greatest x
@@ -554,24 +516,28 @@ void R_InitTextureMapping (void)
     //
     // Calc focallength
     //  so FIELDOFVIEW angles covers SCREENWIDTH.
-    focallength = FixedDiv (centerxfrac,
-			    finetangent[FINEANGLES/4+FIELDOFVIEW/2] );
-	
+    // focallength = FixedDiv (double_to_fixed(ccenterxfrac),
+    //     		    finetangent[FINEANGLES/4+FIELDOFVIEW/2] );
+    double focallength = SCREENWIDTH / (2 * tan((double)ANGLEOFVIEW/2));
+    // printf("focalLength %f %f centerx %f %d\n",
+    //        fixed_to_double(focallength), ffocalLength,
+    //        ccenterxfrac, centerx);
+
     for (i=0 ; i<FINEANGLES/2 ; i++)
     {
 	if (finetangent[i] > FRACUNIT*2)
 	    t = -1;
 	else if (finetangent[i] < -FRACUNIT*2)
-	    t = viewwidth+1;
+	    t = SCREENWIDTH+1;
 	else
 	{
-	    t = FixedMul (finetangent[i], focallength);
-	    t = (centerxfrac - t+FRACUNIT-1)>>FRACBITS;
+	    t = FixedMul (finetangent[i], double_to_fixed(focallength));
+	    t = (double_to_fixed(ccenterxfrac) - t+FRACUNIT-1)>>FRACBITS;
 
 	    if (t < -1)
 		t = -1;
-	    else if (t>viewwidth+1)
-		t = viewwidth+1;
+	    else if (t>SCREENWIDTH+1)
+		t = SCREENWIDTH+1;
 	}
 	viewangletox[i] = t;
     }
@@ -579,27 +545,27 @@ void R_InitTextureMapping (void)
     // Scan viewangletox[] to generate xtoviewangle[]:
     //  xtoviewangle will give the smallest view angle
     //  that maps to x.	
-    for (x=0;x<=viewwidth;x++)
+    for (x=0;x<=SCREENWIDTH;x++)
     {
 	i = 0;
 	while (viewangletox[i]>x)
 	    i++;
-	xtoviewangle[x] = (i<<ANGLETOFINESHIFT)-ANG90;
+	xxtoviewangle[x] = Angle((static_cast<angle_t>(i)<<ANGLETOFINESHIFT)-ANG90);
     }
     
     // Take out the fencepost cases from viewangletox.
     for (i=0 ; i<FINEANGLES/2 ; i++)
     {
-	t = FixedMul (finetangent[i], focallength);
+	t = FixedMul (finetangent[i], double_to_fixed(focallength));
 	t = centerx - t;
 	
 	if (viewangletox[i] == -1)
 	    viewangletox[i] = 0;
-	else if (viewangletox[i] == viewwidth+1)
-	    viewangletox[i]  = viewwidth;
+	else if (viewangletox[i] == SCREENWIDTH+1)
+	    viewangletox[i] = SCREENWIDTH;
     }
 	
-    clipangle = xtoviewangle[0];
+    cclipangle = xxtoviewangle[0];
 }
 
 
@@ -641,122 +607,65 @@ void R_InitLightTables (void)
     }
 }
 
-
-
-//
-// R_SetViewSize
-// Do not really change anything here,
-//  because it might be in the middle of a refresh.
-// The change will take effect next refresh.
-//
-boolean		setsizeneeded;
-int		setblocks;
-int		setdetail;
-
-
-void
-R_SetViewSize
-( int		blocks,
-  int		detail )
-{
-    setsizeneeded = true;
-    setblocks = blocks;
-    setdetail = detail;
-}
-
-
 //
 // R_ExecuteSetViewSize
 //
 void R_ExecuteSetViewSize (void)
 {
-    fixed_t	cosadj;
     fixed_t	dy;
     int		i;
     int		j;
     int		level;
     int		startmap; 	
 
-    setsizeneeded = false;
-
-    if (setblocks == 11)
-    {
-	scaledviewwidth = SCREENWIDTH;
-	viewheight = SCREENHEIGHT;
-    }
-    else
-    {
-	scaledviewwidth = setblocks*32;
-	viewheight = (setblocks*168/10)&~7;
-    }
+    centery = SCREENHEIGHT/2;
+    centerx = SCREENWIDTH/2;
+    ccenterxfrac = centerx;
+    ccenteryfrac = centery;
+    pprojection = ccenterxfrac;
     
-    detailshift = setdetail;
-    viewwidth = scaledviewwidth>>detailshift;
-	
-    centery = viewheight/2;
-    centerx = viewwidth/2;
-    centerxfrac = centerx<<FRACBITS;
-    centeryfrac = centery<<FRACBITS;
-    projection = centerxfrac;
-
-    if (!detailshift)
-    {
-	colfunc = basecolfunc = R_DrawColumn;
-	fuzzcolfunc = R_DrawFuzzColumn;
-	transcolfunc = R_DrawTranslatedColumn;
-	spanfunc = R_DrawSpan;
-    }
-    else
-    {
-	colfunc = basecolfunc = R_DrawColumnLow;
-	fuzzcolfunc = R_DrawFuzzColumn;
-	transcolfunc = R_DrawTranslatedColumn;
-	spanfunc = R_DrawSpanLow;
-    }
-
-    R_InitBuffer (scaledviewwidth, viewheight);
-	
+    colfunc = basecolfunc = R_DrawColumn;
+    fuzzcolfunc = R_DrawFuzzColumn;
+    transcolfunc = R_DrawTranslatedColumn;
+    spanfunc = R_DrawSpan;
+    
     R_InitTextureMapping ();
-    
-    // psprite scales
-    pspritescale = FRACUNIT*viewwidth/SCREENWIDTH;
-    pspriteiscale = FRACUNIT*SCREENWIDTH/viewwidth;
-    
+        
     // thing clipping
-    for (i=0 ; i<viewwidth ; i++)
-	screenheightarray[i] = viewheight;
+    for (i=0 ; i<SCREENWIDTH ; i++)
+        screenheightarray[i] = SCREENHEIGHT;
     
     // planes
-    for (i=0 ; i<viewheight ; i++)
+    for (i=0 ; i<SCREENHEIGHT ; i++)
     {
-	dy = ((i-viewheight/2)<<FRACBITS)+FRACUNIT/2;
-	dy = abs(dy);
-	yslope[i] = FixedDiv ( (viewwidth<<detailshift)/2*FRACUNIT, dy);
+        dy = ((i-SCREENHEIGHT/2)<<FRACBITS)+FRACUNIT/2;
+        dy = abs(dy);
+        yslope[i] = FixedDiv (SCREENWIDTH/2*FRACUNIT, dy);
     }
 	
-    for (i=0 ; i<viewwidth ; i++)
+    for (i=0 ; i<SCREENWIDTH ; i++)
     {
-	cosadj = abs(finecosine[xtoviewangle[i]>>ANGLETOFINESHIFT]);
-	distscale[i] = FixedDiv (FRACUNIT,cosadj);
+	double cosadj = abs(sin(xxtoviewangle[i]));
+        ddistscale[i] = 1 / cosadj;
     }
     
     // Calculate the light levels to use
     //  for each level / scale combination.
     for (i=0 ; i< LIGHTLEVELS ; i++)
     {
-	startmap = ((LIGHTLEVELS-1-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
-	for (j=0 ; j<MAXLIGHTSCALE ; j++)
-	{
-	    level = startmap - j*SCREENWIDTH/(viewwidth<<detailshift)/DISTMAP;
-	    
-	    if (level < 0)
-		level = 0;
-
-	    if (level >= NUMCOLORMAPS)
-		level = NUMCOLORMAPS-1;
-
-	    scalelight[i][j] = colormaps + level*256;
-	}
+        startmap = ((LIGHTLEVELS-1-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
+        for (j=0 ; j<MAXLIGHTSCALE ; j++)
+        {
+            level = startmap - j/DISTMAP;
+            
+            if (level < 0)
+                level = 0;
+            
+            if (level >= NUMCOLORMAPS)
+                level = NUMCOLORMAPS-1;
+            
+            scalelight[i][j] = colormaps + level*256;
+        }
     }
 }
 
@@ -765,11 +674,6 @@ void R_ExecuteSetViewSize (void)
 //
 // R_Init
 //
-extern int	detailLevel;
-extern int	screenblocks;
-
-
-
 void R_Init (void)
 {
     R_InitData ();
@@ -777,10 +681,7 @@ void R_Init (void)
     R_InitPointToAngle ();
     printf ("\nR_InitPointToAngle");
     R_InitTables ();
-    // viewwidth / viewheight / detailLevel are set by the defaults
     printf ("\nR_InitTables");
-
-    R_SetViewSize (screenblocks, detailLevel);
     R_InitPlanes ();
     printf ("\nR_InitPlanes");
     R_InitLightTables ();
@@ -789,7 +690,6 @@ void R_Init (void)
     printf ("\nR_InitSkyMap");
     R_InitTranslationTables ();
     printf ("\nR_InitTranslationsTables");
-	
     framecount = 0;
 }
 
@@ -798,25 +698,23 @@ void R_Init (void)
 // R_PointInSubsector
 //
 subsector_t*
-R_PointInSubsector
-( fixed_t	x,
-  fixed_t	y )
+RR_PointInSubsector(double x, double y)
 {
-    node_t*	node;
+    BspNode* node;
     int		side;
     int		nodenum;
 
     // single subsector is a special case
     if (!numnodes)				
-	return subsectors;
-		
+        return subsectors;
+    
     nodenum = numnodes-1;
-
+    
     while (! (nodenum & NF_SUBSECTOR) )
     {
-	node = &nodes[nodenum];
-	side = R_PointOnSide (x, y, node);
-	nodenum = node->children[side];
+        node = &nodes[nodenum];
+        side = R_PointOnSide (x, y, node);
+        nodenum = node->children[side];
     }
 	
     return &subsectors[nodenum & ~NF_SUBSECTOR];
@@ -832,16 +730,15 @@ void R_SetupFrame (player_t* player)
     int		i;
     
     viewplayer = player;
-    viewx = player->mo->x;
-    viewy = player->mo->y;
-    viewangle = player->mo->angle + viewangleoffset;
+    vviewx = player->mo->xx;
+    vviewy = player->mo->yy;
+    vviewangle = player->mo->_angle;
     extralight = player->extralight;
 
-    viewz = player->viewz;
-    
-    viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
-    viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
-	
+    vviewz = player->vviewz;
+    vviewsin = sin(vviewangle);
+    vviewcos = cos(vviewangle);
+
     sscount = 0;
 	
     if (player->fixedcolormap)

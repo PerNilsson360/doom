@@ -46,7 +46,7 @@
 
 extern	byte*		screens[5];
 
-extern  int	dirtybox[4];
+extern  double	ddirtybox[4];
 
 extern	byte	gammatable[5][256];
 extern	int	usegamma;
@@ -55,18 +55,6 @@ extern	int	usegamma;
 
 // Allocates buffer screens, call before R_Init.
 void V_Init (void);
-
-
-void
-V_CopyRect
-( int		srcx,
-  int		srcy,
-  int		srcscrn,
-  int		width,
-  int		height,
-  int		destx,
-  int		desty,
-  int		destscrn );
 
 void
 V_DrawPatch
@@ -92,16 +80,6 @@ V_DrawBlock
   int		width,
   int		height,
   byte*		src );
-
-// Reads a linear block of pixels into the view buffer.
-void
-V_GetBlock
-( int		x,
-  int		y,
-  int		scrn,
-  int		width,
-  int		height,
-  byte*		dest );
 
 
 void

@@ -32,6 +32,7 @@ rcsid[] = "$Id: m_menu.c,v 1.7 1997/02/03 22:45:10 b1 Exp $";
 #include <stdlib.h>
 #include <ctype.h>
 
+#include <memory>
 
 #include "doomdef.h"
 #include "dstrings.h"
@@ -62,13 +63,14 @@ rcsid[] = "$Id: m_menu.c,v 1.7 1997/02/03 22:45:10 b1 Exp $";
 #include "sounds.h"
 
 #include "m_menu.h"
+#include "ImageScaler.hh"
 
 
 
 extern patch_t*		hu_font[HU_FONTSIZE];
-extern boolean		message_dontfuckwithme;
+extern bool		message_dontfuckwithme;
 
-extern boolean		chat_on;		// in heads-up code
+extern bool		chat_on;		// in heads-up code
 
 //
 // defaulted values
@@ -77,11 +79,6 @@ int			mouseSensitivity;       // has default
 
 // Show messages has default, 0 = off, 1 = on
 int			showMessages;
-	
-
-// Blocky mode, has default, 0 = high, 1 = normal
-int			detailLevel;		
-int			screenblocks;		// has default
 
 // temp for screenblocks (0-9)
 int			screenSize;		
@@ -100,7 +97,7 @@ int			messy;
 int			messageLastMenuActive;
 
 // timed message = no input from user
-boolean			messageNeedsInput;     
+bool			messageNeedsInput;     
 
 void    (*messageRoutine)(int response);
 
@@ -122,17 +119,16 @@ int			saveCharIndex;	// which char we're editing
 // old save description before edit
 char			saveOldString[SAVESTRINGSIZE];  
 
-boolean			inhelpscreens;
-boolean			menuactive;
+bool			inhelpscreens;
+bool			menuactive;
 
 #define SKULLXOFF		-32
 #define LINEHEIGHT		16
 
-extern boolean		sendpause;
+extern bool		sendpause;
 char			savegamestrings[10][SAVESTRINGSIZE];
 
 char	endstring[160];
-
 
 //
 // MENU TYPEDEFS
@@ -177,6 +173,12 @@ char    skullName[2][/*8*/9] = {"M_SKULL1","M_SKULL2"};
 // current menudef
 menu_t*	currentMenu;                          
 
+namespace
+{
+std::unique_ptr<ImageScaler> menuScaler(
+    new ImageScaler(BASE_WIDTH, BASE_HEIGHT));
+}
+
 //
 // PROTOTYPES
 //
@@ -195,7 +197,6 @@ void M_ChangeMessages(int choice);
 void M_ChangeSensitivity(int choice);
 void M_SfxVol(int choice);
 void M_MusicVol(int choice);
-void M_ChangeDetail(int choice);
 void M_SizeDisplay(int choice);
 void M_StartGame(int choice);
 void M_Sound(int choice);
@@ -226,7 +227,7 @@ void M_WriteText(int x, int y, char *string);
 int  M_StringWidth(char *string);
 int  M_StringHeight(char *string);
 void M_StartControlPanel(void);
-void M_StartMessage(char *string,void *routine,boolean input);
+void M_StartMessage(char *string,void (*routine)(int),bool input);
 void M_StopMessage(void);
 void M_ClearMenus (void);
 
@@ -258,7 +259,7 @@ menuitem_t MainMenu[]=
     {1,"M_QUITG",M_QuitDOOM,'q'}
 };
 
-menu_t  MainDef =
+menu_t MainDef =
 {
     main_end,
     NULL,
@@ -340,7 +341,6 @@ enum
 {
     endgame,
     messages,
-    detail,
     scrnsize,
     option_empty1,
     mousesens,
@@ -353,7 +353,6 @@ menuitem_t OptionsMenu[]=
 {
     {1,"M_ENDGAM",	M_EndGame,'e'},
     {1,"M_MESSG",	M_ChangeMessages,'m'},
-    {1,"M_DETAIL",	M_ChangeDetail,'g'},
     {2,"M_SCRNSZ",	M_SizeDisplay,'s'},
     {-1,"",0},
     {2,"M_MSENS",	M_ChangeSensitivity,'m'},
@@ -518,7 +517,7 @@ void M_ReadSaveStrings(void)
     for (i = 0;i < load_end;i++)
     {
 	if (M_CheckParm("-cdrom"))
-	    sprintf(name,"c:\\doomdata\\"SAVEGAMENAME"%d.dsg",i);
+	    sprintf(name,"c:\\doomdata\\" SAVEGAMENAME "%d.dsg",i);
 	else
 	    sprintf(name,SAVEGAMENAME"%d.dsg",i);
 
@@ -543,7 +542,10 @@ void M_DrawLoad(void)
 {
     int             i;
 	
-    V_DrawPatchDirect (72,28,0,W_CacheLumpName("M_LOADG",PU_CACHE));
+    //V_DrawPatchDirect (72,28,0,(patch_t*)W_CacheLumpName("M_LOADG",PU_CACHE));
+    menuScaler->drawPatch(72,
+			 28,
+			 W_CacheLumpName("M_LOADG",PU_CACHE));
     for (i = 0;i < load_end; i++)
     {
 	M_DrawSaveLoadBorder(LoadDef.x,LoadDef.y+LINEHEIGHT*i);
@@ -560,15 +562,23 @@ void M_DrawSaveLoadBorder(int x,int y)
 {
     int             i;
 	
-    V_DrawPatchDirect (x-8,y+7,0,W_CacheLumpName("M_LSLEFT",PU_CACHE));
-	
+    //V_DrawPatchDirect (x-8,y+7,0,(patch_t*)W_CacheLumpName("M_LSLEFT",PU_CACHE));
+    menuScaler->drawPatch(x-8,
+			 y+7,
+			 W_CacheLumpName("M_LSLEFT",PU_CACHE));
     for (i = 0;i < 24;i++)
     {
-	V_DrawPatchDirect (x,y+7,0,W_CacheLumpName("M_LSCNTR",PU_CACHE));
+	//V_DrawPatchDirect (x,y+7,0,(patch_t*)W_CacheLumpName("M_LSCNTR",PU_CACHE));
+	menuScaler->drawPatch(x,
+			     y+7,
+			     W_CacheLumpName("M_LSCNTR",PU_CACHE));
 	x += 8;
     }
 
-    V_DrawPatchDirect (x,y+7,0,W_CacheLumpName("M_LSRGHT",PU_CACHE));
+    //V_DrawPatchDirect (x,y+7,0,(patch_t*)W_CacheLumpName("M_LSRGHT",PU_CACHE));
+    menuScaler->drawPatch(x,
+			 y+7,
+			 W_CacheLumpName("M_LSRGHT",PU_CACHE));
 }
 
 
@@ -581,7 +591,7 @@ void M_LoadSelect(int choice)
     char    name[256];
 	
     if (M_CheckParm("-cdrom"))
-	sprintf(name,"c:\\doomdata\\"SAVEGAMENAME"%d.dsg",choice);
+	sprintf(name,"c:\\doomdata\\" SAVEGAMENAME "%d.dsg",choice);
     else
 	sprintf(name,SAVEGAMENAME"%d.dsg",choice);
     G_LoadGame (name);
@@ -611,7 +621,10 @@ void M_DrawSave(void)
 {
     int             i;
 	
-    V_DrawPatchDirect (72,28,0,W_CacheLumpName("M_SAVEG",PU_CACHE));
+    //V_DrawPatchDirect (72,28,0,(patch_t*)W_CacheLumpName("M_SAVEG",PU_CACHE));
+    menuScaler->drawPatch(72,
+			 28,
+			 W_CacheLumpName("M_SAVEG",PU_CACHE));
     for (i = 0;i < load_end; i++)
     {
 	M_DrawSaveLoadBorder(LoadDef.x,LoadDef.y+LINEHEIGHT*i);
@@ -755,12 +768,18 @@ void M_DrawReadThis1(void)
     switch ( gamemode )
     {
       case commercial:
-	V_DrawPatchDirect (0,0,0,W_CacheLumpName("HELP",PU_CACHE));
+	  //V_DrawPatchDirect (0,0,0,(patch_t*)W_CacheLumpName("HELP",PU_CACHE));
+	  menuScaler->drawPatch(0,
+			       0,
+			       W_CacheLumpName("HELP",PU_CACHE));
 	break;
       case shareware:
       case registered:
       case retail:
-	V_DrawPatchDirect (0,0,0,W_CacheLumpName("HELP1",PU_CACHE));
+	  //V_DrawPatchDirect (0,0,0,(patch_t*)W_CacheLumpName("HELP1",PU_CACHE));
+	  menuScaler->drawPatch(0,
+			       0,
+			       W_CacheLumpName("HELP1",PU_CACHE));
 	break;
       default:
 	break;
@@ -781,11 +800,17 @@ void M_DrawReadThis2(void)
       case retail:
       case commercial:
 	// This hack keeps us from having to change menus.
-	V_DrawPatchDirect (0,0,0,W_CacheLumpName("CREDIT",PU_CACHE));
+	//V_DrawPatchDirect (0,0,0,(patch_t*)W_CacheLumpName("CREDIT",PU_CACHE));
+	menuScaler->drawPatch(0,
+			     0,
+			     W_CacheLumpName("CREDIT",PU_CACHE));
 	break;
       case shareware:
       case registered:
-	V_DrawPatchDirect (0,0,0,W_CacheLumpName("HELP2",PU_CACHE));
+	  //V_DrawPatchDirect (0,0,0,(patch_t*)W_CacheLumpName("HELP2",PU_CACHE));
+	  menuScaler->drawPatch(0,
+			       0,
+			       W_CacheLumpName("HELP2",PU_CACHE));
 	break;
       default:
 	break;
@@ -799,8 +824,10 @@ void M_DrawReadThis2(void)
 //
 void M_DrawSound(void)
 {
-    V_DrawPatchDirect (60,38,0,W_CacheLumpName("M_SVOL",PU_CACHE));
-
+    //V_DrawPatchDirect (60,38,0,(patch_t*)W_CacheLumpName("M_SVOL",PU_CACHE));
+    menuScaler->drawPatch(60,
+			 38,
+			 W_CacheLumpName("M_SVOL",PU_CACHE));
     M_DrawThermo(SoundDef.x,SoundDef.y+LINEHEIGHT*(sfx_vol+1),
 		 16,snd_SfxVolume);
 
@@ -855,7 +882,10 @@ void M_MusicVol(int choice)
 //
 void M_DrawMainMenu(void)
 {
-    V_DrawPatchDirect (94,2,0,W_CacheLumpName("M_DOOM",PU_CACHE));
+    //V_DrawPatchDirect (94,2,0,(patch_t*)W_CacheLumpName("M_DOOM",PU_CACHE));
+    menuScaler->drawPatch(94,
+			 2,
+			 W_CacheLumpName("M_DOOM",PU_CACHE));
 }
 
 
@@ -866,8 +896,14 @@ void M_DrawMainMenu(void)
 //
 void M_DrawNewGame(void)
 {
-    V_DrawPatchDirect (96,14,0,W_CacheLumpName("M_NEWG",PU_CACHE));
-    V_DrawPatchDirect (54,38,0,W_CacheLumpName("M_SKILL",PU_CACHE));
+    //V_DrawPatchDirect (96,14,0,(patch_t*)W_CacheLumpName("M_NEWG",PU_CACHE));
+    //V_DrawPatchDirect (54,38,0,(patch_t*)W_CacheLumpName("M_SKILL",PU_CACHE));
+    menuScaler->drawPatch(96,
+			 14,
+			 W_CacheLumpName("M_NEWG",PU_CACHE));
+    menuScaler->drawPatch(54,
+			 38,
+			 W_CacheLumpName("M_SKILL",PU_CACHE));
 }
 
 void M_NewGame(int choice)
@@ -892,7 +928,10 @@ int     epi;
 
 void M_DrawEpisode(void)
 {
-    V_DrawPatchDirect (54,38,0,W_CacheLumpName("M_EPISOD",PU_CACHE));
+    V_DrawPatchDirect (54,38,0,(patch_t*)W_CacheLumpName("M_EPISOD",PU_CACHE));
+    menuScaler->drawPatch(54,
+			 38,
+			 W_CacheLumpName("M_EPISOD",PU_CACHE));
 }
 
 void M_VerifyNightmare(int ch)
@@ -900,7 +939,7 @@ void M_VerifyNightmare(int ch)
     if (ch != 'y')
 	return;
 		
-    G_DeferedInitNew(nightmare,epi+1,1);
+    G_DeferedInitNew(sk_nightmare,epi+1,1);
     M_ClearMenus ();
 }
 
@@ -908,11 +947,11 @@ void M_ChooseSkill(int choice)
 {
     if (choice == nightmare)
     {
-	M_StartMessage(NIGHTMARE,M_VerifyNightmare,true);
+        M_StartMessage(NIGHTMARE,M_VerifyNightmare,true);
 	return;
     }
 	
-    G_DeferedInitNew(choice,epi+1,1);
+    G_DeferedInitNew((skill_t)choice,epi+1,1);
     M_ClearMenus ();
 }
 
@@ -944,20 +983,21 @@ void M_Episode(int choice)
 //
 // M_Options
 //
-char    detailNames[2][9]	= {"M_GDHIGH","M_GDLOW"};
 char	msgNames[2][9]		= {"M_MSGOFF","M_MSGON"};
 
 
 void M_DrawOptions(void)
 {
-    V_DrawPatchDirect (108,15,0,W_CacheLumpName("M_OPTTTL",PU_CACHE));
-	
-    V_DrawPatchDirect (OptionsDef.x + 175,OptionsDef.y+LINEHEIGHT*detail,0,
-		       W_CacheLumpName(detailNames[detailLevel],PU_CACHE));
-
-    V_DrawPatchDirect (OptionsDef.x + 120,OptionsDef.y+LINEHEIGHT*messages,0,
-		       W_CacheLumpName(msgNames[showMessages],PU_CACHE));
-
+    //V_DrawPatchDirect (108,15,0,(patch_t*)W_CacheLumpName("M_OPTTTL",PU_CACHE));
+    menuScaler->drawPatch(108,
+			 15,
+			 W_CacheLumpName("M_OPTTTL",PU_CACHE));
+    //V_DrawPatchDirect (OptionsDef.x + 120,OptionsDef.y+LINEHEIGHT*messages,0,
+    //		       (patch_t*)W_CacheLumpName(msgNames[showMessages],PU_CACHE));
+    menuScaler->drawPatch(OptionsDef.x + 120,
+			 OptionsDef.y+LINEHEIGHT*messages,
+			 W_CacheLumpName(msgNames[showMessages],PU_CACHE));
+    
     M_DrawThermo(OptionsDef.x,OptionsDef.y+LINEHEIGHT*(mousesens+1),
 		 10,mouseSensitivity);
 	
@@ -1100,9 +1140,9 @@ void M_QuitDOOM(int choice)
   // We pick index 0 which is language sensitive,
   //  or one at random, between 1 and maximum number.
   if (language != english )
-    sprintf(endstring,"%s\n\n"DOSY, endmsg[0] );
+    sprintf(endstring,"%s\n\n" DOSY, endmsg[0] );
   else
-    sprintf(endstring,"%s\n\n"DOSY, endmsg[ (gametic%(NUM_QUITMESSAGES-2))+1 ]);
+    sprintf(endstring,"%s\n\n" DOSY, endmsg[ (gametic%(NUM_QUITMESSAGES-2))+1 ]);
   
   M_StartMessage(endstring,M_QuitResponse,true);
 }
@@ -1125,52 +1165,23 @@ void M_ChangeSensitivity(int choice)
     }
 }
 
-
-
-
-void M_ChangeDetail(int choice)
-{
-    choice = 0;
-    detailLevel = 1 - detailLevel;
-
-    // FIXME - does not work. Remove anyway?
-    fprintf( stderr, "M_ChangeDetail: low detail mode n.a.\n");
-
-    return;
-    
-    /*R_SetViewSize (screenblocks, detailLevel);
-
-    if (!detailLevel)
-	players[consoleplayer].message = DETAILHI;
-    else
-	players[consoleplayer].message = DETAILLO;*/
-}
-
-
-
-
 void M_SizeDisplay(int choice)
 {
     switch(choice)
     {
-      case 0:
-	if (screenSize > 0)
-	{
-	    screenblocks--;
-	    screenSize--;
-	}
-	break;
-      case 1:
-	if (screenSize < 8)
-	{
-	    screenblocks++;
+    case 0:
+        if (screenSize > 0)
+        {
+            screenSize--;
+        }
+        break;
+    case 1:
+        if (screenSize < 8)
+        {
 	    screenSize++;
-	}
-	break;
+        }
+        break;
     }
-	
-
-    R_SetViewSize (screenblocks, detailLevel);
 }
 
 
@@ -1190,17 +1201,28 @@ M_DrawThermo
     int		i;
 
     xx = x;
-    V_DrawPatchDirect (xx,y,0,W_CacheLumpName("M_THERML",PU_CACHE));
+    //V_DrawPatchDirect (xx,y,0,(patch_t*)W_CacheLumpName("M_THERML",PU_CACHE));
+    menuScaler->drawPatch(xx,
+			 y,
+			 W_CacheLumpName("M_THERML",PU_CACHE));
     xx += 8;
     for (i=0;i<thermWidth;i++)
     {
-	V_DrawPatchDirect (xx,y,0,W_CacheLumpName("M_THERMM",PU_CACHE));
+	//V_DrawPatchDirect (xx,y,0,(patch_t*)W_CacheLumpName("M_THERMM",PU_CACHE));
+	menuScaler->drawPatch(xx,
+			     y,
+			     W_CacheLumpName("M_THERMM",PU_CACHE));
 	xx += 8;
     }
-    V_DrawPatchDirect (xx,y,0,W_CacheLumpName("M_THERMR",PU_CACHE));
-
-    V_DrawPatchDirect ((x+8) + thermDot*8,y,
-		       0,W_CacheLumpName("M_THERMO",PU_CACHE));
+    //V_DrawPatchDirect (xx,y,0,(patch_t*)W_CacheLumpName("M_THERMR",PU_CACHE));
+    menuScaler->drawPatch(xx,
+			 y,
+			 W_CacheLumpName("M_THERMR",PU_CACHE));
+    //V_DrawPatchDirect ((x+8) + thermDot*8,y,
+    //		       0,(patch_t*)W_CacheLumpName("M_THERMO",PU_CACHE));
+    menuScaler->drawPatch((x+8) + thermDot*8,
+			 y,
+			 W_CacheLumpName("M_THERMO",PU_CACHE));
 }
 
 
@@ -1210,8 +1232,11 @@ M_DrawEmptyCell
 ( menu_t*	menu,
   int		item )
 {
-    V_DrawPatchDirect (menu->x - 10,        menu->y+item*LINEHEIGHT - 1, 0,
-		       W_CacheLumpName("M_CELL1",PU_CACHE));
+    //V_DrawPatchDirect (menu->x - 10,        menu->y+item*LINEHEIGHT - 1, 0,
+    //		       (patch_t*)W_CacheLumpName("M_CELL1",PU_CACHE));
+    menuScaler->drawPatch(menu->x - 10,
+			 menu->y+item*LINEHEIGHT - 1,
+			 W_CacheLumpName("M_CELL1",PU_CACHE));
 }
 
 void
@@ -1219,16 +1244,19 @@ M_DrawSelCell
 ( menu_t*	menu,
   int		item )
 {
-    V_DrawPatchDirect (menu->x - 10,        menu->y+item*LINEHEIGHT - 1, 0,
-		       W_CacheLumpName("M_CELL2",PU_CACHE));
+    //V_DrawPatchDirect (menu->x - 10,        menu->y+item*LINEHEIGHT - 1, 0,
+    //		       (patch_t*)W_CacheLumpName("M_CELL2",PU_CACHE));
+    menuScaler->drawPatch(menu->x - 10,
+			 menu->y+item*LINEHEIGHT - 1,
+			 W_CacheLumpName("M_CELL2",PU_CACHE));
 }
 
 
 void
 M_StartMessage
 ( char*		string,
-  void*		routine,
-  boolean	input )
+  void    (*routine)(int),
+  bool	input )
 {
     messageLastMenuActive = menuactive;
     messageToPrint = 1;
@@ -1330,9 +1358,12 @@ M_WriteText
 	}
 		
 	w = SHORT (hu_font[c]->width);
-	if (cx+w > SCREENWIDTH)
+	if (cx+w > menuScaler->getWidth()) {
+	    fprintf(stderr, "break %d", cx + w);
 	    break;
-	V_DrawPatchDirect(cx, cy, 0, hu_font[c]);
+	}
+	//V_DrawPatchDirect(cx, cy, 0, hu_font[c]);
+	menuScaler->drawPatch(cx, cy, hu_font[c]);
 	cx+=w;
     }
 }
@@ -1346,7 +1377,7 @@ M_WriteText
 //
 // M_Responder
 //
-boolean M_Responder (event_t* ev)
+bool M_Responder (event_t* ev)
 {
     int             ch;
     int             i;
@@ -1520,16 +1551,16 @@ boolean M_Responder (event_t* ev)
 	switch(ch)
 	{
 	  case KEY_MINUS:         // Screen size down
-	    if (automapactive || chat_on)
-		return false;
+	    // if (automapactive || chat_on)
+		// return false;
 	    M_SizeDisplay(0);
 	    S_StartSound(NULL,sfx_stnmov);
 	    return true;
 				
 	  case KEY_EQUALS:        // Screen size up
-	    if (automapactive || chat_on)
-		return false;
-	    M_SizeDisplay(1);
+	    // if (automapactive || chat_on)
+		// return false;
+         M_SizeDisplay(1);
 	    S_StartSound(NULL,sfx_stnmov);
 	    return true;
 				
@@ -1563,12 +1594,7 @@ boolean M_Responder (event_t* ev)
 	    itemOn = sfx_vol;
 	    S_StartSound(NULL,sfx_swtchn);
 	    return true;
-				
-	  case KEY_F5:            // Detail toggle
-	    M_ChangeDetail(0);
-	    S_StartSound(NULL,sfx_swtchn);
-	    return true;
-				
+								
 	  case KEY_F6:            // Quicksave
 	    S_StartSound(NULL,sfx_swtchn);
 	    M_QuickSave();
@@ -1599,7 +1625,7 @@ boolean M_Responder (event_t* ev)
 	    if (usegamma > 4)
 		usegamma = 0;
 	    players[consoleplayer].message = gammamsg[usegamma];
-	    I_SetPalette (W_CacheLumpName ("PLAYPAL",PU_CACHE));
+	    I_SetPalette ((byte*)W_CacheLumpName ("PLAYPAL",PU_CACHE));
 	    return true;
 				
 	}
@@ -1732,6 +1758,7 @@ void M_StartControlPanel (void)
 }
 
 
+
 //
 // M_Drawer
 // Called after the view has been rendered,
@@ -1739,69 +1766,63 @@ void M_StartControlPanel (void)
 //
 void M_Drawer (void)
 {
-    static short	x;
-    static short	y;
-    short		i;
-    short		max;
-    char		string[40];
-    int			start;
 
     inhelpscreens = false;
 
-    
+    menuScaler->reset();    
     // Horiz. & Vertically center string and print it.
     if (messageToPrint)
     {
-	start = 0;
-	y = 100 - M_StringHeight(messageString)/2;
-	while(*(messageString+start))
+	printf("messageToPrint %s len %d\n", messageString, strlen(messageString));
+	int start = 0;
+	char string[40];
+	int y = 100 - M_StringHeight(messageString)/2;
+	while (*(messageString+start))
 	{
-	    for (i = 0;i < strlen(messageString+start);i++)
-		if (*(messageString+start+i) == '\n')
-		{
+	    short i;
+	    for (i = 0;i < strlen(messageString+start);i++) {
+		if (*(messageString+start+i) == '\n') {
 		    memset(string,0,40);
 		    strncpy(string,messageString+start,i);
 		    start += i+1;
 		    break;
 		}
-				
-	    if (i == strlen(messageString+start))
-	    {
+	    }
+	    if (i == strlen(messageString+start)) {
 		strcpy(string,messageString+start);
 		start += i;
 	    }
-				
-	    x = 160 - M_StringWidth(string)/2;
-	    M_WriteText(x,y,string);
+	    int x = 160 - M_StringWidth(string)/2;
+	    M_WriteText(x, y, string);
 	    y += SHORT(hu_font[0]->height);
 	}
-	return;
+    } else if (menuactive) {
+	if (currentMenu->routine) {
+	    currentMenu->routine();         // call Draw routine
+	}
+	// DRAW MENU
+	int x = currentMenu->x;
+	int y = currentMenu->y;
+	int max = currentMenu->numitems;
+	for (int i = 0; i < max; i++) {
+	    if (currentMenu->menuitems[i].name[0]) {
+		patch_t* patch =  W_CacheLumpName(
+		    currentMenu->menuitems[i].name ,
+		    PU_CACHE);
+		menuScaler->drawPatch(x, y, patch);
+	    }
+	    y += LINEHEIGHT;
+	}
+	menuScaler->drawPatch(x + SKULLXOFF,
+			      currentMenu->y - 5 + itemOn*LINEHEIGHT,
+			      W_CacheLumpName(skullName[whichSkull],PU_CACHE));
     }
-
-    if (!menuactive)
-	return;
-
-    if (currentMenu->routine)
-	currentMenu->routine();         // call Draw routine
-    
-    // DRAW MENU
-    x = currentMenu->x;
-    y = currentMenu->y;
-    max = currentMenu->numitems;
-
-    for (i=0;i<max;i++)
-    {
-	if (currentMenu->menuitems[i].name[0])
-	    V_DrawPatchDirect (x,y,0,
-			       W_CacheLumpName(currentMenu->menuitems[i].name ,PU_CACHE));
-	y += LINEHEIGHT;
-    }
-
-    
-    // DRAW SKULL
-    V_DrawPatchDirect(x + SKULLXOFF,currentMenu->y - 5 + itemOn*LINEHEIGHT, 0,
-		      W_CacheLumpName(skullName[whichSkull],PU_CACHE));
-
+    // The aspect ratio is different in the orignal
+    // and the scaled up screen.
+    int scale = 3.5;
+    int x = (SCREENWIDTH - BASE_WIDTH * scale) / 2;
+    int y = (SCREENHEIGHT - BASE_HEIGHT * scale) / 2;
+    menuScaler->display(x, y, scale);
 }
 
 
@@ -1851,7 +1872,7 @@ void M_Init (void)
     itemOn = currentMenu->lastOn;
     whichSkull = 0;
     skullAnimCounter = 10;
-    screenSize = screenblocks - 3;
+    screenSize = 0;		// @todo not used
     messageToPrint = 0;
     messageString = NULL;
     messageLastMenuActive = menuactive;
@@ -1890,4 +1911,3 @@ void M_Init (void)
     }
     
 }
-

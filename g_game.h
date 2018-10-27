@@ -40,11 +40,11 @@ void G_InitNew (skill_t skill, int episode, int map);
 // but a warp test can start elsewhere
 void G_DeferedInitNew (skill_t skill, int episode, int map);
 
-void G_DeferedPlayDemo (char* demo);
+void G_DeferedPlayDemo (const char* demo);
 
 // Can be called by the startup code or M_Responder,
 // calls P_SetupLevel or W_EnterWorld.
-void G_LoadGame (char* name);
+void G_LoadGame (const char* name);
 
 void G_DoLoadGame (void);
 
@@ -58,7 +58,7 @@ void G_BeginRecording (void);
 
 void G_PlayDemo (char* name);
 void G_TimeDemo (char* name);
-boolean G_CheckDemoStatus (void);
+bool G_CheckDemoStatus (void);
 
 void G_ExitLevel (void);
 void G_SecretExitLevel (void);
@@ -66,7 +66,7 @@ void G_SecretExitLevel (void);
 void G_WorldDone (void);
 
 void G_Ticker (void);
-boolean G_Responder (event_t*	ev);
+bool G_Responder (event_t*	ev);
 
 void G_ScreenShot (void);
 

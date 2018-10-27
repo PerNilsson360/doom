@@ -70,7 +70,7 @@ int	clipammo[NUMAMMO] = {10, 4, 20, 1};
 // Returns false if the ammo can't be picked up at all
 //
 
-boolean
+bool
 P_GiveAmmo
 ( player_t*	player,
   ammotype_t	ammo,
@@ -164,14 +164,14 @@ P_GiveAmmo
 // P_GiveWeapon
 // The weapon name may have a MF_DROPPED flag ored in.
 //
-boolean
+bool
 P_GiveWeapon
 ( player_t*	player,
   weapontype_t	weapon,
-  boolean	dropped )
+  bool	dropped )
 {
-    boolean	gaveammo;
-    boolean	gaveweapon;
+    bool	gaveammo;
+    bool	gaveweapon;
 	
     if (netgame
 	&& (deathmatch!=2)
@@ -225,7 +225,7 @@ P_GiveWeapon
 // P_GiveBody
 // Returns false if the body isn't needed at all
 //
-boolean
+bool
 P_GiveBody
 ( player_t*	player,
   int		num )
@@ -248,7 +248,7 @@ P_GiveBody
 // Returns false if the armor is worse
 // than the current armor.
 //
-boolean
+bool
 P_GiveArmor
 ( player_t*	player,
   int		armortype )
@@ -286,7 +286,7 @@ P_GiveCard
 //
 // P_GivePower
 //
-boolean
+bool
 P_GivePower
 ( player_t*	player,
   int /*powertype_t*/	power )
@@ -337,32 +337,33 @@ P_GivePower
 //
 void
 P_TouchSpecialThing
-( mobj_t*	special,
-  mobj_t*	toucher )
+( Mob*	special,
+  Mob*	toucher )
 {
+    //printf("P_TouchSpecialThing\n");
     player_t*	player;
     int		i;
-    fixed_t	delta;
+    double delta;
     int		sound;
 		
-    delta = special->z - toucher->z;
+    delta = special->zz - toucher->zz;
 
-    if (delta > toucher->height
-	|| delta < -8*FRACUNIT)
+    if (delta > toucher->hheight || 
+        delta < -8)
     {
-	// out of reach
-	return;
+        // out of reach
+        return;
     }
     
 	
     sound = sfx_itemup;	
     player = toucher->player;
-
+    
     // Dead thing touching.
     // Can happen with a sliding player corpse.
     if (toucher->health <= 0)
-	return;
-
+        return;
+    
     // Identify by sprite.
     switch (special->sprite)
     {
@@ -594,7 +595,7 @@ P_TouchSpecialThing
 	    player->backpack = true;
 	}
 	for (i=0 ; i<NUMAMMO ; i++)
-	    P_GiveAmmo (player, i, 1);
+	    P_GiveAmmo (player, (ammotype_t)i, 1);
 	player->message = GOTBACKPACK;
 	break;
 	
@@ -666,11 +667,11 @@ P_TouchSpecialThing
 //
 void
 P_KillMobj
-( mobj_t*	source,
-  mobj_t*	target )
+( Mob*	source,
+  Mob*	target )
 {
     mobjtype_t	item;
-    mobj_t*	mo;
+    Mob*	mo;
 	
     target->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY);
 
@@ -678,7 +679,7 @@ P_KillMobj
 	target->flags &= ~MF_NOGRAVITY;
 
     target->flags |= MF_CORPSE|MF_DROPOFF;
-    target->height >>= 2;
+    target->hheight /= 4;
 
     if (source && source->player)
     {
@@ -711,22 +712,24 @@ P_KillMobj
 	{
 	    // don't die in auto map,
 	    // switch view prior to dying
-	    AM_Stop ();
+        // @todo double fix
+	    //AM_Stop ();
 	}
 	
     }
 
-    if (target->health < -target->info->spawnhealth 
-	&& target->info->xdeathstate)
+    if (target->health < -target->info->spawnhealth && 
+        target->info->xdeathstate)
     {
-	P_SetMobjState (target, target->info->xdeathstate);
+        target->setState((statenum_t)target->info->xdeathstate);
     }
     else
-	P_SetMobjState (target, target->info->deathstate);
+        target->setState((statenum_t)target->info->deathstate);
+    
     target->tics -= P_Random()&3;
 
     if (target->tics < 1)
-	target->tics = 1;
+        target->tics = 1;
 		
     //	I_StartSound (&actor->r, actor->info->deathsound);
 
@@ -753,7 +756,8 @@ P_KillMobj
 	return;
     }
 
-    mo = P_SpawnMobj (target->x,target->y,ONFLOORZ, item);
+    // @todo onfloorz double fix
+    mo = PP_SpawnMobj(target->xx,target->yy,ONFLOORZ, item);
     mo->flags |= MF_DROPPED;	// special versions of items
 }
 
@@ -773,15 +777,13 @@ P_KillMobj
 //
 void
 P_DamageMobj
-( mobj_t*	target,
-  mobj_t*	inflictor,
-  mobj_t*	source,
+( Mob*	target,
+  Mob*	inflictor,
+  Mob*	source,
   int 		damage )
 {
-    unsigned	ang;
     int		saved;
     player_t*	player;
-    fixed_t	thrust;
     int		temp;
 	
     if ( !(target->flags & MF_SHOOTABLE) )
@@ -792,7 +794,7 @@ P_DamageMobj
 
     if ( target->flags & MF_SKULLFLY )
     {
-	target->momx = target->momy = target->momz = 0;
+        target->mmomx = target->mmomy = target->mmomz = 0;
     }
 	
     player = target->player;
@@ -809,26 +811,24 @@ P_DamageMobj
 	    || !source->player
 	    || source->player->readyweapon != wp_chainsaw))
     {
-	ang = R_PointToAngle2 ( inflictor->x,
-				inflictor->y,
-				target->x,
-				target->y);
+        Angle ang(inflictor->xx, inflictor->yy,
+                  target->xx, target->yy);
 		
-	thrust = damage*(FRACUNIT>>3)*100/target->info->mass;
-
+	// thrust = damage*(FRACUNIT>>3)*100/target->info->mass;
+        double thrust =
+            (damage * 100) / (pow(2, 16) * 8 * target->info->mass);
 	// make fall forwards sometimes
 	if ( damage < 40
 	     && damage > target->health
-	     && target->z - inflictor->z > 64*FRACUNIT
+	     && target->zz - inflictor->zz > 64
 	     && (P_Random ()&1) )
 	{
-	    ang += ANG180;
+	    ang += Angle::A180;
 	    thrust *= 4;
 	}
-		
-	ang >>= ANGLETOFINESHIFT;
-	target->momx += FixedMul (thrust, finecosine[ang]);
-	target->momy += FixedMul (thrust, finesine[ang]);
+
+	target->mmomx += thrust * cos(ang);
+	target->mmomy += thrust * sin(ang);
     }
     
     // player specific
@@ -894,9 +894,9 @@ P_DamageMobj
     if ( (P_Random () < target->info->painchance)
 	 && !(target->flags&MF_SKULLFLY) )
     {
-	target->flags |= MF_JUSTHIT;	// fight back!
-	
-	P_SetMobjState (target, target->info->painstate);
+        target->flags |= MF_JUSTHIT;	// fight back!
+        
+        target->setState((statenum_t)target->info->painstate);
     }
 			
     target->reactiontime = 0;		// we're awake now...	
@@ -911,7 +911,7 @@ P_DamageMobj
 	target->threshold = BASETHRESHOLD;
 	if (target->state == &states[target->info->spawnstate]
 	    && target->info->seestate != S_NULL)
-	    P_SetMobjState (target, target->info->seestate);
+	    target->setState((statenum_t)target->info->seestate);
     }
 			
 }

@@ -48,18 +48,14 @@ int
 EV_Teleport
 ( line_t*	line,
   int		side,
-  mobj_t*	thing )
+  Mob*	thing )
 {
     int		i;
     int		tag;
-    mobj_t*	m;
-    mobj_t*	fog;
-    unsigned	an;
+    Mob*	m;
+    Mob*	fog;
     thinker_t*	thinker;
     sector_t*	sector;
-    fixed_t	oldx;
-    fixed_t	oldy;
-    fixed_t	oldz;
 
     // don't teleport missiles
     if (thing->flags & MF_MISSILE)
@@ -85,7 +81,7 @@ EV_Teleport
 		if (thinker->function.acp1 != (actionf_p1)P_MobjThinker)
 		    continue;	
 
-		m = (mobj_t *)thinker;
+		m = (Mob *)thinker;
 		
 		// not a teleportman
 		if (m->type != MT_TELEPORTMAN )
@@ -96,23 +92,24 @@ EV_Teleport
 		if (sector-sectors != i )
 		    continue;	
 
-		oldx = thing->x;
-		oldy = thing->y;
-		oldz = thing->z;
+		double oldx = thing->xx;
+		double oldy = thing->yy;
+		double oldz = thing->zz;
 				
-		if (!P_TeleportMove (thing, m->x, m->y))
+		if (!PP_TeleportMove (thing, m->xx, m->yy))
 		    return 0;
 		
-		thing->z = thing->floorz;  //fixme: not needed?
+		thing->zz = thing->ffloorz;  //fixme: not needed?
 		if (thing->player)
-		    thing->player->viewz = thing->z+thing->player->viewheight;
+		    thing->player->vviewz = thing->zz + thing->player->vviewheight;
 				
 		// spawn teleport fog at source and destination
-		fog = P_SpawnMobj (oldx, oldy, oldz, MT_TFOG);
+		fog = PP_SpawnMobj(oldx, oldy, oldz, MT_TFOG);
 		S_StartSound (fog, sfx_telept);
-		an = m->angle >> ANGLETOFINESHIFT;
-		fog = P_SpawnMobj (m->x+20*finecosine[an], m->y+20*finesine[an]
-				   , thing->z, MT_TFOG);
+		fog = PP_SpawnMobj(m->xx + (20 * cos(m->_angle)), 
+				   m->yy + (20 * sin(m->_angle)),
+				   thing->zz, 
+				   MT_TFOG);
 
 		// emit sound, where?
 		S_StartSound (fog, sfx_telept);
@@ -121,8 +118,8 @@ EV_Teleport
 		if (thing->player)
 		    thing->reactiontime = 18;	
 
-		thing->angle = m->angle;
-		thing->momx = thing->momy = thing->momz = 0;
+		thing->_angle = m->_angle;
+		thing->mmomx = thing->mmomy = thing->mmomz = 0;
 		return 1;
 	    }	
 	}

@@ -65,14 +65,15 @@ typedef enum
 
 } psprnum_t;
 
-typedef struct
+struct pspdef_t
 {
     state_t*	state;	// a NULL state means not active
     int		tics;
-    fixed_t	sx;
-    fixed_t	sy;
+    double      ssx;
+    double      ssy;
 
-} pspdef_t;
+};
+typedef struct pspdef_t  pspdef_t;
 
 #endif
 //-----------------------------------------------------------------------------

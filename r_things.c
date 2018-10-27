@@ -25,9 +25,11 @@
 static const char
 rcsid[] = "$Id: r_things.c,v 1.5 1997/02/03 16:47:56 b1 Exp $";
 
+#include <iostream>
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <float.h>
 
 
 #include "doomdef.h"
@@ -43,8 +45,9 @@ rcsid[] = "$Id: r_things.c,v 1.5 1997/02/03 16:47:56 b1 Exp $";
 
 
 
-#define MINZ				(FRACUNIT*4)
-#define BASEYCENTER			100
+#define MINZ				4
+#define BASEYCENTER			SCREENHEIGHT/2
+#define BASEXCENTER			SCREENWIDTH/2
 
 //void R_DrawColumn (void);
 //void R_DrawFuzzColumn (void);
@@ -71,9 +74,6 @@ typedef struct
 //  which increases counter clockwise (protractor).
 // There was a lot of stuff grabbed wrong, so I changed it...
 //
-fixed_t		pspritescale;
-fixed_t		pspriteiscale;
-
 lighttable_t**	spritelights;
 
 // constant arrays
@@ -107,51 +107,53 @@ R_InstallSpriteLump
 ( int		lump,
   unsigned	frame,
   unsigned	rotation,
-  boolean	flipped )
+  bool	flipped )
 {
     int		r;
-	
+    
     if (frame >= 29 || rotation > 8)
 	I_Error("R_InstallSpriteLump: "
 		"Bad frame characters in lump %i", lump);
 	
     if ((int)frame > maxframe)
-	maxframe = frame;
-		
+        maxframe = frame;
+    
     if (rotation == 0)
     {
-	// the lump should be used for all rotations
-	if (sprtemp[frame].rotate == false)
-	    I_Error ("R_InitSprites: Sprite %s frame %c has "
-		     "multip rot=0 lump", spritename, 'A'+frame);
-
-	if (sprtemp[frame].rotate == true)
-	    I_Error ("R_InitSprites: Sprite %s frame %c has rotations "
-		     "and a rot=0 lump", spritename, 'A'+frame);
-			
-	sprtemp[frame].rotate = false;
-	for (r=0 ; r<8 ; r++)
-	{
-	    sprtemp[frame].lump[r] = lump - firstspritelump;
-	    sprtemp[frame].flip[r] = (byte)flipped;
-	}
-	return;
+        // the lump should be used for all rotations
+        if (sprtemp[frame].rotate != 255 && sprtemp[frame].rotate == false)
+            I_Error ("R_InitSprites: Sprite %s frame %c has "
+                     "multip rot=0 lump", spritename, 'A'+frame);
+        
+        if (sprtemp[frame].rotate != 255 && sprtemp[frame].rotate == true)
+            I_Error ("R_InitSprites: Sprite %s frame %c has rotations "
+                     "and a rot=0 lump", spritename, 'A'+frame);
+        
+        sprtemp[frame].rotate = false;
+        for (r=0 ; r<8 ; r++)
+        {
+            sprtemp[frame].lump[r] = lump - firstspritelump;
+            sprtemp[frame].flip[r] = (byte)flipped;
+        }
+        return;
     }
 	
-    // the lump is only used for one rotation
-    if (sprtemp[frame].rotate == false)
-	I_Error ("R_InitSprites: Sprite %s frame %c has rotations "
-		 "and a rot=0 lump", spritename, 'A'+frame);
+    // @todo != 255 is funky due to initialisation of bool 
+    if (sprtemp[frame].rotate != 255 && sprtemp[frame].rotate == false)
+    {
+        I_Error ("R_InitSprites: Sprite %s frame %c has rotations "
+                 "and a rot=0 lump", spritename, 'A'+frame);
+    }
 		
     sprtemp[frame].rotate = true;
-
+    
     // make 0 based
     rotation--;		
     if (sprtemp[frame].lump[rotation] != -1)
-	I_Error ("R_InitSprites: Sprite %s : %c : %c "
-		 "has two lumps mapped to it",
-		 spritename, 'A'+frame, '1'+rotation);
-		
+        I_Error ("R_InitSprites: Sprite %s : %c : %c "
+                 "has two lumps mapped to it",
+                 spritename, 'A'+frame, '1'+rotation);
+    
     sprtemp[frame].lump[rotation] = lump - firstspritelump;
     sprtemp[frame].flip[rotation] = (byte)flipped;
 }
@@ -196,7 +198,7 @@ void R_InitSpriteDefs (char** namelist)
     if (!numsprites)
 	return;
 		
-    sprites = Z_Malloc(numsprites *sizeof(*sprites), PU_STATIC, NULL);
+    sprites = (spritedef_t*)Z_Malloc(numsprites *sizeof(*sprites), PU_STATIC, NULL);
 	
     start = firstspritelump-1;
     end = lastspritelump+1;
@@ -218,22 +220,22 @@ void R_InitSpriteDefs (char** namelist)
 	{
 	    if (*(int *)lumpinfo[l].name == intname)
 	    {
-		frame = lumpinfo[l].name[4] - 'A';
-		rotation = lumpinfo[l].name[5] - '0';
-
-		if (modifiedgame)
-		    patched = W_GetNumForName (lumpinfo[l].name);
-		else
-		    patched = l;
-
-		R_InstallSpriteLump (patched, frame, rotation, false);
-
-		if (lumpinfo[l].name[6])
-		{
-		    frame = lumpinfo[l].name[6] - 'A';
-		    rotation = lumpinfo[l].name[7] - '0';
-		    R_InstallSpriteLump (l, frame, rotation, true);
-		}
+            frame = lumpinfo[l].name[4] - 'A';
+            rotation = lumpinfo[l].name[5] - '0';
+            
+            if (modifiedgame)
+                patched = W_GetNumForName (lumpinfo[l].name);
+            else
+                patched = l;
+            
+            R_InstallSpriteLump (patched, frame, rotation, false);
+            
+            if (lumpinfo[l].name[6])
+            {
+                frame = lumpinfo[l].name[6] - 'A';
+                rotation = lumpinfo[l].name[7] - '0';
+                R_InstallSpriteLump (l, frame, rotation, true);
+            }
 	    }
 	}
 	
@@ -274,7 +276,7 @@ void R_InitSpriteDefs (char** namelist)
 	// allocate space for the frames present and copy sprtemp to it
 	sprites[i].numframes = maxframe;
 	sprites[i].spriteframes = 
-	    Z_Malloc (maxframe * sizeof(spriteframe_t), PU_STATIC, NULL);
+	    (spriteframe_t*)Z_Malloc (maxframe * sizeof(spriteframe_t), PU_STATIC, NULL);
 	memcpy (sprites[i].spriteframes, sprtemp, maxframe*sizeof(spriteframe_t));
     }
 
@@ -302,7 +304,7 @@ void R_InitSprites (char** namelist)
 	
     for (i=0 ; i<SCREENWIDTH ; i++)
     {
-	negonearray[i] = -1;
+        negonearray[i] = -1;
     }
 	
     R_InitSpriteDefs (namelist);
@@ -401,11 +403,10 @@ R_DrawVisSprite
 {
     column_t*		column;
     int			texturecolumn;
-    fixed_t		frac;
     patch_t*		patch;
 	
 	
-    patch = W_CacheLumpNum (vis->patch+firstspritelump, PU_CACHE);
+    patch = (patch_t*)W_CacheLumpNum (vis->patch+firstspritelump, PU_CACHE);
 
     dc_colormap = vis->colormap;
     
@@ -421,18 +422,19 @@ R_DrawVisSprite
 	    ( (vis->mobjflags & MF_TRANSLATION) >> (MF_TRANSSHIFT-8) );
     }
 	
-    dc_iscale = abs(vis->xiscale)>>detailshift;
-    dc_texturemid = vis->texturemid;
-    frac = vis->startfrac;
-    spryscale = vis->scale;
-    sprtopscreen = centeryfrac - FixedMul(dc_texturemid,spryscale);
-	
-    for (dc_x=vis->x1 ; dc_x<=vis->x2 ; dc_x++, frac += vis->xiscale)
+    dc_iscale = abs(double_to_fixed(vis->xxiscale));
+    dc_texturemid = double_to_fixed(vis->ttexturemid);
+    double frac = vis->sstartfrac;
+    spryscale = double_to_fixed(vis->sscale);
+    sprtopscreen = double_to_fixed(ccenteryfrac) - FixedMul(dc_texturemid,spryscale);
+    for (dc_x=vis->x1 ; dc_x<=vis->x2 ; dc_x++, frac += vis->xxiscale)
     {
-	texturecolumn = frac>>FRACBITS;
+	texturecolumn = frac;
 #ifdef RANGECHECK
-	if (texturecolumn < 0 || texturecolumn >= SHORT(patch->width))
+	if (texturecolumn < 0 || texturecolumn >= SHORT(patch->width)) {
+            printf(" texturecolumn %d width %d\n", texturecolumn, SHORT(patch->width));
 	    I_Error ("R_DrawSpriteRange: bad texturecolumn");
+    }
 #endif
 	column = (column_t *) ((byte *)patch +
 			       LONG(patch->columnofs[texturecolumn]));
@@ -449,57 +451,42 @@ R_DrawVisSprite
 // Generates a vissprite for a thing
 //  if it might be visible.
 //
-void R_ProjectSprite (mobj_t* thing)
+void R_ProjectSprite (Mob* thing)
 {
-    fixed_t		tr_x;
-    fixed_t		tr_y;
-    
-    fixed_t		gxt;
-    fixed_t		gyt;
-    
-    fixed_t		tx;
-    fixed_t		tz;
-
-    fixed_t		xscale;
-    
-    int			x1;
-    int			x2;
-
     spritedef_t*	sprdef;
     spriteframe_t*	sprframe;
     int			lump;
     
     unsigned		rot;
-    boolean		flip;
+    bool		flip;
     
     int			index;
 
     vissprite_t*	vis;
     
     angle_t		ang;
-    fixed_t		iscale;
     
     // transform the origin point
-    tr_x = thing->x - viewx;
-    tr_y = thing->y - viewy;
+    double tr_x = thing->xx - vviewx;
+    double tr_y = thing->yy - vviewy;
 	
-    gxt = FixedMul(tr_x,viewcos); 
-    gyt = -FixedMul(tr_y,viewsin);
+    double gxt = tr_x * vviewcos; 
+    double gyt = -(tr_y * vviewsin);
     
-    tz = gxt-gyt; 
+    double tz = gxt - gyt; 
 
     // thing is behind view plane?
     if (tz < MINZ)
 	return;
     
-    xscale = FixedDiv(projection, tz);
+    double xscale = pprojection / tz;
 	
-    gxt = -FixedMul(tr_x,viewsin); 
-    gyt = FixedMul(tr_y,viewcos); 
-    tx = -(gyt+gxt); 
+    gxt = -(tr_x * vviewsin); 
+    gyt = tr_y * vviewcos; 
+    double tx = -(gyt+gxt); 
 
     // too far off the side?
-    if (abs(tx)>(tz<<2))
+    if (fabs(tx)>(tz * 4))
 	return;
     
     // decide which patch to use for sprite relative to player
@@ -519,28 +506,29 @@ void R_ProjectSprite (mobj_t* thing)
     if (sprframe->rotate)
     {
 	// choose a different rotation based on player view
-	ang = R_PointToAngle (thing->x, thing->y);
-	rot = (ang-thing->angle+(unsigned)(ANG45/2)*9)>>29;
+        Angle ang(vviewx, vviewy, thing->xx, thing->yy);
+	Angle magic((Angle::A45/2)*9); // @todo fix, understand the magic here
+	rot = ((angle_t)ang - (angle_t)thing->_angle + (angle_t)magic)>>29;
 	lump = sprframe->lump[rot];
-	flip = (boolean)sprframe->flip[rot];
+	flip = (bool)sprframe->flip[rot];
     }
     else
     {
 	// use single rotation for all views
 	lump = sprframe->lump[0];
-	flip = (boolean)sprframe->flip[0];
+	flip = (bool)sprframe->flip[0];
     }
     
     // calculate edges of the shape
-    tx -= spriteoffset[lump];	
-    x1 = (centerxfrac + FixedMul (tx,xscale) ) >>FRACBITS;
+    tx -= sspriteoffset[lump];	
+    int x1 = ccenterxfrac + (tx * xscale);
 
     // off the right side?
-    if (x1 > viewwidth)
+    if (x1 > SCREENWIDTH)
 	return;
     
-    tx +=  spritewidth[lump];
-    x2 = ((centerxfrac + FixedMul (tx,xscale) ) >>FRACBITS) - 1;
+    tx +=  sspritewidth[lump];
+    int x2 = int(ccenterxfrac + (tx * xscale)) - 1;
 
     // off the left side
     if (x2 < 0)
@@ -549,29 +537,30 @@ void R_ProjectSprite (mobj_t* thing)
     // store information in a vissprite
     vis = R_NewVisSprite ();
     vis->mobjflags = thing->flags;
-    vis->scale = xscale<<detailshift;
-    vis->gx = thing->x;
-    vis->gy = thing->y;
-    vis->gz = thing->z;
-    vis->gzt = thing->z + spritetopoffset[lump];
-    vis->texturemid = vis->gzt - viewz;
+    vis->sscale = xscale;
+    vis->ggx = thing->xx;
+    vis->ggy = thing->yy;
+    vis->ggz = thing->zz;
+    vis->ggzt = thing->zz + sspritetopoffset[lump];
+    vis->ttexturemid = vis->ggzt - vviewz;
     vis->x1 = x1 < 0 ? 0 : x1;
-    vis->x2 = x2 >= viewwidth ? viewwidth-1 : x2;	
-    iscale = FixedDiv (FRACUNIT, xscale);
+    vis->x2 = x2 >= SCREENWIDTH ? SCREENWIDTH-1 : x2;	
+    double iscale = 1 / xscale;
 
     if (flip)
     {
-	vis->startfrac = spritewidth[lump]-1;
-	vis->xiscale = -iscale;
+	//vis->sstartfrac = fixed_to_double(double_to_fixed(sspritewidth[lump])-1);
+	vis->sstartfrac = sspritewidth[lump] - 1;
+	vis->xxiscale = -iscale;
     }
     else
     {
-	vis->startfrac = 0;
-	vis->xiscale = iscale;
+	vis->sstartfrac = 0;
+	vis->xxiscale = iscale;
     }
 
     if (vis->x1 > x1)
-	vis->startfrac += vis->xiscale*(vis->x1-x1);
+	vis->sstartfrac += vis->xxiscale * (vis->x1-x1);
     vis->patch = lump;
     
     // get light level
@@ -590,11 +579,10 @@ void R_ProjectSprite (mobj_t* thing)
 	// full bright
 	vis->colormap = colormaps;
     }
-    
     else
     {
 	// diminished light
-	index = xscale>>(LIGHTSCALESHIFT-detailshift);
+	index = double_to_fixed(xscale)>>(LIGHTSCALESHIFT);
 
 	if (index >= MAXLIGHTSCALE) 
 	    index = MAXLIGHTSCALE-1;
@@ -612,7 +600,7 @@ void R_ProjectSprite (mobj_t* thing)
 //
 void R_AddSprites (sector_t* sec)
 {
-    mobj_t*		thing;
+    Mob*		thing;
     int			lightnum;
 
     // BSP is traversed by subsector.
@@ -640,18 +628,20 @@ void R_AddSprites (sector_t* sec)
 }
 
 
+
+// @todo a lot magic numbers when it comes to drawing weapons
+#define WEAPONSCALE 1.5
 //
 // R_DrawPSprite
 //
 void R_DrawPSprite (pspdef_t* psp)
 {
-    fixed_t		tx;
     int			x1;
     int			x2;
     spritedef_t*	sprdef;
     spriteframe_t*	sprframe;
     int			lump;
-    boolean		flip;
+    bool		flip;
     vissprite_t*	vis;
     vissprite_t		avis;
     
@@ -670,47 +660,22 @@ void R_DrawPSprite (pspdef_t* psp)
     sprframe = &sprdef->spriteframes[ psp->state->frame & FF_FRAMEMASK ];
 
     lump = sprframe->lump[0];
-    flip = (boolean)sprframe->flip[0];
-    
-    // calculate edges of the shape
-    tx = psp->sx-160*FRACUNIT;
-	
-    tx -= spriteoffset[lump];	
-    x1 = (centerxfrac + FixedMul (tx,pspritescale) ) >>FRACBITS;
-
-    // off the right side
-    if (x1 > viewwidth)
-	return;		
-
-    tx +=  spritewidth[lump];
-    x2 = ((centerxfrac + FixedMul (tx, pspritescale) ) >>FRACBITS) - 1;
-
-    // off the left side
-    if (x2 < 0)
-	return;
-    
+        
     // store information in a vissprite
     vis = &avis;
     vis->mobjflags = 0;
-    vis->texturemid = (BASEYCENTER<<FRACBITS)+FRACUNIT/2-(psp->sy-spritetopoffset[lump]);
-    vis->x1 = x1 < 0 ? 0 : x1;
-    vis->x2 = x2 >= viewwidth ? viewwidth-1 : x2;	
-    vis->scale = pspritescale<<detailshift;
-    
-    if (flip)
-    {
-	vis->xiscale = -pspriteiscale;
-	vis->startfrac = spritewidth[lump]-1;
-    }
-    else
-    {
-	vis->xiscale = pspriteiscale;
-	vis->startfrac = 0;
-    }
-    
-    if (vis->x1 > x1)
-	vis->startfrac += vis->xiscale*(vis->x1-x1);
+    int weaponoffset = psp->ssy - 1.3 * sspritetopoffset[lump];
+    vis->ttexturemid = BASEYCENTER - weaponoffset;
 
+    double tx = psp->ssx - WEAPONSCALE * 160;
+    tx -= WEAPONSCALE * sspriteoffset[lump];
+    vis->x1 = centerx + tx;
+    tx += WEAPONSCALE * sspritewidth[lump];
+    vis->x2 = int(centerx + tx) - 1;
+    
+    vis->sscale = WEAPONSCALE;
+    vis->xxiscale = 1/vis->sscale;
+    vis->sstartfrac = 0;
     vis->patch = lump;
 
     if (viewplayer->powers[pw_invisibility] > 4*32
@@ -791,7 +756,6 @@ void R_SortVisSprites (void)
     vissprite_t*	ds;
     vissprite_t*	best;
     vissprite_t		unsorted;
-    fixed_t		bestscale;
 
     count = vissprite_p - vissprites;
 	
@@ -814,14 +778,15 @@ void R_SortVisSprites (void)
     // pull the vissprites out by scale
     //best = 0;		// shut up the compiler warning
     vsprsortedhead.next = vsprsortedhead.prev = &vsprsortedhead;
+    double bestscale;
     for (i=0 ; i<count ; i++)
     {
-	bestscale = MAXINT;
+	bestscale = DBL_MAX;
 	for (ds=unsorted.next ; ds!= &unsorted ; ds=ds->next)
 	{
-	    if (ds->scale < bestscale)
+	    if (ds->sscale < bestscale)
 	    {
-		bestscale = ds->scale;
+		bestscale = ds->sscale;
 		best = ds;
 	    }
 	}
@@ -883,9 +848,9 @@ void R_DrawSprite (vissprite_t* spr)
 	    scale = ds->scale2;
 	}
 		
-	if (scale < spr->scale
-	    || ( lowscale < spr->scale
-		 && !R_PointOnSegSide (spr->gx, spr->gy, ds->curline) ) )
+	if (scale < double_to_fixed(spr->sscale)
+	    || ( lowscale < double_to_fixed(spr->sscale)
+		 && !RR_PointOnSegSide(spr->ggx, spr->ggy, ds->curline) ) )
 	{
 	    // masked mid texture?
 	    if (ds->maskedtexturecol)	
@@ -898,10 +863,10 @@ void R_DrawSprite (vissprite_t* spr)
 	// clip this piece of the sprite
 	silhouette = ds->silhouette;
 	
-	if (spr->gz >= ds->bsilheight)
+	if (double_to_fixed(spr->ggz) >= ds->bsilheight)
 	    silhouette &= ~SIL_BOTTOM;
 
-	if (spr->gzt <= ds->tsilheight)
+	if (double_to_fixed(spr->ggzt) <= ds->tsilheight)
 	    silhouette &= ~SIL_TOP;
 			
 	if (silhouette == 1)
@@ -938,7 +903,7 @@ void R_DrawSprite (vissprite_t* spr)
     for (x = spr->x1 ; x<=spr->x2 ; x++)
     {
 	if (clipbot[x] == -2)		
-	    clipbot[x] = viewheight;
+	    clipbot[x] = SCREENHEIGHT;
 
 	if (cliptop[x] == -2)
 	    cliptop[x] = -1;
@@ -980,9 +945,7 @@ void R_DrawMasked (void)
 	    R_RenderMaskedSegRange (ds, ds->x1, ds->x2);
     
     // draw the psprites on top of everything
-    //  but does not draw on side views
-    if (!viewangleoffset)		
-	R_DrawPlayerSprites ();
+    R_DrawPlayerSprites ();
 }
 
 

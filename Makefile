@@ -4,11 +4,11 @@
 #
 # $Log:$
 #
-CC=  gcc  # gcc or g++
+CC=  g++  # gcc or g++
 
-CFLAGS=-g -Wall -DNORMALUNIX -DLINUX # -DUSEASM 
+CFLAGS=-g -Wall -DNORMALUNIX -DLINUX -fpermissive -std=gnu++14
 LDFLAGS=-L/usr/X11R6/lib
-LIBS=-lXext -lX11 -lnsl -lm
+LIBS=-lXext -lX11  -lm #-lnsl
 
 # subdirectory for objects
 O=linux
@@ -52,7 +52,6 @@ OBJS=				\
 		$(O)/p_sight.o		\
 		$(O)/p_spec.o			\
 		$(O)/p_switch.o		\
-		$(O)/p_mobj.o			\
 		$(O)/p_telept.o		\
 		$(O)/p_tick.o			\
 		$(O)/p_saveg.o		\
@@ -72,23 +71,51 @@ OBJS=				\
 		$(O)/st_stuff.o		\
 		$(O)/hu_stuff.o		\
 		$(O)/hu_lib.o			\
-		$(O)/s_sound.o		\
-		$(O)/z_zone.o			\
-		$(O)/info.o				\
-		$(O)/sounds.o
+		$(O)/s_sound.o\
+		$(O)/z_zone.o\
+		$(O)/info.o\
+		$(O)/sounds.o	\
+		$(O)/BlockMap.o \
+		$(O)/BspNode.o \
+		$(O)/DivLine.o \
+		$(O)/Mob.o \
+		$(O)/Angle.o \
+		$(O)/ImageScaler.o \
 
 all:	 $(O)/linuxxdoom
 
 clean:
 	rm -f *.o *~ *.flc
 	rm -f linux/*
+	rm -f TAGS
 
-$(O)/linuxxdoom:	$(OBJS) $(O)/i_main.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) $(O)/i_main.o \
+$(O)/linuxxdoom:	$(CCOBJS) $(OBJS) $(O)/i_main.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $(CCOBJS) $(OBJS) $(O)/i_main.o \
 	-o $(O)/linuxxdoom $(LIBS)
+
+$(O)/BlockMap.o: BlockMap.cc BlockMap.hh
+	$(CC) $(CFLAGS) $(LDFLAGS) -c BlockMap.cc -o $(O)/BlockMap.o
+
+$(O)/BspNode.o: BspNode.cc BspNode.hh
+	$(CC) $(CFLAGS) $(LDFLAGS) -c BspNode.cc -o $(O)/BspNode.o
+
+$(O)/DivLine.o: DivLine.cc DivLine.hh
+	$(CC) $(CFLAGS) $(LDFLAGS) -c DivLine.cc -o $(O)/DivLine.o
+
+$(O)/Mob.o: Mob.cc Mob.hh
+	$(CC) $(CFLAGS) $(LDFLAGS) -c Mob.cc -o $(O)/Mob.o
+
+$(O)/Angle.o: Angle.cc Angle.hh
+	$(CC) $(CFLAGS) $(LDFLAGS) -c Angle.cc -o $(O)/Angle.o
+
+$(O)/ImageScaler.o: ImageScaler.cc ImageScaler.hh
+	$(CC) $(CFLAGS) $(LDFLAGS) -c ImageScaler.cc -o $(O)/ImageScaler.o
 
 $(O)/%.o:	%.c
 	$(CC) $(CFLAGS) -c $< -o $@
+
+tags :
+	find . -name "*.[chCH]" -print | etags -	
 
 #############################################################
 #

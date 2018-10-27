@@ -27,10 +27,6 @@
 
 static const char rcsid[] = "$Id: d_main.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 
-#define	BGCOLOR		7
-#define	FGCOLOR		8
-
-
 #ifdef NORMALUNIX
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,6 +35,8 @@ static const char rcsid[] = "$Id: d_main.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 #include <sys/stat.h>
 #include <fcntl.h>
 #endif
+
+#include <memory>
 
 
 #include "doomdef.h"
@@ -74,6 +72,7 @@ static const char rcsid[] = "$Id: d_main.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 #include "p_setup.h"
 #include "r_local.h"
 
+#include "ImageScaler.hh"
 
 #include "d_main.h"
 
@@ -92,14 +91,14 @@ void D_DoomLoop (void);
 char*		wadfiles[MAXWADFILES];
 
 
-boolean		devparm;	// started game with -devparm
-boolean         nomonsters;	// checkparm of -nomonsters
-boolean         respawnparm;	// checkparm of -respawn
-boolean         fastparm;	// checkparm of -fast
+bool		devparm;	// started game with -devparm
+bool         nomonsters;	// checkparm of -nomonsters
+bool         respawnparm;	// checkparm of -respawn
+bool         fastparm;	// checkparm of -fast
 
-boolean         drone;
+bool         drone;
 
-boolean		singletics = false; // debug flag to cancel adaptiveness
+bool		singletics = false; // debug flag to cancel adaptiveness
 
 
 
@@ -107,16 +106,16 @@ boolean		singletics = false; // debug flag to cancel adaptiveness
 //extern  int	sfxVolume;
 //extern  int	musicVolume;
 
-extern  boolean	inhelpscreens;
+extern  bool inhelpscreens;
 
 skill_t		startskill;
 int             startepisode;
 int		startmap;
-boolean		autostart;
+bool		autostart;
 
 FILE*		debugfile;
 
-boolean		advancedemo;
+bool		advancedemo;
 
 
 
@@ -186,39 +185,26 @@ void D_ProcessEvents (void)
 
 // wipegamestate can be set to -1 to force a wipe on the next draw
 gamestate_t     wipegamestate = GS_DEMOSCREEN;
-extern  boolean setsizeneeded;
 extern  int             showMessages;
 void R_ExecuteSetViewSize (void);
 
 void D_Display (void)
 {
-    static  boolean		viewactivestate = false;
-    static  boolean		menuactivestate = false;
-    static  boolean		inhelpscreensstate = false;
-    static  boolean		fullscreen = false;
-    static  gamestate_t		oldgamestate = -1;
-    static  int			borderdrawcount;
+    static  bool		viewactivestate = false;
+    static  bool		menuactivestate = false;
+    static  bool		inhelpscreensstate = false;
+    static  gamestate_t		oldgamestate = GS_WIPE;
     int				nowtime;
     int				tics;
     int				wipestart;
     int				y;
-    boolean			done;
-    boolean			wipe;
-    boolean			redrawsbar;
+    bool			done;
+    bool			wipe;
 
     if (nodrawers)
 	return;                    // for comparative timing / profiling
 		
-    redrawsbar = false;
     
-    // change the view size if needed
-    if (setsizeneeded)
-    {
-	R_ExecuteSetViewSize ();
-	oldgamestate = -1;                      // force background redraw
-	borderdrawcount = 3;
-    }
-
     // save the current screen if about to wipe
     if (gamestate != wipegamestate)
     {
@@ -234,34 +220,32 @@ void D_Display (void)
     // do buffered drawing
     switch (gamestate)
     {
-      case GS_LEVEL:
+    case GS_LEVEL:
 	if (!gametic)
 	    break;
 	if (automapactive)
 	    AM_Drawer ();
-	if (wipe || (viewheight != 200 && fullscreen) )
-	    redrawsbar = true;
-	if (inhelpscreensstate && !inhelpscreens)
-	    redrawsbar = true;              // just put away the help screen
-	ST_Drawer (viewheight == 200, redrawsbar );
-	fullscreen = viewheight == 200;
 	break;
-
-      case GS_INTERMISSION:
-	WI_Drawer ();
+    //     if (wipe || (viewheight != SCREENHEIGHT && fullscreen) )
+    //         redrawsbar = true;
+    //     if (inhelpscreensstate && !inhelpscreens)
+    //         redrawsbar = true;              // just put away the help screen
+    //     ST_Drawer (false/*viewheight == SCREENHEIGHT*/, redrawsbar);
+    //     fullscreen = viewheight == SCREENHEIGHT;
+    //     break;
+        
+    case GS_INTERMISSION:
+        WI_Drawer ();
+        break;
+        
+    case GS_FINALE:
+        F_Drawer ();
 	break;
-
-      case GS_FINALE:
-	F_Drawer ();
-	break;
-
-      case GS_DEMOSCREEN:
+    
+    case GS_DEMOSCREEN:
 	D_PageDrawer ();
 	break;
     }
-    
-    // draw buffered stuff to screen
-    I_UpdateNoBlit ();
     
     // draw the view directly
     if (gamestate == GS_LEVEL && !automapactive && gametic)
@@ -272,28 +256,15 @@ void D_Display (void)
     
     // clean up border stuff
     if (gamestate != oldgamestate && gamestate != GS_LEVEL)
-	I_SetPalette (W_CacheLumpName ("PLAYPAL",PU_CACHE));
+        I_SetPalette ((byte*)W_CacheLumpName ("PLAYPAL",PU_CACHE));
 
-    // see if the border needs to be initially drawn
-    if (gamestate == GS_LEVEL && oldgamestate != GS_LEVEL)
-    {
-	viewactivestate = false;        // view was not active
-	R_FillBackScreen ();    // draw the pattern into the back screen
+    if (gamestate == GS_LEVEL) {
+        if (gametic) {
+            ST_Drawer();
+        }
     }
 
-    // see if the border needs to be updated to the screen
-    if (gamestate == GS_LEVEL && !automapactive && scaledviewwidth != 320)
-    {
-	if (menuactive || menuactivestate || !viewactivestate)
-	    borderdrawcount = 3;
-	if (borderdrawcount)
-	{
-	    R_DrawViewBorder ();    // erase old menu stuff
-	    borderdrawcount--;
-	}
-
-    }
-
+    
     menuactivestate = menuactive;
     viewactivestate = viewactive;
     inhelpscreensstate = inhelpscreens;
@@ -302,12 +273,13 @@ void D_Display (void)
     // draw pause pic
     if (paused)
     {
-	if (automapactive)
-	    y = 4;
-	else
-	    y = viewwindowy+4;
-	V_DrawPatchDirect(viewwindowx+(scaledviewwidth-68)/2,
-			  y,0,W_CacheLumpName ("M_PAUSE", PU_CACHE));
+        printf("Draw pause\n");
+	// if (automapactive)
+	//     y = 4;
+	// else
+        y = 4;
+	V_DrawPatchDirect((SCREENWIDTH-68)/2,
+                          y,0,(patch_t*)W_CacheLumpName ("M_PAUSE", PU_CACHE));
     }
 
 
@@ -336,9 +308,7 @@ void D_Display (void)
 	    tics = nowtime - wipestart;
 	} while (!tics);
 	wipestart = nowtime;
-	done = wipe_ScreenWipe(wipe_Melt
-			       , 0, 0, SCREENWIDTH, SCREENHEIGHT, tics);
-	I_UpdateNoBlit ();
+	done = wipe_ScreenWipe(wipe_Melt, 0, 0, SCREENWIDTH, SCREENHEIGHT, tics);
 	M_Drawer ();                            // menu is drawn even on top of wipes
 	I_FinishUpdate ();                      // page flip or blit buffer
     } while (!done);
@@ -349,7 +319,7 @@ void D_Display (void)
 //
 //  D_DoomLoop
 //
-extern  boolean         demorecording;
+extern  bool         demorecording;
 
 void D_DoomLoop (void)
 {
@@ -365,7 +335,8 @@ void D_DoomLoop (void)
     }
 	
     I_InitGraphics ();
-
+    R_ExecuteSetViewSize ();
+    
     while (1)
     {
 	// frame syncronous IO operations
@@ -413,7 +384,7 @@ void D_DoomLoop (void)
 //
 int             demosequence;
 int             pagetic;
-char                    *pagename;
+const char *pagename;
 
 
 //
@@ -427,13 +398,26 @@ void D_PageTicker (void)
 }
 
 
+namespace
+{
+std::unique_ptr<ImageScaler> pageScaler(
+    new ImageScaler(BASE_WIDTH, BASE_HEIGHT));
+}
 
 //
 // D_PageDrawer
 //
 void D_PageDrawer (void)
 {
-    V_DrawPatch (0,0, 0, W_CacheLumpName(pagename, PU_CACHE));
+    patch_t* patch = W_CacheLumpName(pagename, PU_CACHE);
+    //V_DrawPatch (0,0, 0, patch);
+    pageScaler->drawPatch(0, 0, patch);
+    // The aspect ratio is different in the orignal
+    // and the scaled up screen.
+    int scale = 3.5;
+    int x = (SCREENWIDTH - BASE_WIDTH * scale) / 2;
+    int y = (SCREENHEIGHT - BASE_HEIGHT * scale) / 2;
+    pageScaler->display(x, y, scale);
 }
 
 
@@ -540,7 +524,7 @@ char            title[128];
 //
 // D_AddFile
 //
-void D_AddFile (char *file)
+void D_AddFile (const char *file)
 {
     int     numwadfiles;
     char    *newfile;
@@ -548,7 +532,7 @@ void D_AddFile (char *file)
     for (numwadfiles = 0 ; wadfiles[numwadfiles] ; numwadfiles++)
 	;
 
-    newfile = malloc (strlen(file)+1);
+    newfile = (char*)malloc (strlen(file)+1);
     strcpy (newfile, file);
 	
     wadfiles[numwadfiles] = newfile;
@@ -573,39 +557,39 @@ void IdentifyVersion (void)
     char*	tntwad;
 
 #ifdef NORMALUNIX
-    char *home;
-    char *doomwaddir;
+    const char *home;
+    const char *doomwaddir;
     doomwaddir = getenv("DOOMWADDIR");
     if (!doomwaddir)
 	doomwaddir = ".";
 
     // Commercial.
-    doom2wad = malloc(strlen(doomwaddir)+1+9+1);
+    doom2wad = (char*)malloc(strlen(doomwaddir)+1+9+1);
     sprintf(doom2wad, "%s/doom2.wad", doomwaddir);
 
     // Retail.
-    doomuwad = malloc(strlen(doomwaddir)+1+8+1);
+    doomuwad = (char*)malloc(strlen(doomwaddir)+1+9+1);
     sprintf(doomuwad, "%s/doomu.wad", doomwaddir);
     
     // Registered.
-    doomwad = malloc(strlen(doomwaddir)+1+8+1);
+    doomwad = (char*)malloc(strlen(doomwaddir)+1+8+1);
     sprintf(doomwad, "%s/doom.wad", doomwaddir);
     
     // Shareware.
-    doom1wad = malloc(strlen(doomwaddir)+1+9+1);
+    doom1wad = (char*)malloc(strlen(doomwaddir)+1+9+1);
     sprintf(doom1wad, "%s/doom1.wad", doomwaddir);
 
      // Bug, dear Shawn.
     // Insufficient malloc, caused spurious realloc errors.
-    plutoniawad = malloc(strlen(doomwaddir)+1+/*9*/12+1);
+    plutoniawad = (char*)malloc(strlen(doomwaddir)+1+/*9*/12+1);
     sprintf(plutoniawad, "%s/plutonia.wad", doomwaddir);
 
-    tntwad = malloc(strlen(doomwaddir)+1+9+1);
+    tntwad = (char*)malloc(strlen(doomwaddir)+1+9+1);
     sprintf(tntwad, "%s/tnt.wad", doomwaddir);
 
 
     // French stuff.
-    doom2fwad = malloc(strlen(doomwaddir)+1+10+1);
+    doom2fwad = (char*)malloc(strlen(doomwaddir)+1+10+1);
     sprintf(doom2fwad, "%s/doom2f.wad", doomwaddir);
 
     home = getenv("HOME");
@@ -748,7 +732,7 @@ void FindResponseFile (void)
 	    fseek (handle,0,SEEK_END);
 	    size = ftell(handle);
 	    fseek (handle,0,SEEK_SET);
-	    file = malloc (size);
+	    file = (char*)malloc (size);
 	    fread (file,size,1,handle);
 	    fclose (handle);
 			
@@ -757,7 +741,7 @@ void FindResponseFile (void)
 		moreargs[index++] = myargv[k];
 			
 	    firstargv = myargv[0];
-	    myargv = malloc(sizeof(char *)*MAXARGVS);
+	    myargv = (char**)malloc(sizeof(char *)*MAXARGVS);
 	    memset(myargv,0,sizeof(char *)*MAXARGVS);
 	    myargv[0] = firstargv;
 			
@@ -789,6 +773,12 @@ void FindResponseFile (void)
 	}
 }
 
+void
+testStuff()
+{
+    printf("##### testing start\n");
+    printf("##### testing end\n");
+}
 
 //
 // D_DoomMain
@@ -798,6 +788,8 @@ void D_DoomMain (void)
     int             p;
     char                    file[256];
 
+    testStuff();
+    
     FindResponseFile ();
 	
     IdentifyVersion ();
@@ -917,7 +909,7 @@ void D_DoomMain (void)
 	  case shareware:
 	  case retail:
 	  case registered:
-	    sprintf (file,"~"DEVMAPS"E%cM%c.wad",
+	    sprintf (file,"~" DEVMAPS "E%cM%c.wad",
 		     myargv[p+1][0], myargv[p+2][0]);
 	    printf("Warping to Episode %s, Map %s.\n",
 		   myargv[p+1],myargv[p+2]);
@@ -927,9 +919,9 @@ void D_DoomMain (void)
 	  default:
 	    p = atoi (myargv[p+1]);
 	    if (p<10)
-	      sprintf (file,"~"DEVMAPS"cdata/map0%i.wad", p);
+	      sprintf (file,"~" DEVMAPS "cdata/map0%i.wad", p);
 	    else
-	      sprintf (file,"~"DEVMAPS"cdata/map%i.wad", p);
+	      sprintf (file,"~" DEVMAPS "cdata/map%i.wad", p);
 	    break;
 	}
 	D_AddFile (file);
@@ -967,7 +959,7 @@ void D_DoomMain (void)
     p = M_CheckParm ("-skill");
     if (p && p < myargc-1)
     {
-	startskill = myargv[p+1][0]-'1';
+        startskill = (skill_t)(myargv[p+1][0]-'1');
 	autostart = true;
     }
 
@@ -1026,7 +1018,7 @@ void D_DoomMain (void)
     {
 	// These are the lumps that will be checked in IWAD,
 	// if any one is not present, execution will be aborted.
-	char name[23][8]=
+	const char* name[23]=
 	{
 	    "e2m1","e2m2","e2m3","e2m4","e2m5","e2m6","e2m7","e2m8","e2m9",
 	    "e3m1","e3m3","e3m3","e3m4","e3m5","e3m6","e3m7","e3m8","e3m9",
@@ -1151,9 +1143,9 @@ void D_DoomMain (void)
     if (p && p < myargc-1)
     {
 	if (M_CheckParm("-cdrom"))
-	    sprintf(file, "c:\\doomdata\\"SAVEGAMENAME"%c.dsg",myargv[p+1][0]);
+	    sprintf(file, "c:\\doomdata\\" SAVEGAMENAME "%c.dsg",myargv[p+1][0]);
 	else
-	    sprintf(file, SAVEGAMENAME"%c.dsg",myargv[p+1][0]);
+	    sprintf(file, SAVEGAMENAME "%c.dsg",myargv[p+1][0]);
 	G_LoadGame (file);
     }
 	

@@ -59,7 +59,7 @@ rcsid[] = "$Id: p_spec.c,v 1.6 1997/02/03 22:45:12 b1 Exp $";
 //
 typedef struct
 {
-    boolean	istexture;
+    bool	istexture;
     int		picnum;
     int		basepic;
     int		numpics;
@@ -72,7 +72,7 @@ typedef struct
 //
 typedef struct
 {
-    boolean	istexture;	// if false, it is a flat
+    bool	istexture;	// if false, it is a flat
     char	endname[9];
     char	startname[9];
     int		speed;
@@ -127,8 +127,6 @@ animdef_t		animdefs[] =
     {true,	"SFALL4",	"SFALL1",	8},
     {true,	"WFALL4",	"WFALL1",	8},
     {true,	"DBRAIN4",	"DBRAIN1",	8},
-	
-    {-1}
 };
 
 anim_t		anims[MAXANIMS];
@@ -148,40 +146,40 @@ extern  line_t*	linespeciallist[MAXLINEANIMS];
 void P_InitPicAnims (void)
 {
     int		i;
-
+    int     n_animdefs = sizeof(animdefs)/sizeof(animdefs[0]);
     
     //	Init animation
     lastanim = anims;
-    for (i=0 ; animdefs[i].istexture != -1 ; i++)
+    for (i = 0 ; i < n_animdefs; i++)
     {
-	if (animdefs[i].istexture)
-	{
-	    // different episode ?
-	    if (R_CheckTextureNumForName(animdefs[i].startname) == -1)
-		continue;	
-
-	    lastanim->picnum = R_TextureNumForName (animdefs[i].endname);
-	    lastanim->basepic = R_TextureNumForName (animdefs[i].startname);
-	}
-	else
-	{
-	    if (W_CheckNumForName(animdefs[i].startname) == -1)
-		continue;
-
-	    lastanim->picnum = R_FlatNumForName (animdefs[i].endname);
-	    lastanim->basepic = R_FlatNumForName (animdefs[i].startname);
-	}
-
-	lastanim->istexture = animdefs[i].istexture;
-	lastanim->numpics = lastanim->picnum - lastanim->basepic + 1;
-
-	if (lastanim->numpics < 2)
-	    I_Error ("P_InitPicAnims: bad cycle from %s to %s",
-		     animdefs[i].startname,
-		     animdefs[i].endname);
-	
-	lastanim->speed = animdefs[i].speed;
-	lastanim++;
+        if (animdefs[i].istexture)
+        {
+            // different episode ?
+            if (R_CheckTextureNumForName(animdefs[i].startname) == -1)
+                continue;	
+            
+            lastanim->picnum = R_TextureNumForName (animdefs[i].endname);
+            lastanim->basepic = R_TextureNumForName (animdefs[i].startname);
+        }
+        else
+        {
+            if (W_CheckNumForName(animdefs[i].startname) == -1)
+                continue;
+            
+            lastanim->picnum = R_FlatNumForName (animdefs[i].endname);
+            lastanim->basepic = R_FlatNumForName (animdefs[i].startname);
+        }
+        
+        lastanim->istexture = animdefs[i].istexture;
+        lastanim->numpics = lastanim->picnum - lastanim->basepic + 1;
+        
+        if (lastanim->numpics < 2)
+            I_Error ("P_InitPicAnims: bad cycle from %s to %s",
+                     animdefs[i].startname,
+                     animdefs[i].endname);
+        
+        lastanim->speed = animdefs[i].speed;
+        lastanim++;
     }
 	
 }
@@ -267,23 +265,25 @@ getNextSector
 // P_FindLowestFloorSurrounding()
 // FIND LOWEST FLOOR HEIGHT IN SURROUNDING SECTORS
 //
-fixed_t	P_FindLowestFloorSurrounding(sector_t* sec)
+// @todo the find routines below needs to be cleanup
+double 
+PP_FindLowestFloorSurrounding(sector_t* sec)
 {
     int			i;
     line_t*		check;
     sector_t*		other;
-    fixed_t		floor = sec->floorheight;
+    double		floor = sec->ffloorheight;
 	
     for (i=0 ;i < sec->linecount ; i++)
     {
-	check = sec->lines[i];
-	other = getNextSector(check,sec);
-
-	if (!other)
-	    continue;
-	
-	if (other->floorheight < floor)
-	    floor = other->floorheight;
+        check = sec->lines[i];
+        other = getNextSector(check,sec);
+        
+        if (!other)
+            continue;
+        
+        if (other->ffloorheight < floor)
+            floor = other->ffloorheight;
     }
     return floor;
 }
@@ -294,23 +294,24 @@ fixed_t	P_FindLowestFloorSurrounding(sector_t* sec)
 // P_FindHighestFloorSurrounding()
 // FIND HIGHEST FLOOR HEIGHT IN SURROUNDING SECTORS
 //
-fixed_t	P_FindHighestFloorSurrounding(sector_t *sec)
+double	
+PP_FindHighestFloorSurrounding(sector_t *sec)
 {
     int			i;
     line_t*		check;
-    sector_t*		other;
-    fixed_t		floor = -500*FRACUNIT;
+    sector_t*  other;
+    double floor = -500;
 	
     for (i=0 ;i < sec->linecount ; i++)
     {
-	check = sec->lines[i];
-	other = getNextSector(check,sec);
-	
-	if (!other)
-	    continue;
-	
-	if (other->floorheight > floor)
-	    floor = other->floorheight;
+        check = sec->lines[i];
+        other = getNextSector(check,sec);
+        
+        if (!other)
+            continue;
+        
+        if (other->ffloorheight > floor)
+            floor = other->ffloorheight;
     }
     return floor;
 }
@@ -325,44 +326,42 @@ fixed_t	P_FindHighestFloorSurrounding(sector_t *sec)
 // 20 adjoining sectors max!
 #define MAX_ADJOINING_SECTORS    	20
 
-fixed_t
-P_FindNextHighestFloor
-( sector_t*	sec,
-  int		currentheight )
+double
+PP_FindNextHighestFloor(sector_t* sec, double currentheight)
 {
     int			i;
     int			h;
     int			min;
     line_t*		check;
     sector_t*		other;
-    fixed_t		height = currentheight;
+    double height = currentheight;
 
     
-    fixed_t		heightlist[MAX_ADJOINING_SECTORS];		
+    double heightlist[MAX_ADJOINING_SECTORS];		
 
     for (i=0, h=0 ;i < sec->linecount ; i++)
     {
-	check = sec->lines[i];
-	other = getNextSector(check,sec);
-
-	if (!other)
-	    continue;
-	
-	if (other->floorheight > height)
-	    heightlist[h++] = other->floorheight;
-
-	// Check for overflow. Exit.
-	if ( h >= MAX_ADJOINING_SECTORS )
-	{
-	    fprintf( stderr,
-		     "Sector with more than 20 adjoining sectors\n" );
-	    break;
-	}
+        check = sec->lines[i];
+        other = getNextSector(check,sec);
+        
+        if (!other)
+            continue;
+        
+        if (other->ffloorheight > height)
+            heightlist[h++] = other->ffloorheight;
+        
+        // Check for overflow. Exit.
+        if ( h >= MAX_ADJOINING_SECTORS )
+        {
+            fprintf( stderr,
+                     "Sector with more than 20 adjoining sectors\n" );
+            break;
+        }
     }
     
     // Find lowest height in list
     if (!h)
-	return currentheight;
+        return currentheight;
 		
     min = heightlist[0];
     
@@ -370,7 +369,7 @@ P_FindNextHighestFloor
     for (i = 1;i < h;i++)
 	if (heightlist[i] < min)
 	    min = heightlist[i];
-			
+    
     return min;
 }
 
@@ -378,24 +377,24 @@ P_FindNextHighestFloor
 //
 // FIND LOWEST CEILING IN THE SURROUNDING SECTORS
 //
-fixed_t
-P_FindLowestCeilingSurrounding(sector_t* sec)
+double
+PP_FindLowestCeilingSurrounding(sector_t* sec)
 {
     int			i;
     line_t*		check;
     sector_t*		other;
-    fixed_t		height = MAXINT;
+    double		height = INT_MAX;
 	
     for (i=0 ;i < sec->linecount ; i++)
     {
-	check = sec->lines[i];
-	other = getNextSector(check,sec);
+        check = sec->lines[i];
+        other = getNextSector(check,sec);
+        
+        if (!other)
+            continue;
 
-	if (!other)
-	    continue;
-
-	if (other->ceilingheight < height)
-	    height = other->ceilingheight;
+        if (other->cceilingheight < height)
+            height = other->cceilingheight;
     }
     return height;
 }
@@ -404,23 +403,24 @@ P_FindLowestCeilingSurrounding(sector_t* sec)
 //
 // FIND HIGHEST CEILING IN THE SURROUNDING SECTORS
 //
-fixed_t	P_FindHighestCeilingSurrounding(sector_t* sec)
+double 
+PP_FindHighestCeilingSurrounding(sector_t* sec)
 {
     int		i;
     line_t*	check;
     sector_t*	other;
-    fixed_t	height = 0;
+    double height = 0;
 	
     for (i=0 ;i < sec->linecount ; i++)
     {
-	check = sec->lines[i];
-	other = getNextSector(check,sec);
-
-	if (!other)
-	    continue;
-
-	if (other->ceilingheight > height)
-	    height = other->ceilingheight;
+        check = sec->lines[i];
+        other = getNextSector(check,sec);
+        
+        if (!other)
+            continue;
+        
+        if (other->cceilingheight > height)
+            height = other->cceilingheight;
     }
     return height;
 }
@@ -492,7 +492,7 @@ void
 P_CrossSpecialLine
 ( int		linenum,
   int		side,
-  mobj_t*	thing )
+  Mob*	thing )
 {
     line_t*	line;
     int		ok;
@@ -957,7 +957,7 @@ P_CrossSpecialLine
 //
 void
 P_ShootSpecialLine
-( mobj_t*	thing,
+( Mob*	thing,
   line_t*	line )
 {
     int		ok;
@@ -1013,8 +1013,8 @@ void P_PlayerInSpecialSector (player_t* player)
     sector = player->mo->subsector->sector;
 
     // Falling, not all the way down yet?
-    if (player->mo->z != sector->floorheight)
-	return;	
+    if (player->mo->zz != sector->ffloorheight)
+        return;	
 
     // Has hitten ground.
     switch (sector->special)
@@ -1077,7 +1077,7 @@ void P_PlayerInSpecialSector (player_t* player)
 // P_UpdateSpecials
 // Animate planes, scroll walls, etc.
 //
-boolean		levelTimer;
+bool		levelTimer;
 int		levelTimeCount;
 
 void P_UpdateSpecials (void)
@@ -1118,7 +1118,7 @@ void P_UpdateSpecials (void)
 	{
 	  case 48:
 	    // EFFECT FIRSTCOL SCROLL +
-	    sides[line->sidenum[0]].textureoffset += FRACUNIT;
+	    sides[line->sidenum[0]].ttextureoffset += 1;
 	    break;
 	}
     }
@@ -1148,7 +1148,7 @@ void P_UpdateSpecials (void)
 			buttonlist[i].btexture;
 		    break;
 		}
-		S_StartSound((mobj_t *)&buttonlist[i].soundorg,sfx_swtchn);
+		S_StartSound((Mob *)&buttonlist[i].soundorg,sfx_swtchn);
 		memset(&buttonlist[i],0,sizeof(button_t));
 	    }
 	}
@@ -1190,7 +1190,7 @@ int EV_DoDonut(line_t*	line)
 	    s3 = s2->lines[i]->backsector;
 	    
 	    //	Spawn rising slime
-	    floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC, 0);
+	    floor = (floormove_t*)Z_Malloc (sizeof(*floor), PU_LEVSPEC, 0);
 	    P_AddThinker (&floor->thinker);
 	    s2->specialdata = floor;
 	    floor->thinker.function.acp1 = (actionf_p1) T_MoveFloor;
@@ -1198,13 +1198,13 @@ int EV_DoDonut(line_t*	line)
 	    floor->crush = false;
 	    floor->direction = 1;
 	    floor->sector = s2;
-	    floor->speed = FLOORSPEED / 2;
+	    floor->sspeed = FFLOORSPEED / 2;
 	    floor->texture = s3->floorpic;
 	    floor->newspecial = 0;
-	    floor->floordestheight = s3->floorheight;
+	    floor->ffloordestheight = s3->ffloorheight;
 	    
 	    //	Spawn lowering donut-hole
-	    floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC, 0);
+	    floor = (floormove_t*)Z_Malloc (sizeof(*floor), PU_LEVSPEC, 0);
 	    P_AddThinker (&floor->thinker);
 	    s1->specialdata = floor;
 	    floor->thinker.function.acp1 = (actionf_p1) T_MoveFloor;
@@ -1212,8 +1212,8 @@ int EV_DoDonut(line_t*	line)
 	    floor->crush = false;
 	    floor->direction = -1;
 	    floor->sector = s1;
-	    floor->speed = FLOORSPEED / 2;
-	    floor->floordestheight = s3->floorheight;
+	    floor->sspeed = FFLOORSPEED / 2;
+	    floor->ffloordestheight = s3->ffloorheight;
 	    break;
 	}
     }

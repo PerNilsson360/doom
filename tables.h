@@ -44,8 +44,10 @@
 #define PI				3.141592657
 #endif
 
+#include <stdint.h>
 
 #include "m_fixed.h"
+#include "doomdata.h"
 	
 #define FINEANGLES		8192
 #define FINEMASK		(FINEANGLES-1)
@@ -58,25 +60,26 @@
 extern  fixed_t		finesine[5*FINEANGLES/4];
 
 // Re-use data, is just PI/2 pahse shift.
-extern  fixed_t*	finecosine;
+//extern  fixed_t*	finecosine;
 
 
 // Effective size is 4096.
 extern fixed_t		finetangent[FINEANGLES/2];
 
 // Binary Angle Measument, BAM.
-#define ANG45			0x20000000
-#define ANG90			0x40000000
+#define ANG45           0x20000000
+#define ANG90		0x40000000
 #define ANG180		0x80000000
 #define ANG270		0xc0000000
-
 
 #define SLOPERANGE		2048
 #define SLOPEBITS		11
 #define DBITS			(FRACBITS-SLOPEBITS)
 
-typedef unsigned angle_t;
+typedef uint32_t angle_t;
 
+// @todo mapthing should be class
+double getMapThingAngle(mapthing_t* m);
 
 // Effective size is 2049;
 // The +1 size is to handle the case when x==y

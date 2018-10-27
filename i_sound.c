@@ -27,6 +27,7 @@ rcsid[] = "$Id: i_unix.c,v 1.5 1997/02/03 22:45:10 b1 Exp $";
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <errno.h>
 
 #include <math.h>
 
@@ -42,7 +43,8 @@ rcsid[] = "$Id: i_unix.c,v 1.5 1997/02/03 22:45:10 b1 Exp $";
 #include <sys/ioctl.h>
 
 // Linux voxware output.
-#include <linux/soundcard.h>
+// @todo per
+//#include <linux/soundcard.h>
 
 // Timer stuff. Experimental.
 #include <time.h>
@@ -62,7 +64,7 @@ rcsid[] = "$Id: i_unix.c,v 1.5 1997/02/03 22:45:10 b1 Exp $";
 #ifdef SNDSERV
 // Separate sound server process.
 FILE*	sndserver=0;
-char*	sndserver_filename = "./sndserver ";
+const char*	sndserver_filename = "./sndserver ";
 #elif SNDINTR
 
 // Update all 30 millisecs, approx. 30fps synchronized.
@@ -163,7 +165,8 @@ myioctl
   int*	arg )
 {   
     int		rc;
-    extern int	errno;
+    //@todo need to delete these
+    //extern int	errno;
     
     rc = ioctl(fd, command, arg);  
     if (rc < 0)

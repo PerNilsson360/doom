@@ -29,9 +29,12 @@
 
 // Size of statusbar.
 // Now sensitive for scaling.
-#define ST_HEIGHT	32*SCREEN_MUL
-#define ST_WIDTH	SCREENWIDTH
-#define ST_Y		(SCREENHEIGHT - ST_HEIGHT)
+#define ST_HEIGHT	32
+#define ST_WIDTH        320
+
+// Location of status bar
+#define ST_Y		(SCREENHEIGHT - 2 * ST_HEIGHT)
+#define ST_X		(SCREENWIDTH / 2) - ST_WIDTH 
 
 
 //
@@ -39,13 +42,13 @@
 //
 
 // Called by main loop.
-boolean ST_Responder (event_t* ev);
+bool ST_Responder (event_t* ev);
 
 // Called by main loop.
 void ST_Ticker (void);
 
 // Called by main loop.
-void ST_Drawer (boolean fullscreen, boolean refresh);
+void ST_Drawer();
 
 // Called when the console player is spawned on each level.
 void ST_Start (void);
@@ -72,10 +75,6 @@ typedef enum
     GetChatState
     
 } st_chatstateenum_t;
-
-
-boolean ST_Responder(event_t* ev);
-
 
 
 #endif

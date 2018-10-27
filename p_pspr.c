@@ -41,11 +41,11 @@ rcsid[] = "$Id: p_pspr.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 
 #include "p_pspr.h"
 
-#define LOWERSPEED		FRACUNIT*6
-#define RAISESPEED		FRACUNIT*6
+#define LLOWERSPEED		4*6
+#define RRAISESPEED		4*6
 
-#define WEAPONBOTTOM	128*FRACUNIT
-#define WEAPONTOP		32*FRACUNIT
+#define WWEAPONBOTTOM	        12 * 128
+#define WWEAPONTOP	        12 * 32
 
 
 // plasma cells for a bfg attack
@@ -82,15 +82,15 @@ P_SetPsprite
 	if (state->misc1)
 	{
 	    // coordinate set
-	    psp->sx = state->misc1 << FRACBITS;
-	    psp->sy = state->misc2 << FRACBITS;
+	    psp->ssx = state->misc1;
+	    psp->ssy = state->misc2;
 	}
 	
 	// Call action routine.
 	// Modified handling.
-	if (state->action.acp2)
+	if (state->action)
 	{
-	    state->action.acp2(player, psp);
+	    ((actionf_p2)state->action)(player, psp);
 	    if (!psp->state)
 		break;
 	}
@@ -100,34 +100,6 @@ P_SetPsprite
     } while (!psp->tics);
     // an initial state of 0 could cycle through
 }
-
-
-
-//
-// P_CalcSwing
-//	
-fixed_t		swingx;
-fixed_t		swingy;
-
-void P_CalcSwing (player_t*	player)
-{
-    fixed_t	swing;
-    int		angle;
-	
-    // OPTIMIZE: tablify this.
-    // A LUT would allow for different modes,
-    //  and add flexibility.
-
-    swing = player->bob;
-
-    angle = (FINEANGLES/70*leveltime)&FINEMASK;
-    swingx = FixedMul ( swing, finesine[angle]);
-
-    angle = (FINEANGLES/70*leveltime+FINEANGLES/2)&FINEMASK;
-    swingy = -FixedMul ( swingx, finesine[angle]);
-}
-
-
 
 //
 // P_BringUpWeapon
@@ -148,7 +120,7 @@ void P_BringUpWeapon (player_t* player)
     newstate = weaponinfo[player->pendingweapon].upstate;
 
     player->pendingweapon = wp_nochange;
-    player->psprites[ps_weapon].sy = WEAPONBOTTOM;
+    player->psprites[ps_weapon].ssy = WWEAPONBOTTOM;
 
     P_SetPsprite (player, ps_weapon, newstate);
 }
@@ -158,7 +130,7 @@ void P_BringUpWeapon (player_t* player)
 // Returns true if there is enough ammo to shoot.
 // If not, selects the next weapon to use.
 //
-boolean P_CheckAmmo (player_t* player)
+bool P_CheckAmmo (player_t* player)
 {
     ammotype_t		ammo;
     int			count;
@@ -248,9 +220,9 @@ void P_FireWeapon (player_t* player)
     statenum_t	newstate;
 	
     if (!P_CheckAmmo (player))
-	return;
+        return;
 	
-    P_SetMobjState (player->mo, S_PLAY_ATK1);
+    player->mo->setState(S_PLAY_ATK1);
     newstate = weaponinfo[player->readyweapon].atkstate;
     P_SetPsprite (player, ps_weapon, newstate);
     P_NoiseAlert (player->mo, player->mo);
@@ -284,13 +256,12 @@ A_WeaponReady
   pspdef_t*	psp )
 {	
     statenum_t	newstate;
-    int		angle;
     
     // get out of attack state
     if (player->mo->state == &states[S_PLAY_ATK1]
 	|| player->mo->state == &states[S_PLAY_ATK2] )
     {
-	P_SetMobjState (player->mo, S_PLAY);
+        player->mo->setState(S_PLAY);
     }
     
     if (player->readyweapon == wp_chainsaw
@@ -326,11 +297,8 @@ A_WeaponReady
     else
 	player->attackdown = false;
     
-    // bob the weapon based on movement speed
-    angle = (128*leveltime)&FINEMASK;
-    psp->sx = FRACUNIT + FixedMul (player->bob, finecosine[angle]);
-    angle &= FINEANGLES/2-1;
-    psp->sy = WEAPONTOP + FixedMul (player->bob, finesine[angle]);
+    psp->ssx = 1 + (24 * cos(player->bbob));
+    psp->ssy = WWEAPONTOP + (8 * INV_ASPECT_RATIO * sin(2 * player->bbob));
 }
 
 
@@ -368,6 +336,7 @@ A_CheckReload
   pspdef_t*	psp )
 {
     P_CheckAmmo (player);
+    // @todo what is this
 #if 0
     if (player->ammo[am_shell]<2)
 	P_SetPsprite (player, ps_weapon, S_DSNR1);
@@ -386,16 +355,16 @@ A_Lower
 ( player_t*	player,
   pspdef_t*	psp )
 {	
-    psp->sy += LOWERSPEED;
+    psp->ssy += LLOWERSPEED;
 
     // Is already down.
-    if (psp->sy < WEAPONBOTTOM )
+    if (psp->ssy < WWEAPONBOTTOM )
 	return;
 
     // Player is dead.
     if (player->playerstate == PST_DEAD)
     {
-	psp->sy = WEAPONBOTTOM;
+	psp->ssy = WWEAPONBOTTOM;
 
 	// don't bring weapon back up
 	return;		
@@ -426,12 +395,12 @@ A_Raise
 {
     statenum_t	newstate;
 	
-    psp->sy -= RAISESPEED;
+    psp->ssy -= RRAISESPEED;
 
-    if (psp->sy > WEAPONTOP )
+    if (psp->ssy > WWEAPONTOP )
 	return;
     
-    psp->sy = WEAPONTOP;
+    psp->ssy = WWEAPONTOP;
     
     // The weapon has been raised all the way,
     //  so change to the ready state.
@@ -450,7 +419,7 @@ A_GunFlash
 ( player_t*	player,
   pspdef_t*	psp ) 
 {
-    P_SetMobjState (player->mo, S_PLAY_ATK2);
+    player->mo->setState(S_PLAY_ATK2);
     P_SetPsprite (player,ps_flash,weaponinfo[player->readyweapon].flashstate);
 }
 
@@ -469,28 +438,24 @@ A_Punch
 ( player_t*	player,
   pspdef_t*	psp ) 
 {
-    angle_t	angle;
-    int		damage;
-    int		slope;
-	
-    damage = (P_Random ()%10+1)<<1;
+    int	damage = (P_Random ()%10+1)<<1;
 
     if (player->powers[pw_strength])	
 	damage *= 10;
 
-    angle = player->mo->angle;
-    angle += (P_Random()-P_Random())<<18;
-    slope = P_AimLineAttack (player->mo, angle, MELEERANGE);
-    P_LineAttack (player->mo, angle, MELEERANGE, slope, damage);
+    Angle angle = player->mo->_angle;
+    angle += (double)(P_Random()-P_Random()) * 4; // 2^2 (<< 18)
+    double slope = PP_AimLineAttack(player->mo, angle, MMELEERANGE);
+    PP_LineAttack(player->mo, angle, MMELEERANGE, slope, damage);
 
     // turn to face target
     if (linetarget)
     {
-	S_StartSound (player->mo, sfx_punch);
-	player->mo->angle = R_PointToAngle2 (player->mo->x,
-					     player->mo->y,
-					     linetarget->x,
-					     linetarget->y);
+        S_StartSound (player->mo, sfx_punch);
+        player->mo->_angle = Angle(player->mo->xx,
+                                   player->mo->yy,
+                                   linetarget->xx,
+                                   linetarget->yy);
     }
 }
 
@@ -503,17 +468,13 @@ A_Saw
 ( player_t*	player,
   pspdef_t*	psp ) 
 {
-    angle_t	angle;
-    int		damage;
-    int		slope;
-
-    damage = 2*(P_Random ()%10+1);
-    angle = player->mo->angle;
-    angle += (P_Random()-P_Random())<<18;
+    int damage = 2*(P_Random ()%10+1);
+    Angle angle = player->mo->_angle;
+    angle += (angle_t)(P_Random()-P_Random()) <<18;
     
     // use meleerange + 1 se the puff doesn't skip the flash
-    slope = P_AimLineAttack (player->mo, angle, MELEERANGE+1);
-    P_LineAttack (player->mo, angle, MELEERANGE+1, slope, damage);
+    double slope = PP_AimLineAttack(player->mo, angle, MMELEERANGE+1);
+    PP_LineAttack (player->mo, angle, MMELEERANGE+1, slope, damage);
 
     if (!linetarget)
     {
@@ -523,21 +484,24 @@ A_Saw
     S_StartSound (player->mo, sfx_sawhit);
 	
     // turn to face target
-    angle = R_PointToAngle2 (player->mo->x, player->mo->y,
-			     linetarget->x, linetarget->y);
-    if (angle - player->mo->angle > ANG180)
+    angle = Angle(player->mo->xx, 
+                  player->mo->yy,
+                  linetarget->xx, 
+                  linetarget->yy);
+
+    if (angle - player->mo->_angle > Angle::A180)
     {
-	if (angle - player->mo->angle < -ANG90/20)
-	    player->mo->angle = angle + ANG90/21;
+        if (angle - player->mo->_angle < -Angle::A90/20)
+            player->mo->_angle = angle + Angle(Angle::A90)/21;
 	else
-	    player->mo->angle -= ANG90/20;
+	    player->mo->_angle -= Angle(Angle::A90)/20;
     }
     else
     {
-	if (angle - player->mo->angle > ANG90/20)
-	    player->mo->angle = angle - ANG90/21;
+        if (angle - player->mo->_angle > Angle::A90/20)
+            player->mo->_angle = angle - Angle(Angle::A90)/21;
 	else
-	    player->mo->angle += ANG90/20;
+	    player->mo->_angle += Angle(Angle::A90)/20;
     }
     player->mo->flags |= MF_JUSTATTACKED;
 }
@@ -582,8 +546,8 @@ A_FirePlasma
     player->ammo[weaponinfo[player->readyweapon].ammo]--;
 
     P_SetPsprite (player,
-		  ps_flash,
-		  weaponinfo[player->readyweapon].flashstate+(P_Random ()&1) );
+                  ps_flash,
+                  (statenum_t)(weaponinfo[player->readyweapon].flashstate+(P_Random ()&1)));
 
     P_SpawnPlayerMissile (player->mo, MT_PLASMA);
 }
@@ -595,25 +559,23 @@ A_FirePlasma
 // Sets a slope so a near miss is at aproximately
 // the height of the intended target
 //
-fixed_t		bulletslope;
+double bbulletslope;
 
 
-void P_BulletSlope (mobj_t*	mo)
+void P_BulletSlope (Mob* mo)
 {
-    angle_t	an;
-    
     // see which target is to be aimed at
-    an = mo->angle;
-    bulletslope = P_AimLineAttack (mo, an, 16*64*FRACUNIT);
+    Angle an = mo->_angle;
+    bbulletslope = PP_AimLineAttack(mo, an, 16*64);
 
     if (!linetarget)
     {
-	an += 1<<26;
-	bulletslope = P_AimLineAttack (mo, an, 16*64*FRACUNIT);
+	an += (angle_t)1<<26;
+	bbulletslope = PP_AimLineAttack(mo, an, 16*64);
 	if (!linetarget)
 	{
-	    an -= 2<<26;
-	    bulletslope = P_AimLineAttack (mo, an, 16*64*FRACUNIT);
+	    an -= (angle_t)2<<26;
+	    bbulletslope = PP_AimLineAttack(mo, an, 16*64);
 	}
     }
 }
@@ -624,19 +586,17 @@ void P_BulletSlope (mobj_t*	mo)
 //
 void
 P_GunShot
-( mobj_t*	mo,
-  boolean	accurate )
+( Mob*	mo,
+  bool	accurate )
 {
-    angle_t	angle;
-    int		damage;
-	
-    damage = 5*(P_Random ()%3+1);
-    angle = mo->angle;
+    int damage = 5*(P_Random ()%3+1);
+    Angle angle = mo->_angle;
 
-    if (!accurate)
-	angle += (P_Random()-P_Random())<<18;
-
-    P_LineAttack (mo, angle, MISSILERANGE, bulletslope, damage);
+    if (!accurate) {
+        // @todo should be 4 "<<18 -> * 2^2"
+        angle += (angle_t)((P_Random()-P_Random()) << 18);
+    }
+    PP_LineAttack(mo, angle, MMISSILERANGE, bbulletslope, damage);
 }
 
 
@@ -650,7 +610,7 @@ A_FirePistol
 {
     S_StartSound (player->mo, sfx_pistol);
 
-    P_SetMobjState (player->mo, S_PLAY_ATK2);
+    player->mo->setState(S_PLAY_ATK2);
     player->ammo[weaponinfo[player->readyweapon].ammo]--;
 
     P_SetPsprite (player,
@@ -673,18 +633,18 @@ A_FireShotgun
     int		i;
 	
     S_StartSound (player->mo, sfx_shotgn);
-    P_SetMobjState (player->mo, S_PLAY_ATK2);
-
+    player->mo->setState(S_PLAY_ATK2);
+    
     player->ammo[weaponinfo[player->readyweapon].ammo]--;
-
-    P_SetPsprite (player,
-		  ps_flash,
-		  weaponinfo[player->readyweapon].flashstate);
-
+    
+    P_SetPsprite(player,
+                 ps_flash,
+                 weaponinfo[player->readyweapon].flashstate);
+    
     P_BulletSlope (player->mo);
 	
     for (i=0 ; i<7 ; i++)
-	P_GunShot (player->mo, false);
+        P_GunShot (player->mo, false);
 }
 
 
@@ -698,12 +658,10 @@ A_FireShotgun2
   pspdef_t*	psp ) 
 {
     int		i;
-    angle_t	angle;
     int		damage;
 		
-	
     S_StartSound (player->mo, sfx_dshtgn);
-    P_SetMobjState (player->mo, S_PLAY_ATK2);
+    player->mo->setState(S_PLAY_ATK2);
 
     player->ammo[weaponinfo[player->readyweapon].ammo]-=2;
 
@@ -716,12 +674,12 @@ A_FireShotgun2
     for (i=0 ; i<20 ; i++)
     {
 	damage = 5*(P_Random ()%3+1);
-	angle = player->mo->angle;
-	angle += (P_Random()-P_Random())<<19;
-	P_LineAttack (player->mo,
-		      angle,
-		      MISSILERANGE,
-		      bulletslope + ((P_Random()-P_Random())<<5), damage);
+	Angle angle = player->mo->_angle;
+	angle += (angle_t)((P_Random()-P_Random()) << 19);
+	PP_LineAttack(player->mo,
+                      angle,
+		      MMISSILERANGE,
+		      bbulletslope + fixed_to_double(((P_Random()-P_Random())<<5)), damage);
     }
 }
 
@@ -737,16 +695,16 @@ A_FireCGun
     S_StartSound (player->mo, sfx_pistol);
 
     if (!player->ammo[weaponinfo[player->readyweapon].ammo])
-	return;
+        return;
 		
-    P_SetMobjState (player->mo, S_PLAY_ATK2);
+    player->mo->setState(S_PLAY_ATK2);
     player->ammo[weaponinfo[player->readyweapon].ammo]--;
 
     P_SetPsprite (player,
-		  ps_flash,
-		  weaponinfo[player->readyweapon].flashstate
-		  + psp->state
-		  - &states[S_CHAIN1] );
+                  ps_flash,
+                  (statenum_t)(weaponinfo[player->readyweapon].flashstate
+                               + psp->state
+                               - &states[S_CHAIN1]));
 
     P_BulletSlope (player->mo);
 	
@@ -778,29 +736,28 @@ void A_Light2 (player_t *player, pspdef_t *psp)
 // A_BFGSpray
 // Spawn a BFG explosion on every monster in view
 //
-void A_BFGSpray (mobj_t* mo) 
+void A_BFGSpray (Mob* mo) 
 {
     int			i;
     int			j;
     int			damage;
-    angle_t		an;
 	
     // offset angles from its attack angle
     for (i=0 ; i<40 ; i++)
     {
-	an = mo->angle - ANG90/2 + ANG90/40*i;
+        Angle angle((double)mo->_angle - Angle::A45 + Angle::A90/40*i);
 
 	// mo->target is the originator (player)
 	//  of the missile
-	P_AimLineAttack (mo->target, an, 16*64*FRACUNIT);
+	PP_AimLineAttack(mo->target, angle, 16*64);
 
 	if (!linetarget)
 	    continue;
 
-	P_SpawnMobj (linetarget->x,
-		     linetarget->y,
-		     linetarget->z + (linetarget->height>>2),
-		     MT_EXTRABFG);
+	PP_SpawnMobj(linetarget->xx,
+                 linetarget->yy,
+                 linetarget->zz + (linetarget->hheight / 4),
+                 MT_EXTRABFG);
 	
 	damage = 0;
 	for (j=0;j<15;j++)
@@ -872,8 +829,8 @@ void P_MovePsprites (player_t* player)
 	}
     }
     
-    player->psprites[ps_flash].sx = player->psprites[ps_weapon].sx;
-    player->psprites[ps_flash].sy = player->psprites[ps_weapon].sy;
+    player->psprites[ps_flash].ssx = player->psprites[ps_weapon].ssx;
+    player->psprites[ps_flash].ssy = player->psprites[ps_weapon].ssy;
 }
 
 

@@ -61,8 +61,8 @@ ticcmd_t	localcmds[BACKUPTICS];
 
 ticcmd_t        netcmds[MAXPLAYERS][BACKUPTICS];
 int         	nettics[MAXNETNODES];
-boolean		nodeingame[MAXNETNODES];		// set false as nodes leave game
-boolean		remoteresend[MAXNETNODES];		// set when local needs tics
+bool		nodeingame[MAXNETNODES];		// set false as nodes leave game
+bool		remoteresend[MAXNETNODES];		// set when local needs tics
 int		resendto[MAXNETNODES];			// set when remote needs tics
 int		resendcount[MAXNETNODES];
 
@@ -79,7 +79,7 @@ void D_ProcessEvents (void);
 void G_BuildTiccmd (ticcmd_t *cmd); 
 void D_DoAdvanceDemo (void);
  
-boolean		reboundpacket;
+bool		reboundpacket;
 doomdata_t	reboundstore;
 
 
@@ -189,7 +189,7 @@ HSendPacket
 // HGetPacket
 // Returns false if no packet is waiting
 //
-boolean HGetPacket (void)
+bool HGetPacket (void)
 {	
     if (reboundpacket)
     {
@@ -476,7 +476,7 @@ void CheckAbort (void)
 void D_ArbitrateNetStart (void)
 {
     int		i;
-    boolean	gotinfo[MAXNETNODES];
+    bool	gotinfo[MAXNETNODES];
 	
     autostart = true;
     memset (gotinfo,0,sizeof(gotinfo));
@@ -494,7 +494,7 @@ void D_ArbitrateNetStart (void)
 	    {
 		if (netbuffer->player != VERSION)
 		    I_Error ("Different DOOM versions cannot play a net game!");
-		startskill = netbuffer->retransmitfrom & 15;
+		startskill = (skill_t)(netbuffer->retransmitfrom & 15);
 		deathmatch = (netbuffer->retransmitfrom & 0xc0) >> 6;
 		nomonsters = (netbuffer->retransmitfrom & 0x20) > 0;
 		respawnparm = (netbuffer->retransmitfrom & 0x10) > 0;
@@ -550,7 +550,6 @@ void D_ArbitrateNetStart (void)
 // D_CheckNetGame
 // Works out player numbers among the net participants
 //
-extern	int			viewangleoffset;
 
 void D_CheckNetGame (void)
 {
@@ -631,7 +630,7 @@ int	frameon;
 int	frameskip[4];
 int	oldnettics;
 
-extern	boolean	advancedemo;
+extern	bool	advancedemo;
 
 void TryRunTics (void)
 {
@@ -652,7 +651,7 @@ void TryRunTics (void)
     // get available tics
     NetUpdate ();
 	
-    lowtic = MAXINT;
+    lowtic = INT_MAX;
     numplaying = 0;
     for (i=0 ; i<doomcom->numnodes ; i++)
     {
@@ -715,7 +714,7 @@ void TryRunTics (void)
     while (lowtic < gametic/ticdup + counts)	
     {
 	NetUpdate ();   
-	lowtic = MAXINT;
+	lowtic = INT_MAX;
 	
 	for (i=0 ; i<doomcom->numnodes ; i++)
 	    if (nodeingame[i] && nettics[i] < lowtic)

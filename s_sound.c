@@ -118,7 +118,7 @@ int 		snd_MusicVolume = 15;
 
 
 // whether songs are mus_paused
-static boolean		mus_paused;	
+static bool		mus_paused;	
 
 // music currently being played
 static musicinfo_t*	mus_playing=0;
@@ -143,8 +143,8 @@ S_getChannel
 
 int
 S_AdjustSoundParams
-( mobj_t*	listener,
-  mobj_t*	source,
+( Mob*	listener,
+  Mob*	source,
   int*		vol,
   int*		sep,
   int*		pitch );
@@ -265,7 +265,7 @@ S_StartSoundAtVolume
   sfxinfo_t*	sfx;
   int		cnum;
   
-  mobj_t*	origin = (mobj_t *) origin_p;
+  Mob*	origin = (Mob *) origin_p;
   
   
   // Debug.
@@ -309,8 +309,8 @@ S_StartSoundAtVolume
 			     &sep,
 			     &pitch);
 	
-    if ( origin->x == players[consoleplayer].mo->x
-	 && origin->y == players[consoleplayer].mo->y)
+    if ( origin->xx == players[consoleplayer].mo->xx
+	 && origin->yy == players[consoleplayer].mo->yy)
     {	
       sep 	= NORM_SEP;
     }
@@ -368,8 +368,8 @@ S_StartSoundAtVolume
   // cache data if necessary
   if (!sfx->data)
   {
-    fprintf( stderr,
-	     "S_StartSoundAtVolume: 16bit and not pre-cached - wtf?\n");
+    // fprintf( stderr,
+	//      "S_StartSoundAtVolume: 16bit and not pre-cached - wtf?\n");
 
     // DOS remains, 8bit handling
     //sfx->data = (void *) W_CacheLumpNum(sfx->lumpnum, PU_MUSIC);
@@ -413,7 +413,7 @@ S_StartSound
     int i;
     int n;
 	
-    static mobj_t*      last_saw_origins[10] = {1,1,1,1,1,1,1,1,1,1};
+    static Mob*      last_saw_origins[10] = {1,1,1,1,1,1,1,1,1,1};
     static int		first_saw=0;
     static int		next_saw=0;
 	
@@ -526,7 +526,7 @@ void S_UpdateSounds(void* listener_p)
     sfxinfo_t*	sfx;
     channel_t*	c;
     
-    mobj_t*	listener = (mobj_t*)listener_p;
+    Mob*	listener = (Mob*)listener_p;
 
 
     
@@ -584,7 +584,7 @@ void S_UpdateSounds(void* listener_p)
 		if (c->origin && listener_p != c->origin)
 		{
 		    audible = S_AdjustSoundParams(listener,
-						  c->origin,
+                                          (Mob*)c->origin,
 						  &volume,
 						  &sep,
 						  &pitch);
@@ -751,8 +751,8 @@ void S_StopChannel(int cnum)
 //
 int
 S_AdjustSoundParams
-( mobj_t*	listener,
-  mobj_t*	source,
+( Mob*	listener,
+  Mob*	source,
   int*		vol,
   int*		sep,
   int*		pitch )
@@ -764,8 +764,8 @@ S_AdjustSoundParams
 
     // calculate the distance to sound origin
     //  and clip it if necessary
-    adx = abs(listener->x - source->x);
-    ady = abs(listener->y - source->y);
+    adx = double_to_fixed(fabs(listener->xx - source->xx));
+    ady = double_to_fixed(fabs(listener->yy - source->yy));
 
     // From _GG1_ p.428. Appox. eucledian distance fast.
     approx_dist = adx + ady - ((adx < ady ? adx : ady)>>1);
@@ -777,15 +777,13 @@ S_AdjustSoundParams
     }
     
     // angle of source to listener
-    angle = R_PointToAngle2(listener->x,
-			    listener->y,
-			    source->x,
-			    source->y);
+    angle = Angle(listener->xx,listener->yy,
+                  source->xx, source->yy);
 
-    if (angle > listener->angle)
-	angle = angle - listener->angle;
+    if (angle > (angle_t)listener->_angle)
+    angle = angle - (angle_t)listener->_angle;
     else
-	angle = angle + (0xffffffff - listener->angle);
+      angle = angle + (0xffffffff - (angle_t)listener->_angle);
 
     angle >>= ANGLETOFINESHIFT;
 

@@ -35,22 +35,18 @@
 //
 // POV related.
 //
-extern fixed_t		viewcos;
-extern fixed_t		viewsin;
+extern double vviewcos;
+extern double  vviewsin;
 
-extern int		viewwidth;
-extern int		viewheight;
-extern int		viewwindowx;
-extern int		viewwindowy;
-
-
+//extern int		viewwidth;
+//extern int		viewheight;
 
 extern int		centerx;
 extern int		centery;
 
-extern fixed_t		centerxfrac;
-extern fixed_t		centeryfrac;
-extern fixed_t		projection;
+extern double		ccenterxfrac;
+extern double		ccenteryfrac;
+extern double		pprojection;
 
 extern int		validcount;
 
@@ -86,13 +82,6 @@ extern lighttable_t*	fixedcolormap;
 // There a 0-31, i.e. 32 LUT in the COLORMAP lump.
 #define NUMCOLORMAPS		32
 
-
-// Blocky/low detail mode.
-//B remove this?
-//  0 = high, 1 = low
-extern	int		detailshift;	
-
-
 //
 // Function pointers to switch refresh/drawing functions.
 // Used to select shadow mode etc.
@@ -107,49 +96,24 @@ extern void		(*spanfunc) (void);
 //
 // Utility functions.
 int
-R_PointOnSide
-( fixed_t	x,
-  fixed_t	y,
-  node_t*	node );
+R_PointOnSide(
+    double x,
+    double y,
+    BspNode* node);
 
 int
-R_PointOnSegSide
-( fixed_t	x,
-  fixed_t	y,
-  seg_t*	line );
+RR_PointOnSegSide(
+    double x,
+    double y,
+    seg_t* line );
 
-angle_t
-R_PointToAngle
-( fixed_t	x,
-  fixed_t	y );
-
-angle_t
-R_PointToAngle2
-( fixed_t	x1,
-  fixed_t	y1,
-  fixed_t	x2,
-  fixed_t	y2 );
-
-fixed_t
-R_PointToDist
-( fixed_t	x,
-  fixed_t	y );
-
-
-fixed_t R_ScaleFromGlobalAngle (angle_t visangle);
+double R_PointsToAngle(double x1, double y1, double x2, double y2);
+double RR_PointToDist(double x, double y);
+double RR_ScaleFromGlobalAngle(Angle visangle);
 
 subsector_t*
-R_PointInSubsector
-( fixed_t	x,
-  fixed_t	y );
-
-void
-R_AddPointToBox
-( int		x,
-  int		y,
-  fixed_t*	box );
-
-
+RR_PointInSubsector(double x, double y);
+int R_ViewAngleToX(const Angle& a);
 
 //
 // REFRESH - the actual rendering functions.
@@ -160,9 +124,6 @@ void R_RenderPlayerView (player_t *player);
 
 // Called by startup code.
 void R_Init (void);
-
-// Called by M_Responder.
-void R_SetViewSize (int blocks, int detail);
 
 #endif
 //-----------------------------------------------------------------------------

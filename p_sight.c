@@ -36,13 +36,13 @@ rcsid[] = "$Id: p_sight.c,v 1.3 1997/01/28 22:08:28 b1 Exp $";
 //
 // P_CheckSight
 //
-fixed_t		sightzstart;		// eye z of looker
-fixed_t		topslope;
-fixed_t		bottomslope;		// slopes to top and bottom of target
+double ssightzstart;		// eye z of looker
+double ttopslope;
+double bbottomslope;		// slopes to top and bottom of target
 
-divline_t	strace;			// from t1 to t2
-fixed_t		t2x;
-fixed_t		t2y;
+DivLine	strace;			// from t1 to t2
+double tt2x;
+double tt2y;
 
 int		sightcounts[2];
 
@@ -53,48 +53,48 @@ int		sightcounts[2];
 //
 int
 P_DivlineSide
-( fixed_t	x,
-  fixed_t	y,
-  divline_t*	node )
+( double x,
+  double y,
+  DivLine*	node )
 {
-    fixed_t	dx;
-    fixed_t	dy;
-    fixed_t	left;
-    fixed_t	right;
+    double dx;
+    double dy;
+    double left;
+    double right;
 
     if (!node->dx)
     {
-	if (x==node->x)
-	    return 2;
-	
-	if (x <= node->x)
-	    return node->dy > 0;
+        if (x==node->x)
+            return 2;
+        
+        if (x <= node->x)
+            return node->dy > 0;
 
-	return node->dy < 0;
+        return node->dy < 0;
     }
     
     if (!node->dy)
     {
-	if (x==node->y)
-	    return 2;
-
-	if (y <= node->y)
-	    return node->dx < 0;
-
-	return node->dx > 0;
+        if (x==node->y)
+            return 2;
+        
+        if (y <= node->y)
+            return node->dx < 0;
+        
+        return node->dx > 0;
     }
 	
     dx = (x - node->x);
     dy = (y - node->y);
 
-    left =  (node->dy>>FRACBITS) * (dx>>FRACBITS);
-    right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
+    left =  node->dy * dx;
+    right = dy * node->dx;
 	
     if (right < left)
-	return 0;	// front side
+        return 0;	// front side
     
     if (left == right)
-	return 2;
+        return 2;
     return 1;		// back side
 }
 
@@ -105,24 +105,22 @@ P_DivlineSide
 // along the first divline.
 // This is only called by the addthings and addlines traversers.
 //
-fixed_t
-P_InterceptVector2
-( divline_t*	v2,
-  divline_t*	v1 )
+double 
+PP_InterceptVector2(DivLine* v2,
+                    DivLine* v1)
 {
-    fixed_t	frac;
-    fixed_t	num;
-    fixed_t	den;
+    double frac;
+    double num;
+    double den;
 	
-    den = FixedMul (v1->dy>>8,v2->dx) - FixedMul(v1->dx>>8,v2->dy);
+    den = (v1->dy * v2->dx) - (v1->dx * v2->dy);
 
     if (den == 0)
-	return 0;
+        return 0;
     //	I_Error ("P_InterceptVector: parallel");
     
-    num = FixedMul ( (v1->x - v2->x)>>8 ,v1->dy) + 
-	FixedMul ( (v2->y - v1->y)>>8 , v1->dx);
-    frac = FixedDiv (num , den);
+    num = ((v1->x - v2->x) * v1->dy) + ((v2->y - v1->y) * v1->dx);
+    frac = num  / den;
 
     return frac;
 }
@@ -132,7 +130,7 @@ P_InterceptVector2
 // Returns true
 //  if strace crosses the given subsector successfully.
 //
-boolean P_CrossSubsector (int num)
+bool P_CrossSubsector (int num)
 {
     seg_t*		seg;
     line_t*		line;
@@ -142,13 +140,11 @@ boolean P_CrossSubsector (int num)
     subsector_t*	sub;
     sector_t*		front;
     sector_t*		back;
-    fixed_t		opentop;
-    fixed_t		openbottom;
-    divline_t		divl;
+    double opentop;
+    double openbottom;
+    DivLine		divl;
     vertex_t*		v1;
     vertex_t*		v2;
-    fixed_t		frac;
-    fixed_t		slope;
 	
 #ifdef RANGECHECK
     if (num>=numsubsectors)
@@ -175,19 +171,19 @@ boolean P_CrossSubsector (int num)
 		
 	v1 = line->v1;
 	v2 = line->v2;
-	s1 = P_DivlineSide (v1->x,v1->y, &strace);
-	s2 = P_DivlineSide (v2->x, v2->y, &strace);
+	s1 = P_DivlineSide(v1->xx, v1->yy, &strace);
+	s2 = P_DivlineSide(v2->xx, v2->yy, &strace);
 
 	// line isn't crossed?
 	if (s1 == s2)
 	    continue;
 	
-	divl.x = v1->x;
-	divl.y = v1->y;
-	divl.dx = v2->x - v1->x;
-	divl.dy = v2->y - v1->y;
+	divl.x = v1->xx;
+	divl.y = v1->yy;
+	divl.dx = v2->xx - v1->xx;
+	divl.dy = v2->yy - v1->yy;
 	s1 = P_DivlineSide (strace.x, strace.y, &divl);
-	s2 = P_DivlineSide (t2x, t2y, &divl);
+	s2 = P_DivlineSide (tt2x, tt2y, &divl);
 
 	// line isn't crossed?
 	if (s1 == s2)
@@ -203,44 +199,44 @@ boolean P_CrossSubsector (int num)
 	back = seg->backsector;
 
 	// no wall to block sight with?
-	if (front->floorheight == back->floorheight
-	    && front->ceilingheight == back->ceilingheight)
+	if (front->ffloorheight == back->ffloorheight
+	    && front->cceilingheight == back->cceilingheight)
 	    continue;	
 
 	// possible occluder
 	// because of ceiling height differences
-	if (front->ceilingheight < back->ceilingheight)
-	    opentop = front->ceilingheight;
+	if (front->cceilingheight < back->cceilingheight)
+	    opentop = front->cceilingheight;
 	else
-	    opentop = back->ceilingheight;
+	    opentop = back->cceilingheight;
 
 	// because of ceiling height differences
-	if (front->floorheight > back->floorheight)
-	    openbottom = front->floorheight;
+	if (front->ffloorheight > back->ffloorheight)
+	    openbottom = front->ffloorheight;
 	else
-	    openbottom = back->floorheight;
+	    openbottom = back->ffloorheight;
 		
 	// quick test for totally closed doors
 	if (openbottom >= opentop)	
 	    return false;		// stop
 	
-	frac = P_InterceptVector2 (&strace, &divl);
+	double frac = PP_InterceptVector2(&strace, &divl);
 		
-	if (front->floorheight != back->floorheight)
+	if (front->ffloorheight != back->ffloorheight)
 	{
-	    slope = FixedDiv (openbottom - sightzstart , frac);
-	    if (slope > bottomslope)
-		bottomslope = slope;
+	    double slope = (openbottom - ssightzstart) / frac;
+            if (slope > bbottomslope)
+		bbottomslope = slope;
 	}
 		
-	if (front->ceilingheight != back->ceilingheight)
+	if (front->cceilingheight != back->cceilingheight)
 	{
-	    slope = FixedDiv (opentop - sightzstart , frac);
-	    if (slope < topslope)
-		topslope = slope;
+	    double slope = (opentop - ssightzstart) / frac;
+	    if (slope < ttopslope)
+		ttopslope = slope;
 	}
 		
-	if (topslope <= bottomslope)
+	if (ttopslope <= bbottomslope)
 	    return false;		// stop				
     }
     // passed the subsector ok
@@ -254,35 +250,35 @@ boolean P_CrossSubsector (int num)
 // Returns true
 //  if strace crosses the given node successfully.
 //
-boolean P_CrossBSPNode (int bspnum)
+bool P_CrossBSPNode (int bspnum)
 {
-    node_t*	bsp;
+    BspNode* bsp;
     int		side;
-
+    
     if (bspnum & NF_SUBSECTOR)
     {
-	if (bspnum == -1)
-	    return P_CrossSubsector (0);
-	else
-	    return P_CrossSubsector (bspnum&(~NF_SUBSECTOR));
+        if (bspnum == -1)
+            return P_CrossSubsector (0);
+        else
+            return P_CrossSubsector (bspnum&(~NF_SUBSECTOR));
     }
-		
+	
     bsp = &nodes[bspnum];
     
     // decide which side the start point is on
-    side = P_DivlineSide (strace.x, strace.y, (divline_t *)bsp);
+    side = P_DivlineSide (strace.x, strace.y, bsp);
     if (side == 2)
-	side = 0;	// an "on" should cross both sides
-
+        side = 0;	// an "on" should cross both sides
+    
     // cross the starting side
     if (!P_CrossBSPNode (bsp->children[side]) )
-	return false;
+        return false;
 	
     // the partition plane is crossed here
-    if (side == P_DivlineSide (t2x, t2y,(divline_t *)bsp))
+    if (side == P_DivlineSide (tt2x, tt2y, bsp))
     {
-	// the line doesn't touch the other side
-	return true;
+        // the line doesn't touch the other side
+        return true;
     }
     
     // cross the ending side		
@@ -296,10 +292,10 @@ boolean P_CrossBSPNode (int bspnum)
 //  if a straight line between t1 and t2 is unobstructed.
 // Uses REJECT.
 //
-boolean
+bool
 P_CheckSight
-( mobj_t*	t1,
-  mobj_t*	t2 )
+( Mob*	t1,
+  Mob*	t2 )
 {
     int		s1;
     int		s2;
@@ -319,10 +315,10 @@ P_CheckSight
     // Check in REJECT table.
     if (rejectmatrix[bytenum]&bitnum)
     {
-	sightcounts[0]++;
-
-	// can't possibly be connected
-	return false;	
+        sightcounts[0]++;
+        
+        // can't possibly be connected
+        return false;	
     }
 
     // An unobstructed LOS is possible.
@@ -331,16 +327,16 @@ P_CheckSight
 
     validcount++;
 	
-    sightzstart = t1->z + t1->height - (t1->height>>2);
-    topslope = (t2->z+t2->height) - sightzstart;
-    bottomslope = (t2->z) - sightzstart;
+    ssightzstart = t1->zz + t1->hheight - (t1->hheight / 4);
+    ttopslope = t2->zz + t2->hheight - ssightzstart;
+    bbottomslope = t2->zz - ssightzstart;
 	
-    strace.x = t1->x;
-    strace.y = t1->y;
-    t2x = t2->x;
-    t2y = t2->y;
-    strace.dx = t2->x - t1->x;
-    strace.dy = t2->y - t1->y;
+    strace.x = t1->xx;
+    strace.y = t1->yy;
+    tt2x = t2->xx;
+    tt2y = t2->yy;
+    strace.dx = t2->xx - t1->xx;
+    strace.dy = t2->yy - t1->yy;
 
     // the head node is the last node output
     return P_CrossBSPNode (numnodes-1);	

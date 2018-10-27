@@ -38,7 +38,7 @@ rcsid[] = "$Id: r_plane.c,v 1.4 1997/02/03 16:47:55 b1 Exp $";
 
 #include "r_local.h"
 #include "r_sky.h"
-
+#include "r_defs.h"
 
 
 planefunction_t		floorfunc;
@@ -50,6 +50,7 @@ planefunction_t		ceilingfunc;
 
 // Here comes the obnoxious "visplane".
 #define MAXVISPLANES	128
+#define MAXHEIGHT       0xffff
 visplane_t		visplanes[MAXVISPLANES];
 visplane_t*		lastvisplane;
 visplane_t*		floorplane;
@@ -83,7 +84,7 @@ lighttable_t**		planezlight;
 fixed_t			planeheight;
 
 fixed_t			yslope[SCREENHEIGHT];
-fixed_t			distscale[SCREENWIDTH];
+double			ddistscale[SCREENWIDTH];
 fixed_t			basexscale;
 fixed_t			baseyscale;
 
@@ -123,7 +124,6 @@ R_MapPlane
   int		x1,
   int		x2 )
 {
-    angle_t	angle;
     fixed_t	distance;
     fixed_t	length;
     unsigned	index;
@@ -131,10 +131,10 @@ R_MapPlane
 #ifdef RANGECHECK
     if (x2 < x1
 	|| x1<0
-	|| x2>=viewwidth
-	|| (unsigned)y>viewheight)
+	|| x2>=SCREENWIDTH
+	|| (unsigned)y>SCREENHEIGHT)
     {
-	I_Error ("R_MapPlane: %i, %i at %i",x1,x2,y);
+	I_Error ("R_MapPlane: %i, %i at %i", x1,x2,y);
     }
 #endif
 
@@ -152,10 +152,10 @@ R_MapPlane
 	ds_ystep = cachedystep[y];
     }
 	
-    length = FixedMul (distance,distscale[x1]);
-    angle = (viewangle + xtoviewangle[x1])>>ANGLETOFINESHIFT;
-    ds_xfrac = viewx + FixedMul(finecosine[angle], length);
-    ds_yfrac = -viewy - FixedMul(finesine[angle], length);
+    length = FixedMul (distance, double_to_fixed(ddistscale[x1]));
+    Angle a = vviewangle + xxtoviewangle[x1]; 
+    ds_xfrac = double_to_fixed(vviewx + (cos(a) * fixed_to_double(length)));
+    ds_yfrac = -double_to_fixed(vviewy - (sin(a) * fixed_to_double(length)));
 
     if (fixedcolormap)
 	ds_colormap = fixedcolormap;
@@ -185,12 +185,11 @@ R_MapPlane
 void R_ClearPlanes (void)
 {
     int		i;
-    angle_t	angle;
     
     // opening / clipping determination
-    for (i=0 ; i<viewwidth ; i++)
+    for (i=0 ; i<SCREENWIDTH ; i++)
     {
-	floorclip[i] = viewheight;
+	floorclip[i] = SCREENHEIGHT;
 	ceilingclip[i] = -1;
     }
 
@@ -201,11 +200,11 @@ void R_ClearPlanes (void)
     memset (cachedheight, 0, sizeof(cachedheight));
 
     // left to right mapping
-    angle = (viewangle-ANG90)>>ANGLETOFINESHIFT;
+    Angle angle(vviewangle - Angle(Angle::A90));
 	
     // scale will be unit scale at SCREENWIDTH/2 distance
-    basexscale = FixedDiv (finecosine[angle],centerxfrac);
-    baseyscale = -FixedDiv (finesine[angle],centerxfrac);
+    basexscale = double_to_fixed(cos(angle) / ccenterxfrac);
+    baseyscale = -double_to_fixed(sin(angle) / ccenterxfrac);
 }
 
 
@@ -215,10 +214,9 @@ void R_ClearPlanes (void)
 // R_FindPlane
 //
 visplane_t*
-R_FindPlane
-( fixed_t	height,
-  int		picnum,
-  int		lightlevel )
+R_FindPlane(double height,
+            int	picnum,
+            int lightlevel )
 {
     visplane_t*	check;
 	
@@ -230,7 +228,7 @@ R_FindPlane
 	
     for (check=visplanes; check<lastvisplane; check++)
     {
-	if (height == check->height
+	if (height == check->hheight
 	    && picnum == check->picnum
 	    && lightlevel == check->lightlevel)
 	{
@@ -247,13 +245,13 @@ R_FindPlane
 		
     lastvisplane++;
 
-    check->height = height;
+    check->hheight = height;
     check->picnum = picnum;
     check->lightlevel = lightlevel;
     check->minx = SCREENWIDTH;
     check->maxx = -1;
     
-    memset (check->top,0xff,sizeof(check->top));
+    memset (check->top, MAXHEIGHT, sizeof(check->top));
 		
     return check;
 }
@@ -297,7 +295,7 @@ R_CheckPlane
     }
 
     for (x=intrl ; x<= intrh ; x++)
-	if (pl->top[x] != 0xff)
+	if (pl->top[x] != MAXHEIGHT)
 	    break;
 
     if (x > intrh)
@@ -310,7 +308,7 @@ R_CheckPlane
     }
 	
     // make a new visplane
-    lastvisplane->height = pl->height;
+    lastvisplane->hheight = pl->hheight;
     lastvisplane->picnum = pl->picnum;
     lastvisplane->lightlevel = pl->lightlevel;
     
@@ -318,7 +316,7 @@ R_CheckPlane
     pl->minx = start;
     pl->maxx = stop;
 
-    memset (pl->top,0xff,sizeof(pl->top));
+    memset (pl->top, MAXHEIGHT, sizeof(pl->top));
 		
     return pl;
 }
@@ -370,7 +368,6 @@ void R_DrawPlanes (void)
     int			light;
     int			x;
     int			stop;
-    int			angle;
 				
 #ifdef RANGECHECK
     if (ds_p - drawsegs > MAXDRAWSEGS)
@@ -395,7 +392,7 @@ void R_DrawPlanes (void)
 	// sky flat
 	if (pl->picnum == skyflatnum)
 	{
-	    dc_iscale = pspriteiscale>>detailshift;
+	    dc_iscale = FRACUNIT;
 	    
 	    // Sky is allways drawn full bright,
 	    //  i.e. colormaps[0] is used.
@@ -410,7 +407,8 @@ void R_DrawPlanes (void)
 
 		if (dc_yl <= dc_yh)
 		{
-		    angle = (viewangle + xtoviewangle[x])>>ANGLETOSKYSHIFT;
+                    Angle a = vviewangle + xxtoviewangle[x];
+		    angle_t angle = ((angle_t)a)>>ANGLETOSKYSHIFT;
 		    dc_x = x;
 		    dc_source = R_GetColumn(skytexture, angle);
 		    colfunc ();
@@ -420,11 +418,11 @@ void R_DrawPlanes (void)
 	}
 	
 	// regular flat
-	ds_source = W_CacheLumpNum(firstflat +
+	ds_source = (byte*)W_CacheLumpNum(firstflat +
 				   flattranslation[pl->picnum],
 				   PU_STATIC);
 	
-	planeheight = abs(pl->height-viewz);
+	planeheight = double_to_fixed(abs(pl->hheight - vviewz));
 	light = (pl->lightlevel >> LIGHTSEGSHIFT)+extralight;
 
 	if (light >= LIGHTLEVELS)
@@ -435,14 +433,15 @@ void R_DrawPlanes (void)
 
 	planezlight = zlight[light];
 
-	pl->top[pl->maxx+1] = 0xff;
-	pl->top[pl->minx-1] = 0xff;
+	pl->top[pl->maxx+1] = MAXHEIGHT;
+	pl->top[pl->minx-1] = MAXHEIGHT;
 		
 	stop = pl->maxx + 1;
 
 	for (x=pl->minx ; x<= stop ; x++)
 	{
-	    R_MakeSpans(x,pl->top[x-1],
+	    R_MakeSpans(x,
+                        pl->top[x-1],
 			pl->bottom[x-1],
 			pl->top[x],
 			pl->bottom[x]);

@@ -27,6 +27,7 @@
 static const char
 rcsid[] = "$Id: v_video.c,v 1.5 1997/02/03 22:45:13 b1 Exp $";
 
+#include <stdlib.h>
 
 #include "i_system.h"
 #include "r_local.h"
@@ -43,7 +44,7 @@ rcsid[] = "$Id: v_video.c,v 1.5 1997/02/03 22:45:13 b1 Exp $";
 // Each screen is [SCREENWIDTH*SCREENHEIGHT]; 
 byte*				screens[5];	
  
-int				dirtybox[4]; 
+//double				dirtybox[4]; 
 
 
 
@@ -135,21 +136,7 @@ byte gammatable[5][256] =
 
 
 int	usegamma;
-			 
-//
-// V_MarkRect 
-// 
-void
-V_MarkRect
-( int		x,
-  int		y,
-  int		width,
-  int		height ) 
-{ 
-    M_AddToBox (dirtybox, x, y); 
-    M_AddToBox (dirtybox, x+width-1, y+height-1); 
-} 
- 
+
 
 //
 // V_CopyRect 
@@ -182,7 +169,6 @@ V_CopyRect
 	I_Error ("Bad V_CopyRect");
     }
 #endif 
-    V_MarkRect (destx, desty, width, height); 
 	 
     src = screens[srcscrn]+SCREENWIDTH*srcy+srcx; 
     dest = screens[destscrn]+SCREENWIDTH*desty+destx; 
@@ -207,7 +193,6 @@ V_DrawPatch
   int		scrn,
   patch_t*	patch ) 
 { 
-
     int		count;
     int		col; 
     column_t*	column; 
@@ -228,13 +213,10 @@ V_DrawPatch
       fprintf( stderr, "Patch at %d,%d exceeds LFB\n", x,y );
       // No I_Error abort - what is up with TNT.WAD?
       fprintf( stderr, "V_DrawPatch: bad patch (ignored)\n");
-      return;
+      exit(0);
     }
 #endif 
  
-    if (!scrn)
-	V_MarkRect (x, y, SHORT(patch->width), SHORT(patch->height)); 
-
     col = 0; 
     desttop = screens[scrn]+y*SCREENWIDTH+x; 
 	 
@@ -297,8 +279,8 @@ V_DrawPatchFlipped
     }
 #endif 
  
-    if (!scrn)
-	V_MarkRect (x, y, SHORT(patch->width), SHORT(patch->height)); 
+    //if (!scrn)
+    //V_MarkRect (x, y, SHORT(patch->width), SHORT(patch->height)); 
 
     col = 0; 
     desttop = screens[scrn]+y*SCREENWIDTH+x; 
@@ -423,7 +405,7 @@ V_DrawBlock
     }
 #endif 
  
-    V_MarkRect (x, y, width, height); 
+    //V_MarkRect (x, y, width, height); 
  
     dest = screens[scrn] + y*SCREENWIDTH+x; 
 
@@ -434,60 +416,15 @@ V_DrawBlock
 	dest += SCREENWIDTH; 
     } 
 } 
- 
-
-
-//
-// V_GetBlock
-// Gets a linear block of pixels from the view buffer.
-//
-void
-V_GetBlock
-( int		x,
-  int		y,
-  int		scrn,
-  int		width,
-  int		height,
-  byte*		dest ) 
-{ 
-    byte*	src; 
-	 
-#ifdef RANGECHECK 
-    if (x<0
-	||x+width >SCREENWIDTH
-	|| y<0
-	|| y+height>SCREENHEIGHT 
-	|| (unsigned)scrn>4 )
-    {
-	I_Error ("Bad V_DrawBlock");
-    }
-#endif 
- 
-    src = screens[scrn] + y*SCREENWIDTH+x; 
-
-    while (height--) 
-    { 
-	memcpy (dest, src, width); 
-	src += SCREENWIDTH; 
-	dest += width; 
-    } 
-} 
-
-
-
 
 //
 // V_Init
 // 
 void V_Init (void) 
 { 
-    int		i;
-    byte*	base;
-		
-    // stick these in low dos memory on PCs
-
-    base = I_AllocLow (SCREENWIDTH*SCREENHEIGHT*4);
-
-    for (i=0 ; i<4 ; i++)
+    // @todo clean this upp
+    byte* base = I_AllocLow (SCREENWIDTH*SCREENHEIGHT*4);
+    memset(base, 0, SCREENWIDTH*SCREENHEIGHT*4);
+    for (int i = 0; i < 4; i++)
 	screens[i] = base + i*SCREENWIDTH*SCREENHEIGHT;
 }

@@ -31,6 +31,7 @@ rcsid[] = "$Id: m_bbox.c,v 1.1 1997/02/03 22:45:10 b1 Exp $";
 #include <stdarg.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include "doomdef.h"
 #include "m_misc.h"
@@ -48,7 +49,7 @@ rcsid[] = "$Id: m_bbox.c,v 1.1 1997/02/03 22:45:10 b1 Exp $";
 
 
 
-int	mb_used = 6;
+int	mb_used = 100;
 
 
 void
@@ -157,9 +158,9 @@ byte*	I_AllocLow(int length)
 //
 // I_Error
 //
-extern boolean demorecording;
+extern bool demorecording;
 
-void I_Error (char *error, ...)
+void I_Error (const char *error, ...)
 {
     va_list	argptr;
 
@@ -179,5 +180,7 @@ void I_Error (char *error, ...)
     D_QuitNetGame ();
     I_ShutdownGraphics();
     
-    exit(-1);
+    //exit(-1);
+    // @todo maybe not crash is appropriate
+    assert(false);
 }

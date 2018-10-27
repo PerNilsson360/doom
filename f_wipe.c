@@ -40,7 +40,7 @@ static const char rcsid[] = "$Id: f_wipe.c,v 1.2 1997/02/03 22:45:09 b1 Exp $";
 //
 
 // when zero, stop the wipe
-static boolean	go = 0;
+static bool	go = 0;
 
 static byte*	wipe_scr_start;
 static byte*	wipe_scr_end;
@@ -57,7 +57,7 @@ wipe_shittyColMajorXform
     int		y;
     short*	dest;
 
-    dest = (short*) Z_Malloc(width*height*2, PU_STATIC, 0);
+   dest = (short*) Z_Malloc(width*height*2, PU_STATIC, 0);
 
     for(y=0;y<height;y++)
 	for(x=0;x<width;x++)
@@ -66,7 +66,6 @@ wipe_shittyColMajorXform
     memcpy(array, dest, width*height*2);
 
     Z_Free(dest);
-
 }
 
 int
@@ -85,7 +84,7 @@ wipe_doColorXForm
   int	height,
   int	ticks )
 {
-    boolean	changed;
+    bool	changed;
     byte*	w;
     byte*	e;
     int		newval;
@@ -181,7 +180,7 @@ wipe_doMelt
     
     short*	s;
     short*	d;
-    boolean	done = true;
+    bool	done = true;
 
     width/=2;
 
@@ -286,7 +285,7 @@ wipe_ScreenWipe
     }
 
     // do a piece of wipe-in
-    V_MarkRect(0, 0, width, height);
+    //V_MarkRect(0, 0, width, height);
     rc = (*wipes[wipeno*3+1])(width, height, ticks);
     //  V_DrawBlock(x, y, 0, width, height, wipe_scr); // DEBUG
 

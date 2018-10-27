@@ -35,6 +35,8 @@ rcsid[] = "$Id: w_wad.c,v 1.5 1997/02/03 16:47:57 b1 Exp $";
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <alloca.h>
+#include <errno.h>
+
 #define O_BINARY		0
 #endif
 
@@ -196,7 +198,7 @@ void W_AddFile (char *filename)
 	header.numlumps = LONG(header.numlumps);
 	header.infotableofs = LONG(header.infotableofs);
 	length = header.numlumps*sizeof(filelump_t);
-	fileinfo = alloca (length);
+	fileinfo = (filelump_t*)alloca (length);
 	lseek (handle, header.infotableofs, SEEK_SET);
 	read (handle, fileinfo, length);
 	numlumps += header.numlumps;
@@ -204,7 +206,7 @@ void W_AddFile (char *filename)
 
     
     // Fill in lumpinfo
-    lumpinfo = realloc (lumpinfo, numlumps*sizeof(lumpinfo_t));
+    lumpinfo = (lumpinfo_t*)realloc (lumpinfo, numlumps*sizeof(lumpinfo_t));
 
     if (!lumpinfo)
 	I_Error ("Couldn't realloc lumpinfo");
@@ -253,7 +255,7 @@ void W_Reload (void)
     lumpcount = LONG(header.numlumps);
     header.infotableofs = LONG(header.infotableofs);
     length = lumpcount*sizeof(filelump_t);
-    fileinfo = alloca (length);
+    fileinfo = (filelump_t*)alloca (length);
     lseek (handle, header.infotableofs, SEEK_SET);
     read (handle, fileinfo, length);
     
@@ -297,17 +299,19 @@ void W_InitMultipleFiles (char** filenames)
     numlumps = 0;
 
     // will be realloced as lumps are added
-    lumpinfo = malloc(1);	
+    lumpinfo = (lumpinfo_t*)malloc(1);	
 
-    for ( ; *filenames ; filenames++)
+    for ( ; *filenames ; filenames++) {
+        printf("prossecing file name %s\n", *filenames);
 	W_AddFile (*filenames);
-
+    }
+    
     if (!numlumps)
 	I_Error ("W_InitFiles: no files found");
     
     // set up caching
     size = numlumps * sizeof(*lumpcache);
-    lumpcache = malloc (size);
+    lumpcache = (void**)malloc (size);
     
     if (!lumpcache)
 	I_Error ("Couldn't allocate lumpcache");
@@ -348,7 +352,7 @@ int W_NumLumps (void)
 // Returns -1 if name not found.
 //
 
-int W_CheckNumForName (char* name)
+int W_CheckNumForName (const char* name)
 {
     union {
 	char	s[9];
@@ -396,7 +400,7 @@ int W_CheckNumForName (char* name)
 // W_GetNumForName
 // Calls W_CheckNumForName, but bombs out if not found.
 //
-int W_GetNumForName (char* name)
+int W_GetNumForName (const char* name)
 {
     int	i;
 
@@ -435,7 +439,7 @@ W_ReadLump
 {
     int		c;
     lumpinfo_t*	l;
-    int		handle;
+    int32_t handle;
 	
     if (lump >= numlumps)
 	I_Error ("W_ReadLump: %i >= numlumps",lump);
@@ -452,13 +456,13 @@ W_ReadLump
     }
     else
 	handle = l->handle;
-		
+
     lseek (handle, l->position, SEEK_SET);
     c = read (handle, dest, l->size);
 
     if (c < l->size)
-	I_Error ("W_ReadLump: only read %i of %i on lump %i",
-		 c,l->size,lump);	
+	I_Error ("W_ReadLump: only read %i of %i on lump %i, %s",
+		 c,l->size,lump, strerror(errno));	
 
     if (l->handle == -1)
 	close (handle);
@@ -477,8 +481,6 @@ W_CacheLumpNum
 ( int		lump,
   int		tag )
 {
-    byte*	ptr;
-
     if ((unsigned)lump >= numlumps)
 	I_Error ("W_CacheLumpNum: %i >= numlumps",lump);
 		
@@ -487,7 +489,7 @@ W_CacheLumpNum
 	// read the lump in
 	
 	//printf ("cache miss on lump %i\n",lump);
-	ptr = Z_Malloc (W_LumpLength (lump), tag, &lumpcache[lump]);
+        (void) Z_Malloc (W_LumpLength (lump), tag, &lumpcache[lump]);
 	W_ReadLump (lump, lumpcache[lump]);
     }
     else
@@ -506,7 +508,7 @@ W_CacheLumpNum
 //
 void*
 W_CacheLumpName
-( char*		name,
+( const char*		name,
   int		tag )
 {
     return W_CacheLumpNum (W_GetNumForName(name), tag);

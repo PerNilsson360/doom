@@ -24,6 +24,7 @@
 #define __R_STATE__
 
 // Need data structure definitions.
+#include "BspNode.hh"
 #include "d_player.h"
 #include "r_data.h"
 
@@ -41,18 +42,17 @@
 //
 
 // needed for texture pegging
-extern fixed_t*		textureheight;
+extern double*		ttextureheight;
 
 // needed for pre rendering (fracs)
-extern fixed_t*		spritewidth;
+extern double*		sspritewidth;
 
-extern fixed_t*		spriteoffset;
-extern fixed_t*		spritetopoffset;
+extern double*		sspriteoffset;
+extern double*		sspritetopoffset;
 
 extern lighttable_t*	colormaps;
 
 extern int		viewwidth;
-extern int		scaledviewwidth;
 extern int		viewheight;
 
 extern int		firstflat;
@@ -88,7 +88,7 @@ extern int		numsubsectors;
 extern subsector_t*	subsectors;
 
 extern int		numnodes;
-extern node_t*		nodes;
+extern BspNode*		nodes;
 
 extern int		numlines;
 extern line_t*		lines;
@@ -100,28 +100,28 @@ extern side_t*		sides;
 //
 // POV data.
 //
-extern fixed_t		viewx;
-extern fixed_t		viewy;
-extern fixed_t		viewz;
+extern double		vviewx;
+extern double		vviewy;
+extern double		vviewz;
 
-extern angle_t		viewangle;
+extern Angle		vviewangle;
 extern player_t*	viewplayer;
 
 
 // ?
-extern angle_t		clipangle;
+extern Angle		cclipangle;
 
 extern int		viewangletox[FINEANGLES/2];
-extern angle_t		xtoviewangle[SCREENWIDTH+1];
+extern Angle xxtoviewangle[SCREENWIDTH+1];
 //extern fixed_t		finetangent[FINEANGLES/2];
 
 extern fixed_t		rw_distance;
-extern angle_t		rw_normalangle;
+extern Angle		rrw_normalangle;
 
 
 
 // angle to line origin
-extern int		rw_angle1;
+extern Angle		rrw_angle1;
 
 // Segs count?
 extern int		sscount;

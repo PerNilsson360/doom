@@ -187,7 +187,7 @@ typedef struct
 
   // Bounding box for each child,
   // clip against view frustum.
-  short		bbox[2][4];
+  short		bbbox[2][4];
 
   // If NF_SUBSECTOR its a subsector,
   // else it's a node of another subtree.

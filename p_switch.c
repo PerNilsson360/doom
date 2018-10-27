@@ -181,7 +181,7 @@ P_StartButton
 	    buttonlist[i].where = w;
 	    buttonlist[i].btexture = texture;
 	    buttonlist[i].btimer = time;
-	    buttonlist[i].soundorg = (mobj_t *)&line->frontsector->soundorg;
+	    buttonlist[i].soundorg = (Mob *)&line->frontsector->soundorg;
 	    return;
 	}
     }
@@ -202,6 +202,7 @@ P_ChangeSwitchTexture
 ( line_t*	line,
   int 		useAgain )
 {
+    printf("P_ChangeSwitchTexture\n");
     int     texTop;
     int     texMid;
     int     texBot;
@@ -272,13 +273,12 @@ P_ChangeSwitchTexture
 // Called when a thing uses a special line.
 // Only the front sides of lines are usable.
 //
-boolean
+bool
 P_UseSpecialLine
-( mobj_t*	thing,
+( Mob*	thing,
   line_t*	line,
   int		side )
 {               
-
     // Err...
     // Use the back sides of VERY SPECIAL lines...
     if (side)

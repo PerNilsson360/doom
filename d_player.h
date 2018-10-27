@@ -33,7 +33,8 @@
 
 // In addition, the player is just a special
 // case of the generic moving object/actor.
-#include "p_mobj.h"
+//#include "Mob.hh"
+class Mob;
 
 // Finally, for odd reasons, the player input
 // is buffered within the player data struct,
@@ -80,22 +81,22 @@ typedef enum
 //
 // Extended player object info: player_t
 //
-typedef struct player_s
+struct player_s
 {
-    mobj_t*		mo;
+    Mob*		mo;
     playerstate_t	playerstate;
     ticcmd_t		cmd;
 
     // Determine POV,
     //  including viewpoint bobbing during movement.
     // Focal origin above r.z
-    fixed_t		viewz;
+    double vviewz;
     // Base height above floor for viewz.
-    fixed_t		viewheight;
+    double vviewheight;
     // Bob/squat speed.
-    fixed_t         	deltaviewheight;
+    double ddeltaviewheight;
     // bounded/scaled total momentum.
-    fixed_t         	bob;	
+    double bbob;	
 
     // This is only used between levels,
     // mo->health is used during levels.
@@ -106,8 +107,8 @@ typedef struct player_s
 
     // Power ups. invinc and invis are tic counters.
     int			powers[NUMPOWERS];
-    boolean		cards[NUMCARDS];
-    boolean		backpack;
+    bool		cards[NUMCARDS];
+    bool		backpack;
     
     // Frags, kills of other players.
     int			frags[MAXPLAYERS];
@@ -116,7 +117,7 @@ typedef struct player_s
     // Is wp_nochange if not changing.
     weapontype_t	pendingweapon;
 
-    boolean		weaponowned[NUMWEAPONS];
+    int		    weaponowned[NUMWEAPONS];
     int			ammo[NUMAMMO];
     int			maxammo[NUMAMMO];
 
@@ -137,14 +138,14 @@ typedef struct player_s
     int			secretcount;
 
     // Hint messages.
-    char*		message;	
+    const char*		message;	
     
     // For screen flashing (red or bright).
     int			damagecount;
     int			bonuscount;
 
     // Who did damage (NULL for floors/ceilings).
-    mobj_t*		attacker;
+    Mob*		attacker;
     
     // So gun flashes light up areas.
     int			extralight;
@@ -158,12 +159,13 @@ typedef struct player_s
     int			colormap;	
 
     // Overlay view sprites (gun, etc).
-    pspdef_t		psprites[NUMPSPRITES];
+    struct pspdef_t		psprites[NUMPSPRITES];
 
     // True if secret level has been done.
-    boolean		didsecret;	
+    bool		didsecret;	
 
-} player_t;
+};
+typedef struct player_s  player_t;
 
 
 //
@@ -172,7 +174,7 @@ typedef struct player_s
 //
 typedef struct
 {
-    boolean	in;	// whether the player is in game
+    bool	in;	// whether the player is in game
     
     // Player stats, kills, collected items etc.
     int		skills;
@@ -189,7 +191,7 @@ typedef struct
     int		epsd;	// episode # (0-2)
 
     // if true, splash the secret level
-    boolean	didsecret;
+    bool	didsecret;
     
     // previous and next levels, origin 0
     int		last;

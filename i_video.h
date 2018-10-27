@@ -36,13 +36,13 @@
 // and sets up the video mode
 void I_InitGraphics (void);
 
+void I_Draw(int x, int y, unsigned char c);
 
 void I_ShutdownGraphics(void);
 
 // Takes full 8 bit values.
 void I_SetPalette (byte* palette);
 
-void I_UpdateNoBlit (void);
 void I_FinishUpdate (void);
 
 // Wait for vertical retrace or pause a bit.

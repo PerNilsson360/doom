@@ -43,7 +43,6 @@
 #define PU_PURGELEVEL	100
 #define PU_CACHE		101
 
-
 void	Z_Init (void);
 void*	Z_Malloc (int size, int tag, void *ptr);
 void    Z_Free (void *ptr);
@@ -72,11 +71,9 @@ typedef struct memblock_s
 #define Z_ChangeTag(p,t) \
 { \
       if (( (memblock_t *)( (byte *)(p) - sizeof(memblock_t)))->id!=0x1d4a11) \
-	  I_Error("Z_CT at "__FILE__":%i",__LINE__); \
+	  I_Error("Z_CT at " __FILE__ ":%i",__LINE__); \
 	  Z_ChangeTag2(p,t); \
 };
-
-
 
 #endif
 //-----------------------------------------------------------------------------

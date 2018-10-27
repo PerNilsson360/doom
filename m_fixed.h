@@ -28,7 +28,6 @@
 #pragma interface
 #endif
 
-
 //
 // Fixed point, 32bit as 16.16.
 //
@@ -36,6 +35,9 @@
 #define FRACUNIT		(1<<FRACBITS)
 
 typedef int fixed_t;
+
+double fixed_to_double(fixed_t a);
+fixed_t double_to_fixed(double d);
 
 fixed_t FixedMul	(fixed_t a, fixed_t b);
 fixed_t FixedDiv	(fixed_t a, fixed_t b);

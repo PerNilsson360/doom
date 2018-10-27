@@ -45,30 +45,21 @@ rcsid[] = "$Id: p_user.c,v 1.3 1997/01/28 22:08:29 b1 Exp $";
 // Movement.
 //
 
-// 16 pixels of bob
-#define MAXBOB	0x100000	
+// 16 pixels of bob (old max bob was 16 pixels)
 
-boolean		onground;
+#define MAXBOB 8	
+#define BOB_ANGLE 0.1
+#define MAX_BOB_ANGLE 0.5
 
 
-//
-// P_Thrust
-// Moves the given origin along a given angle.
-//
+bool		onground;
+
 void
-P_Thrust
-( player_t*	player,
-  angle_t	angle,
-  fixed_t	move ) 
+PP_Thrust(player_t* player, double angle, double move ) 
 {
-    angle >>= ANGLETOFINESHIFT;
-    
-    player->mo->momx += FixedMul(move,finecosine[angle]); 
-    player->mo->momy += FixedMul(move,finesine[angle]);
+    player->mo->mmomx += move * cos(angle);
+    player->mo->mmomy += move * sin(angle);
 }
-
-
-
 
 //
 // P_CalcHeight
@@ -76,68 +67,61 @@ P_Thrust
 //
 void P_CalcHeight (player_t* player) 
 {
-    int		angle;
-    fixed_t	bob;
-    
     // Regular movement bobbing
     // (needs to be calculated for gun swing
     // even if not on ground)
     // OPTIMIZE: tablify angle
     // Note: a LUT allows for effects
     //  like a ramp with low health.
-    player->bob =
-	FixedMul (player->mo->momx, player->mo->momx)
-	+ FixedMul (player->mo->momy,player->mo->momy);
-    
-    player->bob >>= 2;
-
-    if (player->bob>MAXBOB)
-	player->bob = MAXBOB;
+    // @todo bob shold be dependent on player time
+    player->bbob += 
+        fmod(fabs((player->mo->mmomx * player->mo->mmomx) + 
+                  (player->mo->mmomy * player->mo->mmomy)) / 400,
+             2 * M_PI);
 
     if ((player->cheats & CF_NOMOMENTUM) || !onground)
     {
-	player->viewz = player->mo->z + VIEWHEIGHT;
+        player->vviewz = player->mo->zz + VVIEWHEIGHT;
 
-	if (player->viewz > player->mo->ceilingz-4*FRACUNIT)
-	    player->viewz = player->mo->ceilingz-4*FRACUNIT;
+        if (player->vviewz > player->mo->cceilingz - 4)
+            player->vviewz = player->mo->cceilingz - 4;
 
-	player->viewz = player->mo->z + player->viewheight;
-	return;
+        // @todo this looks funny is vviews allready set above
+        player->vviewz = player->mo->zz + player->vviewheight;
+        return;
     }
-		
-    angle = (FINEANGLES/20*leveltime)&FINEMASK;
-    bob = FixedMul ( player->bob/2, finesine[angle]);
 
+    double bob = MAXBOB * sin(player->bbob);
     
     // move viewheight
     if (player->playerstate == PST_LIVE)
     {
-	player->viewheight += player->deltaviewheight;
+	player->vviewheight += player->ddeltaviewheight;
 
-	if (player->viewheight > VIEWHEIGHT)
+	if (player->vviewheight > VVIEWHEIGHT)
 	{
-	    player->viewheight = VIEWHEIGHT;
-	    player->deltaviewheight = 0;
+	    player->vviewheight = VVIEWHEIGHT;
+	    player->ddeltaviewheight = 0;
 	}
 
-	if (player->viewheight < VIEWHEIGHT/2)
+	if (player->vviewheight < VVIEWHEIGHT/2)
 	{
-	    player->viewheight = VIEWHEIGHT/2;
-	    if (player->deltaviewheight <= 0)
-		player->deltaviewheight = 1;
+	    player->vviewheight = VVIEWHEIGHT/2;
+	    if (player->ddeltaviewheight <= 0)
+            player->ddeltaviewheight = 1;
 	}
 	
-	if (player->deltaviewheight)	
+	if (player->ddeltaviewheight)	
 	{
-	    player->deltaviewheight += FRACUNIT/4;
-	    if (!player->deltaviewheight)
-		player->deltaviewheight = 1;
+	    player->ddeltaviewheight += 1/4;
+	    if (!player->ddeltaviewheight)
+            player->ddeltaviewheight = 1;
 	}
     }
-    player->viewz = player->mo->z + player->viewheight + bob;
 
-    if (player->viewz > player->mo->ceilingz-4*FRACUNIT)
-	player->viewz = player->mo->ceilingz-4*FRACUNIT;
+    player->vviewz = player->mo->zz + player->vviewheight + bob;
+    if (player->vviewz > player->mo->cceilingz - 4)
+        player->vviewz = player->mo->cceilingz - 4;
 }
 
 
@@ -150,23 +134,25 @@ void P_MovePlayer (player_t* player)
     ticcmd_t*		cmd;
 	
     cmd = &player->cmd;
-	
-    player->mo->angle += (cmd->angleturn<<16);
+    
+    player->mo->_angle += Angle((angle_t)(cmd->angleturn<<16));
+    
+    double a = player->mo->_angle;
 
     // Do not let the player control movement
     //  if not onground.
-    onground = (player->mo->z <= player->mo->floorz);
+    onground = (player->mo->zz <= player->mo->ffloorz);
 	
     if (cmd->forwardmove && onground)
-	P_Thrust (player, player->mo->angle, cmd->forwardmove*2048);
-    
+        PP_Thrust(player, a, fixed_to_double(cmd->forwardmove*2048));
+        
     if (cmd->sidemove && onground)
-	P_Thrust (player, player->mo->angle-ANG90, cmd->sidemove*2048);
-
+        PP_Thrust(player, a - (M_PI/2), fixed_to_double(cmd->sidemove*2048));
+    
     if ( (cmd->forwardmove || cmd->sidemove) 
-	 && player->mo->state == &states[S_PLAY] )
+         && player->mo->state == &states[S_PLAY] )
     {
-	P_SetMobjState (player->mo, S_PLAY_RUN1);
+        player->mo->setState(S_PLAY_RUN1);
     }
 }	
 
@@ -181,51 +167,49 @@ void P_MovePlayer (player_t* player)
 
 void P_DeathThink (player_t* player)
 {
-    angle_t		angle;
-    angle_t		delta;
-
     P_MovePsprites (player);
 	
     // fall to the ground
-    if (player->viewheight > 6*FRACUNIT)
-	player->viewheight -= FRACUNIT;
+    if (player->vviewheight > 6)
+        player->vviewheight -= 1;
 
-    if (player->viewheight < 6*FRACUNIT)
-	player->viewheight = 6*FRACUNIT;
+    if (player->vviewheight < 6)
+        player->vviewheight = 6;
 
-    player->deltaviewheight = 0;
-    onground = (player->mo->z <= player->mo->floorz);
+    player->ddeltaviewheight = 0;
+    onground = (player->mo->zz <= player->mo->ffloorz);
     P_CalcHeight (player);
 	
     if (player->attacker && player->attacker != player->mo)
     {
-	angle = R_PointToAngle2 (player->mo->x,
-				 player->mo->y,
-				 player->attacker->x,
-				 player->attacker->y);
-	
-	delta = angle - player->mo->angle;
-	
-	if (delta < ANG5 || delta > (unsigned)-ANG5)
-	{
-	    // Looking at killer,
-	    //  so fade damage flash down.
-	    player->mo->angle = angle;
+        Angle angle(player->mo->xx,
+                    player->mo->yy,
+                    player->attacker->xx,
+                    player->attacker->yy);
 
-	    if (player->damagecount)
-		player->damagecount--;
-	}
-	else if (delta < ANG180)
-	    player->mo->angle += ANG5;
-	else
-	    player->mo->angle -= ANG5;
+        // @todo introduce a DiffAngle ?
+        double delta = (double)angle - (double)player->mo->_angle;
+	
+        if (delta < (double)Angle::A5 || delta > -(double)Angle::A5)
+        {
+            // Looking at killer,
+            //  so fade damage flash down.
+            player->mo->_angle = angle;
+            
+            if (player->damagecount)
+                player->damagecount--;
+        }
+        else if (delta < (double)Angle::A180)
+            player->mo->_angle += Angle::A5;
+        else
+	    player->mo->_angle -= Angle::A5;
     }
     else if (player->damagecount)
-	player->damagecount--;
+        player->damagecount--;
 	
-
+    
     if (player->cmd.buttons & BT_USE)
-	player->playerstate = PST_REBORN;
+        player->playerstate = PST_REBORN;
 }
 
 
@@ -285,7 +269,7 @@ void P_PlayerThink (player_t* player)
 	// The actual changing of the weapon is done
 	//  when the weapon psprite can do it
 	//  (read: not in the middle of an attack).
-	newweapon = (cmd->buttons&BT_WEAPONMASK)>>BT_WEAPONSHIFT;
+        newweapon = (weapontype_t)((cmd->buttons&BT_WEAPONMASK)>>BT_WEAPONSHIFT);
 	
 	if (newweapon == wp_fist
 	    && player->weaponowned[wp_chainsaw]

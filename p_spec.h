@@ -30,7 +30,7 @@
 //
 // End-level timer (-TIMER option)
 //
-extern	boolean levelTimer;
+extern	bool levelTimer;
 extern	int	levelTimeCount;
 
 
@@ -48,22 +48,22 @@ void    P_SpawnSpecials (void);
 void    P_UpdateSpecials (void);
 
 // when needed
-boolean
+bool
 P_UseSpecialLine
-( mobj_t*	thing,
+( Mob*	thing,
   line_t*	line,
   int		side );
 
 void
 P_ShootSpecialLine
-( mobj_t*	thing,
+( Mob*	thing,
   line_t*	line );
 
 void
 P_CrossSpecialLine
 ( int		linenum,
   int		side,
-  mobj_t*	thing );
+  Mob*	thing );
 
 void    P_PlayerInSpecialSector (player_t* player);
 
@@ -84,16 +84,14 @@ getSide
   int		line,
   int		side );
 
-fixed_t P_FindLowestFloorSurrounding(sector_t* sec);
-fixed_t P_FindHighestFloorSurrounding(sector_t* sec);
+double PP_FindLowestFloorSurrounding(sector_t* sec);
+double PP_FindHighestFloorSurrounding(sector_t* sec);
 
-fixed_t
-P_FindNextHighestFloor
-( sector_t*	sec,
-  int		currentheight );
+double
+PP_FindNextHighestFloor(sector_t* sec, double currentheight);
 
-fixed_t P_FindLowestCeilingSurrounding(sector_t* sec);
-fixed_t P_FindHighestCeilingSurrounding(sector_t* sec);
+double PP_FindLowestCeilingSurrounding(sector_t* sec);
+double PP_FindHighestCeilingSurrounding(sector_t* sec);
 
 int
 P_FindSectorFromLineTag
@@ -230,7 +228,7 @@ typedef struct
     bwhere_e	where;
     int		btexture;
     int		btimer;
-    mobj_t*	soundorg;
+    Mob*	soundorg;
 
 } button_t;
 
@@ -286,14 +284,14 @@ typedef struct
 {
     thinker_t	thinker;
     sector_t*	sector;
-    fixed_t	speed;
-    fixed_t	low;
-    fixed_t	high;
+    double	sspeed;
+    double	llow;
+    double	hhigh;
     int		wait;
     int		count;
     plat_e	status;
     plat_e	oldstatus;
-    boolean	crush;
+    bool	crush;
     int		tag;
     plattype_e	type;
     
@@ -302,7 +300,7 @@ typedef struct
 
 
 #define PLATWAIT		3
-#define PLATSPEED		FRACUNIT
+#define PPLATSPEED		1.0
 #define MAXPLATS		30
 
 
@@ -345,8 +343,8 @@ typedef struct
     thinker_t	thinker;
     vldoor_e	type;
     sector_t*	sector;
-    fixed_t	topheight;
-    fixed_t	speed;
+    double	ttopheight;
+    double	sspeed;
 
     // 1 = up, 0 = waiting at top, -1 = down
     int             direction;
@@ -361,13 +359,13 @@ typedef struct
 
 
 
-#define VDOORSPEED		FRACUNIT*2
+#define VVDOORSPEED		2
 #define VDOORWAIT		150
 
 void
 EV_VerticalDoor
 ( line_t*	line,
-  mobj_t*	thing );
+  Mob*	thing );
 
 int
 EV_DoDoor
@@ -378,7 +376,7 @@ int
 EV_DoLockedDoor
 ( line_t*	line,
   vldoor_e	type,
-  mobj_t*	thing );
+  Mob*	thing );
 
 void    T_VerticalDoor (vldoor_t* door);
 void    P_SpawnDoorCloseIn30 (sector_t* sec);
@@ -469,7 +467,7 @@ void P_InitSlidingDoorFrames(void);
 void
 EV_SlidingDoor
 ( line_t*	line,
-  mobj_t*	thing );
+  Mob*	thing );
 #endif
 
 
@@ -495,10 +493,10 @@ typedef struct
     thinker_t	thinker;
     ceiling_e	type;
     sector_t*	sector;
-    fixed_t	bottomheight;
-    fixed_t	topheight;
-    fixed_t	speed;
-    boolean	crush;
+    double bbottomheight;
+    double ttopheight;
+    double sspeed;
+    bool	crush;
 
     // 1 = up, 0 = waiting, -1 = down
     int		direction;
@@ -513,7 +511,7 @@ typedef struct
 
 
 
-#define CEILSPEED		FRACUNIT
+#define CCEILSPEED		1
 #define CEILWAIT		150
 #define MAXCEILINGS		30
 
@@ -585,19 +583,19 @@ typedef struct
 {
     thinker_t	thinker;
     floor_e	type;
-    boolean	crush;
+    bool	crush;
     sector_t*	sector;
     int		direction;
     int		newspecial;
     short	texture;
-    fixed_t	floordestheight;
-    fixed_t	speed;
+    double	ffloordestheight;
+    double	sspeed;
 
 } floormove_t;
 
 
 
-#define FLOORSPEED		FRACUNIT
+#define FFLOORSPEED		1.0
 
 typedef enum
 {
@@ -608,13 +606,12 @@ typedef enum
 } result_e;
 
 result_e
-T_MovePlane
-( sector_t*	sector,
-  fixed_t	speed,
-  fixed_t	dest,
-  boolean	crush,
-  int		floorOrCeiling,
-  int		direction );
+TT_MovePlane(sector_t*	sector,
+             double speed,
+             double dest,
+             bool crush,
+             int floorOrCeiling,
+             int direction);
 
 int
 EV_BuildStairs
@@ -635,7 +632,7 @@ int
 EV_Teleport
 ( line_t*	line,
   int		side,
-  mobj_t*	thing );
+  Mob*	thing );
 
 #endif
 //-----------------------------------------------------------------------------

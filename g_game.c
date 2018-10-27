@@ -76,7 +76,7 @@ rcsid[] = "$Id: g_game.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 
 
 
-boolean	G_CheckDemoStatus (void); 
+bool	G_CheckDemoStatus (void); 
 void	G_ReadDemoTiccmd (ticcmd_t* cmd); 
 void	G_WriteDemoTiccmd (ticcmd_t* cmd); 
 void	G_PlayerReborn (int player); 
@@ -97,25 +97,25 @@ void	G_DoSaveGame (void);
 gameaction_t    gameaction; 
 gamestate_t     gamestate; 
 skill_t         gameskill; 
-boolean		respawnmonsters;
+bool		respawnmonsters;
 int             gameepisode; 
 int             gamemap; 
  
-boolean         paused; 
-boolean         sendpause;             	// send a pause event next tic 
-boolean         sendsave;             	// send a save event next tic 
-boolean         usergame;               // ok to save / end game 
+bool         paused; 
+bool         sendpause;             	// send a pause event next tic 
+bool         sendsave;             	// send a save event next tic 
+bool         usergame;               // ok to save / end game 
  
-boolean         timingdemo;             // if true, exit with report on completion 
-boolean         nodrawers;              // for comparative timing purposes 
-boolean         noblit;                 // for comparative timing purposes 
+bool         timingdemo;             // if true, exit with report on completion 
+bool         nodrawers;              // for comparative timing purposes 
+bool         noblit;                 // for comparative timing purposes 
 int             starttime;          	// for comparative timing purposes  	 
  
-boolean         viewactive; 
+bool         viewactive; 
  
-boolean         deathmatch;           	// only if started as net death 
-boolean         netgame;                // only true if packets are broadcast 
-boolean         playeringame[MAXPLAYERS]; 
+bool         deathmatch;           	// only if started as net death 
+bool         netgame;                // only true if packets are broadcast 
+bool         playeringame[MAXPLAYERS]; 
 player_t        players[MAXPLAYERS]; 
  
 int             consoleplayer;          // player taking events and displaying 
@@ -125,15 +125,15 @@ int             levelstarttic;          // gametic at level start
 int             totalkills, totalitems, totalsecret;    // for intermission 
  
 char            demoname[32]; 
-boolean         demorecording; 
-boolean         demoplayback; 
-boolean		netdemo; 
+bool         demorecording; 
+bool         demoplayback; 
+bool		netdemo; 
 byte*		demobuffer;
 byte*		demo_p;
 byte*		demoend; 
-boolean         singledemo;            	// quit after playing a demo from cmdline 
+bool         singledemo;            	// quit after playing a demo from cmdline 
  
-boolean         precache = true;        // if true, load all graphics at start 
+bool         precache = true;        // if true, load all graphics at start 
  
 wbstartstruct_t wminfo;               	// parms for world map / intermission 
  
@@ -180,11 +180,11 @@ fixed_t		angleturn[3] = {640, 1280, 320};	// + slow turn
  
 #define NUMKEYS		256 
 
-boolean         gamekeydown[NUMKEYS]; 
+bool         gamekeydown[NUMKEYS]; 
 int             turnheld;				// for accelerative turning 
  
-boolean		mousearray[4]; 
-boolean*	mousebuttons = &mousearray[1];		// allow [-1]
+bool		mousearray[4]; 
+bool*	mousebuttons = &mousearray[1];		// allow [-1]
 
 // mouse values are used once 
 int             mousex;
@@ -200,8 +200,8 @@ int		dclicks2;
 // joystick values are repeated 
 int             joyxmove;
 int		joyymove;
-boolean         joyarray[5]; 
-boolean*	joybuttons = &joyarray[1];		// allow [-1] 
+bool         joyarray[5]; 
+bool*	joybuttons = &joyarray[1];		// allow [-1] 
  
 int		savegameslot; 
 char		savedescription[32]; 
@@ -209,7 +209,7 @@ char		savedescription[32];
  
 #define	BODYQUESIZE	32
 
-mobj_t*		bodyque[BODYQUESIZE]; 
+Mob*		bodyque[BODYQUESIZE]; 
 int		bodyqueslot; 
  
 void*		statcopy;				// for statistics driver
@@ -237,8 +237,8 @@ int G_CmdChecksum (ticcmd_t* cmd)
 void G_BuildTiccmd (ticcmd_t* cmd) 
 { 
     int		i; 
-    boolean	strafe;
-    boolean	bstrafe; 
+    bool	strafe;
+    bool	bstrafe; 
     int		speed;
     int		tspeed; 
     int		forward;
@@ -295,14 +295,14 @@ void G_BuildTiccmd (ticcmd_t* cmd)
     } 
     else 
     { 
-	if (gamekeydown[key_right]) 
-	    cmd->angleturn -= angleturn[tspeed]; 
-	if (gamekeydown[key_left]) 
-	    cmd->angleturn += angleturn[tspeed]; 
-	if (joyxmove > 0) 
-	    cmd->angleturn -= angleturn[tspeed]; 
-	if (joyxmove < 0) 
-	    cmd->angleturn += angleturn[tspeed]; 
+        if (gamekeydown[key_right])
+            cmd->angleturn -= angleturn[tspeed]; 
+        if (gamekeydown[key_left]) 
+            cmd->angleturn += angleturn[tspeed]; 
+        if (joyxmove > 0) 
+            cmd->angleturn -= angleturn[tspeed]; 
+        if (joyxmove < 0) 
+            cmd->angleturn += angleturn[tspeed]; 
     } 
  
     if (gamekeydown[key_up]) 
@@ -470,7 +470,7 @@ void G_DoLoadLevel (void)
     levelstarttic = gametic;        // for time calculation
     
     if (wipegamestate == GS_LEVEL) 
-	wipegamestate = -1;             // force a wipe 
+	wipegamestate = GS_WIPE;             // force a wipe 
 
     gamestate = GS_LEVEL; 
 
@@ -501,7 +501,7 @@ void G_DoLoadLevel (void)
 // G_Responder  
 // Get info needed to make ticcmd_ts for the players.
 // 
-boolean G_Responder (event_t* ev) 
+bool G_Responder (event_t* ev) 
 { 
     // allow spy mode changes even during the demo
     if (gamestate == GS_LEVEL && ev->type == ev_keydown 
@@ -546,8 +546,9 @@ boolean G_Responder (event_t* ev)
 	if (ST_Responder (ev)) 
 	    return true;	// status window ate it 
 	if (AM_Responder (ev)) 
-	    return true;	// automap ate it 
-    } 
+            return true;	// automap ate it 
+    }
+    
 	 
     if (gamestate == GS_FINALE) 
     { 
@@ -687,7 +688,7 @@ void G_Ticker (void)
 			     cmd->consistancy, consistancy[i][buf]); 
 		} 
 		if (players[i].mo) 
-		    consistancy[i][buf] = players[i].mo->x; 
+		    consistancy[i][buf] = players[i].mo->xx; 
 		else 
 		    consistancy[i][buf] = rndindex; 
 	    } 
@@ -729,7 +730,8 @@ void G_Ticker (void)
       case GS_LEVEL: 
 	P_Ticker (); 
 	ST_Ticker (); 
-	AM_Ticker (); 
+    // @todo fix auto map to support double
+	//AM_Ticker (); 
 	HU_Ticker ();            
 	break; 
 	 
@@ -840,51 +842,53 @@ void G_PlayerReborn (int player)
 //
 void P_SpawnPlayer (mapthing_t* mthing); 
  
-boolean
+bool
 G_CheckSpot
 ( int		playernum,
   mapthing_t*	mthing ) 
 { 
-    fixed_t		x;
-    fixed_t		y; 
+    double x;
+    double y; 
     subsector_t*	ss; 
-    unsigned		an; 
-    mobj_t*		mo; 
+    Mob*		mo; 
     int			i;
 	
     if (!players[playernum].mo)
     {
-	// first spawn of level, before corpses
-	for (i=0 ; i<playernum ; i++)
-	    if (players[i].mo->x == mthing->x << FRACBITS
-		&& players[i].mo->y == mthing->y << FRACBITS)
-		return false;	
-	return true;
+        // first spawn of level, before corpses
+        for (i=0 ; i<playernum ; i++)
+            if (players[i].mo->xx == mthing->x && 
+                players[i].mo->yy == mthing->y)
+                return false;	
+        return true;
     }
 		
-    x = mthing->x << FRACBITS; 
-    y = mthing->y << FRACBITS; 
+    x = mthing->x; 
+    y = mthing->y; 
 	 
-    if (!P_CheckPosition (players[playernum].mo, x, y) ) 
+    if (!PP_CheckPosition (players[playernum].mo, x, y) ) 
 	return false; 
  
     // flush an old corpse if needed 
     if (bodyqueslot >= BODYQUESIZE) 
-	P_RemoveMobj (bodyque[bodyqueslot%BODYQUESIZE]); 
+        P_RemoveMobj (bodyque[bodyqueslot%BODYQUESIZE]); 
+
     bodyque[bodyqueslot%BODYQUESIZE] = players[playernum].mo; 
     bodyqueslot++; 
 	
     // spawn a teleport fog 
-    ss = R_PointInSubsector (x,y); 
-    an = ( ANG45 * (mthing->angle/45) ) >> ANGLETOFINESHIFT; 
- 
-    mo = P_SpawnMobj (x+20*finecosine[an], y+20*finesine[an] 
-		      , ss->sector->floorheight 
-		      , MT_TFOG); 
-	 
-    if (players[consoleplayer].viewz != 1) 
-	S_StartSound (mo, sfx_telept);	// don't start sound on first frame 
- 
+    ss = RR_PointInSubsector (x,y); 
+    Angle an(Angle::A45 * (mthing->angle / 45)); 
+    
+    mo = PP_SpawnMobj(x + (20* cos(an)), 
+                      y + (20 *sin(an)), 
+                      ss->sector->ffloorheight, 
+                      MT_TFOG); 
+    
+    // @todo this looks funny "1" why
+    if (players[consoleplayer].vviewz != 1) 
+        S_StartSound (mo, sfx_telept);	// don't start sound on first frame 
+    
     return true; 
 } 
 
@@ -996,7 +1000,7 @@ int cpars[32] =
 //
 // G_DoCompleted 
 //
-boolean		secretexit; 
+bool		secretexit; 
 extern char*	pagename; 
  
 void G_ExitLevel (void) 
@@ -1027,8 +1031,9 @@ void G_DoCompleted (void)
 	if (playeringame[i]) 
 	    G_PlayerFinishLevel (i);        // take away cards and stuff 
 	 
-    if (automapactive) 
-	AM_Stop (); 
+    //if (automapactive) 
+        // @todo double fix
+        //AM_Stop (); 
 	
     if ( gamemode != commercial)
 	switch(gamemap)
@@ -1132,7 +1137,7 @@ void G_DoCompleted (void)
  
     gamestate = GS_INTERMISSION; 
     viewactive = false; 
-    automapactive = false; 
+    //automapactive = false; 
  
     if (statcopy)
 	memcpy (statcopy, &wminfo, sizeof(wminfo));
@@ -1184,12 +1189,11 @@ void G_DoWorldDone (void)
 // G_InitFromSavegame
 // Can be called by the startup code or the menu task. 
 //
-extern boolean setsizeneeded;
 void R_ExecuteSetViewSize (void);
 
 char	savename[256];
 
-void G_LoadGame (char* name) 
+void G_LoadGame (const char* name) 
 { 
     strcpy (savename, name); 
     gameaction = ga_loadgame; 
@@ -1213,11 +1217,11 @@ void G_DoLoadGame (void)
     // skip the description field 
     memset (vcheck,0,sizeof(vcheck)); 
     sprintf (vcheck,"version %i",VERSION); 
-    if (strcmp (save_p, vcheck)) 
+    if (strcmp ((char*)save_p, vcheck)) 
 	return;				// bad version 
     save_p += VERSIONSIZE; 
 			 
-    gameskill = *save_p++; 
+    gameskill = (skill_t)*save_p++; 
     gameepisode = *save_p++; 
     gamemap = *save_p++; 
     for (i=0 ; i<MAXPLAYERS ; i++) 
@@ -1243,12 +1247,6 @@ void G_DoLoadGame (void)
     
     // done 
     Z_Free (savebuffer); 
- 
-    if (setsizeneeded)
-	R_ExecuteSetViewSize ();
-    
-    // draw the pattern into the back screen
-    R_FillBackScreen ();   
 } 
  
 
@@ -1314,9 +1312,6 @@ void G_DoSaveGame (void)
     savedescription[0] = 0;		 
 	 
     players[consoleplayer].message = GGSAVED; 
-
-    // draw the pattern into the back screen
-    R_FillBackScreen ();	
 } 
  
 
@@ -1443,7 +1438,7 @@ G_InitNew
     usergame = true;                // will be set false if a demo 
     paused = false; 
     demoplayback = false; 
-    automapactive = false; 
+    //automapactive = false; 
     viewactive = true; 
     gameepisode = episode; 
     gamemap = map; 
@@ -1539,7 +1534,7 @@ void G_RecordDemo (char* name)
     i = M_CheckParm ("-maxdemo");
     if (i && i<myargc-1)
 	maxsize = atoi(myargv[i+1])*1024;
-    demobuffer = Z_Malloc (maxsize,PU_STATIC,NULL); 
+    demobuffer = (byte*) Z_Malloc (maxsize,PU_STATIC,NULL);
     demoend = demobuffer + maxsize;
 	
     demorecording = true; 
@@ -1571,9 +1566,9 @@ void G_BeginRecording (void)
 // G_PlayDemo 
 //
 
-char*	defdemoname; 
+const char*	defdemoname; 
  
-void G_DeferedPlayDemo (char* name) 
+void G_DeferedPlayDemo (const char* name) 
 { 
     defdemoname = name; 
     gameaction = ga_playdemo; 
@@ -1582,18 +1577,22 @@ void G_DeferedPlayDemo (char* name)
 void G_DoPlayDemo (void) 
 { 
     skill_t skill; 
-    int             i, episode, map; 
+    int             i, episode, map, version; 
 	 
     gameaction = ga_nothing; 
-    demobuffer = demo_p = W_CacheLumpName (defdemoname, PU_STATIC); 
-    if ( *demo_p++ != VERSION)
+    demobuffer = demo_p = (byte*)W_CacheLumpName (defdemoname, PU_STATIC); 
+    version = *demo_p++;
+    if (version != VERSION)
     {
-      fprintf( stderr, "Demo is from a different game version!\n");
+      fprintf(stderr, 
+              "Demo is from a different game version %d != %d!\n",
+              version,
+          VERSION);
+
       gameaction = ga_nothing;
       return;
-    }
-    
-    skill = *demo_p++; 
+    }    
+    skill = (skill_t)*demo_p++; 
     episode = *demo_p++; 
     map = *demo_p++; 
     deathmatch = *demo_p++;
@@ -1644,7 +1643,7 @@ void G_TimeDemo (char* name)
 =================== 
 */ 
  
-boolean G_CheckDemoStatus (void) 
+bool G_CheckDemoStatus (void) 
 { 
     int             endtime; 
 	 
@@ -1678,7 +1677,7 @@ boolean G_CheckDemoStatus (void)
     { 
 	*demo_p++ = DEMOMARKER; 
 	M_WriteFile (demoname, demobuffer, demo_p - demobuffer); 
-	Z_Free (demobuffer); 
+	Z_Free (demobuffer);
 	demorecording = false; 
 	I_Error ("Demo %s recorded",demoname); 
     } 

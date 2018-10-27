@@ -45,10 +45,6 @@ extern short*		mceilingclip;
 extern fixed_t		spryscale;
 extern fixed_t		sprtopscreen;
 
-extern fixed_t		pspritescale;
-extern fixed_t		pspriteiscale;
-
-
 void R_DrawMaskedColumn (column_t* column);
 
 

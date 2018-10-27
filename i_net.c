@@ -66,7 +66,7 @@ rcsid[] = "$Id: m_bbox.c,v 1.1 1997/02/03 22:45:10 b1 Exp $";
 #define htons(x) ntohs(x)
 
 void	NetSend (void);
-boolean NetListen (void);
+bool NetListen (void);
 
 
 //
@@ -115,7 +115,7 @@ BindToLocalPort
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = port;
 			
-    v = bind (s, (void *)&address, sizeof(address));
+    v = bind (s, (struct sockaddr *)&address, sizeof(address));
     if (v == -1)
 	I_Error ("BindToPort: bind: %s", strerror(errno));
 }
@@ -147,7 +147,7 @@ void PacketSend (void)
 		
     //printf ("sending %i\n",gametic);		
     c = sendto (sendsocket , &sw, doomcom->datalength
-		,0,(void *)&sendaddress[doomcom->remotenode]
+		,0,(struct sockaddr *)&sendaddress[doomcom->remotenode]
 		,sizeof(sendaddress[doomcom->remotenode]));
 	
     //	if (c == -1)
@@ -163,7 +163,7 @@ void PacketGet (void)
     int			i;
     int			c;
     struct sockaddr_in	fromaddress;
-    int			fromlen;
+    unsigned int	fromlen;
     doomdata_t		sw;
 				
     fromlen = sizeof(fromaddress);
@@ -243,12 +243,12 @@ int GetLocalAddress (void)
 //
 void I_InitNetwork (void)
 {
-    boolean		trueval = true;
+    bool		trueval = true;
     int			i;
     int			p;
     struct hostent*	hostentry;	// host information entry
 	
-    doomcom = malloc (sizeof (*doomcom) );
+    doomcom = (doomcom_t*)malloc (sizeof (*doomcom) );
     memset (doomcom, 0, sizeof(*doomcom) );
     
     // set up for network

@@ -70,7 +70,7 @@ int
 M_DrawText
 ( int		x,
   int		y,
-  boolean	direct,
+  bool	direct,
   char*		string )
 {
     int 	c;
@@ -109,7 +109,7 @@ M_DrawText
 #define O_BINARY 0
 #endif
 
-boolean
+bool
 M_WriteFile
 ( char const*	name,
   void*		source,
@@ -151,7 +151,7 @@ M_ReadFile
     if (fstat (handle,&fileinfo) == -1)
 	I_Error ("Couldn't read file %s", name);
     length = fileinfo.st_size;
-    buf = Z_Malloc (length, PU_STATIC, NULL);
+    buf = (byte*)Z_Malloc (length, PU_STATIC, NULL);
     count = read (handle, buf, length);
     close (handle);
 	
@@ -191,15 +191,11 @@ extern int	joybstrafe;
 extern int	joybuse;
 extern int	joybspeed;
 
-extern int	viewwidth;
-extern int	viewheight;
+//extern int	viewwidth;
+//extern int	viewheight;
 
 extern int	mouseSensitivity;
 extern int	showMessages;
-
-extern int	detailLevel;
-
-extern int	screenblocks;
 
 extern int	showMessages;
 
@@ -224,7 +220,7 @@ extern char*	chat_macros[];
 
 typedef struct
 {
-    char*	name;
+    const char*	name;
     int*	location;
     int		defaultvalue;
     int		scantranslate;		// PC scan code hack
@@ -244,8 +240,8 @@ default_t	defaults[] =
     {"key_left",&key_left, KEY_LEFTARROW},
     {"key_up",&key_up, KEY_UPARROW},
     {"key_down",&key_down, KEY_DOWNARROW},
-    {"key_strafeleft",&key_strafeleft, ','},
-    {"key_straferight",&key_straferight, '.'},
+    {"key_strafeleft",&key_strafeleft, 'z'},
+    {"key_straferight",&key_straferight, 'c'},
 
     {"key_fire",&key_fire, KEY_RCTRL},
     {"key_use",&key_use, ' '},
@@ -255,7 +251,7 @@ default_t	defaults[] =
 // UNIX hack, to be removed. 
 #ifdef SNDSERV
     {"sndserver", (int *) &sndserver_filename, (int) "sndserver"},
-    {"mb_used", &mb_used, 2},
+    {"mb_used", &mb_used, 100},
 #endif
     
 #endif
@@ -275,9 +271,6 @@ default_t	defaults[] =
     {"joyb_strafe",&joybstrafe,1},
     {"joyb_use",&joybuse,3},
     {"joyb_speed",&joybspeed,2},
-
-    {"screenblocks",&screenblocks, 9},
-    {"detaillevel",&detailLevel, 0},
 
     {"snd_channels",&numChannels, 3},
 
@@ -346,7 +339,7 @@ void M_LoadDefaults (void)
     char	strparm[100];
     char*	newstring;
     int		parm;
-    boolean	isstring;
+    bool	isstring;
     
     // set everything to base values
     numdefaults = sizeof(defaults)/sizeof(defaults[0]);
@@ -451,7 +444,7 @@ WritePCXfile
     pcx_t*	pcx;
     byte*	pack;
 	
-    pcx = Z_Malloc (width*height*2+1000, PU_STATIC, NULL);
+    pcx = (pcx_t*)Z_Malloc (width*height*2+1000, PU_STATIC, NULL);
 
     pcx->manufacturer = 0x0a;		// PCX id
     pcx->version = 5;			// 256 color
@@ -493,7 +486,7 @@ WritePCXfile
     length = pack - (byte *)pcx;
     M_WriteFile (filename, pcx, length);
 
-    Z_Free (pcx);
+    Z_Free(pcx);
 }
 
 
@@ -526,7 +519,7 @@ void M_ScreenShot (void)
     // save the pcx file
     WritePCXfile (lbmname, linear,
 		  SCREENWIDTH, SCREENHEIGHT,
-		  W_CacheLumpName ("PLAYPAL",PU_CACHE));
+		  (byte*)W_CacheLumpName ("PLAYPAL",PU_CACHE));
 	
     players[consoleplayer].message = "screen shot";
 }

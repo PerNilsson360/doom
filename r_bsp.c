@@ -79,8 +79,8 @@ void R_ClearDrawSegs (void)
 //
 typedef	struct
 {
-    int	first;
-    int last;
+    int32_t first;
+    int32_t last;
     
 } cliprange_t;
 
@@ -199,7 +199,7 @@ R_ClipPassWallSegment
   int	last )
 {
     cliprange_t*	start;
-
+        
     // Find the first range that touches the range
     //  (adjacent pixels are touching).
     start = solidsegs;
@@ -246,7 +246,7 @@ void R_ClearClipSegs (void)
 {
     solidsegs[0].first = -0x7fffffff;
     solidsegs[0].last = -1;
-    solidsegs[1].first = viewwidth;
+    solidsegs[1].first = SCREENWIDTH;
     solidsegs[1].last = 0x7fffffff;
     newend = solidsegs+2;
 }
@@ -260,59 +260,59 @@ void R_AddLine (seg_t*	line)
 {
     int			x1;
     int			x2;
-    angle_t		angle1;
-    angle_t		angle2;
-    angle_t		span;
-    angle_t		tspan;
     
     curline = line;
 
     // OPTIMIZE: quickly reject orthogonal back sides.
-    angle1 = R_PointToAngle (line->v1->x, line->v1->y);
-    angle2 = R_PointToAngle (line->v2->x, line->v2->y);
-    
-    // Clip to view edges.
+    Angle angle1(vviewx, vviewy,
+                 line->v1->xx, line->v1->yy);
+    Angle angle2(vviewx, vviewy,
+                 line->v2->xx, line->v2->yy);
     // OPTIMIZE: make constant out of 2*clipangle (FIELDOFVIEW).
-    span = angle1 - angle2;
+    Angle span = angle1 - angle2;
     
     // Back side? I.e. backface culling?
-    if (span >= ANG180)
-	return;		
+    if (span >= Angle(Angle::A180))
+        return;
 
     // Global angle needed by segcalc.
-    rw_angle1 = angle1;
-    angle1 -= viewangle;
-    angle2 -= viewangle;
-	
-    tspan = angle1 + clipangle;
-    if (tspan > 2*clipangle)
-    {
-	tspan -= 2*clipangle;
+    rrw_angle1 = angle1;
+    angle1 -= vviewangle;
+    angle2 -= vviewangle;
 
-	// Totally off the left edge?
-	if (tspan >= span)
-	    return;
+    Angle tspan = angle1 + cclipangle;
+    if (tspan > 2*cclipangle)
+    {
+        tspan -= 2*cclipangle;
+
+        // Totally off the left edge?
+        if (tspan >= span)
+            return;
 	
-	angle1 = clipangle;
+        angle1 = cclipangle;
     }
-    tspan = clipangle - angle2;
-    if (tspan > 2*clipangle)
+    tspan = cclipangle - angle2;
+    if (tspan > 2*cclipangle)
     {
-	tspan -= 2*clipangle;
+        tspan -= 2*cclipangle;
 
-	// Totally off the left edge?
-	if (tspan >= span)
-	    return;	
-	angle2 = -clipangle;
+        // Totally off the left edge?
+        if (tspan >= span)
+            return;	
+        angle2 = -cclipangle;
     }
     
     // The seg is in the view range,
     // but not necessarily visible.
-    angle1 = (angle1+ANG90)>>ANGLETOFINESHIFT;
-    angle2 = (angle2+ANG90)>>ANGLETOFINESHIFT;
-    x1 = viewangletox[angle1];
-    x2 = viewangletox[angle2];
+    angle1 += Angle::A90;
+    angle2 += Angle::A90;
+    x1 = viewangletox[((angle_t)angle1)>>ANGLETOFINESHIFT];
+    x2 = viewangletox[((angle_t)angle2)>>ANGLETOFINESHIFT];
 
+    // @todo trying to fix something here
+    int xx1 = R_ViewAngleToX(angle1);
+    int xx2 = R_ViewAngleToX(angle2);
+    
     // Does not cross a pixel?
     if (x1 == x2)
 	return;				
@@ -324,14 +324,14 @@ void R_AddLine (seg_t*	line)
 	goto clipsolid;		
 
     // Closed door.
-    if (backsector->ceilingheight <= frontsector->floorheight
-	|| backsector->floorheight >= frontsector->ceilingheight)
-	goto clipsolid;		
+    if (backsector->cceilingheight <= frontsector->ffloorheight
+        || backsector->ffloorheight >= frontsector->cceilingheight)
+        goto clipsolid;		
 
     // Window.
-    if (backsector->ceilingheight != frontsector->ceilingheight
-	|| backsector->floorheight != frontsector->floorheight)
-	goto clippass;	
+    if (backsector->cceilingheight != frontsector->cceilingheight
+        || backsector->ffloorheight != frontsector->ffloorheight)
+        goto clippass;	
 		
     // Reject empty lines used for triggers
     //  and special events.
@@ -345,8 +345,7 @@ void R_AddLine (seg_t*	line)
     {
 	return;
     }
-    
-				
+
   clippass:
     R_ClipPassWallSegment (x1, x2-1);	
     return;
@@ -378,39 +377,26 @@ int	checkcoord[12][4] =
 };
 
 
-boolean R_CheckBBox (fixed_t*	bspcoord)
+bool RR_CheckBBox (double* bspcoord)
 {
     int			boxx;
     int			boxy;
     int			boxpos;
 
-    fixed_t		x1;
-    fixed_t		y1;
-    fixed_t		x2;
-    fixed_t		y2;
-    
-    angle_t		angle1;
-    angle_t		angle2;
-    angle_t		span;
-    angle_t		tspan;
-    
     cliprange_t*	start;
 
-    int			sx1;
-    int			sx2;
-    
     // Find the corners of the box
     // that define the edges from current viewpoint.
-    if (viewx <= bspcoord[BOXLEFT])
+    if (vviewx <= bspcoord[BOXLEFT])
 	boxx = 0;
-    else if (viewx < bspcoord[BOXRIGHT])
+    else if (vviewx < bspcoord[BOXRIGHT])
 	boxx = 1;
     else
 	boxx = 2;
 		
-    if (viewy >= bspcoord[BOXTOP])
+    if (vviewy >= bspcoord[BOXTOP])
 	boxy = 0;
-    else if (viewy > bspcoord[BOXBOTTOM])
+    else if (vviewy > bspcoord[BOXBOTTOM])
 	boxy = 1;
     else
 	boxy = 2;
@@ -419,53 +405,50 @@ boolean R_CheckBBox (fixed_t*	bspcoord)
     if (boxpos == 5)
 	return true;
 	
-    x1 = bspcoord[checkcoord[boxpos][0]];
-    y1 = bspcoord[checkcoord[boxpos][1]];
-    x2 = bspcoord[checkcoord[boxpos][2]];
-    y2 = bspcoord[checkcoord[boxpos][3]];
+    double x1 = bspcoord[checkcoord[boxpos][0]];
+    double y1 = bspcoord[checkcoord[boxpos][1]];
+    double x2 = bspcoord[checkcoord[boxpos][2]];
+    double y2 = bspcoord[checkcoord[boxpos][3]];
     
     // check clip list for an open space
-    angle1 = R_PointToAngle (x1, y1) - viewangle;
-    angle2 = R_PointToAngle (x2, y2) - viewangle;
-	
-    span = angle1 - angle2;
-
-    // Sitting on a line?
-    if (span >= ANG180)
-	return true;
+    Angle angle1 = Angle(vviewx, vviewy, x1, y1) - vviewangle;
+    Angle angle2 = Angle(vviewx, vviewy, x2, y2) - vviewangle;
+    Angle span = angle1 - angle2;
     
-    tspan = angle1 + clipangle;
+    // Sitting on a line?
+    if (span >= Angle(Angle::A180))
+	return true;
 
-    if (tspan > 2*clipangle)
+    Angle tspan = angle1 + cclipangle;
+    if (tspan > 2*cclipangle)
     {
-	tspan -= 2*clipangle;
+	tspan -= 2*cclipangle;
 
 	// Totally off the left edge?
 	if (tspan >= span)
 	    return false;	
 
-	angle1 = clipangle;
+	angle1 = cclipangle;
     }
-    tspan = clipangle - angle2;
-    if (tspan > 2*clipangle)
+    tspan = cclipangle - angle2;
+    if (tspan > 2*cclipangle)
     {
-	tspan -= 2*clipangle;
+	tspan -= 2*cclipangle;
 
 	// Totally off the left edge?
 	if (tspan >= span)
 	    return false;
 	
-	angle2 = -clipangle;
+	angle2 = -cclipangle;
     }
-
 
     // Find the first clippost
     //  that touches the source post
     //  (adjacent pixels are touching).
-    angle1 = (angle1+ANG90)>>ANGLETOFINESHIFT;
-    angle2 = (angle2+ANG90)>>ANGLETOFINESHIFT;
-    sx1 = viewangletox[angle1];
-    sx2 = viewangletox[angle2];
+    angle1 += Angle::A90;
+    angle2 += Angle::A90;
+    int sx1 = viewangletox[((angle_t)angle1)>>ANGLETOFINESHIFT];
+    int sx2 = viewangletox[((angle_t)angle2)>>ANGLETOFINESHIFT];
 
     // Does not cross a pixel.
     if (sx1 == sx2)
@@ -499,7 +482,6 @@ void R_Subsector (int num)
     int			count;
     seg_t*		line;
     subsector_t*	sub;
-	
 #ifdef RANGECHECK
     if (num>=numsubsectors)
 	I_Error ("R_Subsector: ss %i with numss = %i",
@@ -513,19 +495,19 @@ void R_Subsector (int num)
     count = sub->numlines;
     line = &segs[sub->firstline];
 
-    if (frontsector->floorheight < viewz)
+    if (frontsector->ffloorheight < vviewz)
     {
-	floorplane = R_FindPlane (frontsector->floorheight,
-				  frontsector->floorpic,
-				  frontsector->lightlevel);
+        floorplane = R_FindPlane (frontsector->ffloorheight,
+                                  frontsector->floorpic,
+                                  frontsector->lightlevel);
     }
     else
 	floorplane = NULL;
     
-    if (frontsector->ceilingheight > viewz 
+    if (frontsector->cceilingheight > vviewz 
 	|| frontsector->ceilingpic == skyflatnum)
     {
-	ceilingplane = R_FindPlane (frontsector->ceilingheight,
+        ceilingplane = R_FindPlane (frontsector->cceilingheight,
 				    frontsector->ceilingpic,
 				    frontsector->lightlevel);
     }
@@ -551,30 +533,30 @@ void R_Subsector (int num)
 // Just call with BSP root.
 void R_RenderBSPNode (int bspnum)
 {
-    node_t*	bsp;
+    BspNode* bsp;
     int		side;
-
+    
     // Found a subsector?
     if (bspnum & NF_SUBSECTOR)
     {
-	if (bspnum == -1)			
-	    R_Subsector (0);
-	else
-	    R_Subsector (bspnum&(~NF_SUBSECTOR));
-	return;
+        if (bspnum == -1)			
+            R_Subsector (0);
+        else
+            R_Subsector (bspnum&(~NF_SUBSECTOR));
+        return;
     }
-		
+	
     bsp = &nodes[bspnum];
     
     // Decide which side the view point is on.
-    side = R_PointOnSide (viewx, viewy, bsp);
-
+    side = R_PointOnSide (vviewx, vviewy, bsp);
+    
     // Recursively divide front space.
     R_RenderBSPNode (bsp->children[side]); 
-
+    
     // Possibly divide back space.
-    if (R_CheckBBox (bsp->bbox[side^1]))	
-	R_RenderBSPNode (bsp->children[side^1]);
+    if (RR_CheckBBox (bsp->bbbox[side^1]))	
+        R_RenderBSPNode (bsp->children[side^1]);
 }
 
 

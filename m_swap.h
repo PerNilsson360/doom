@@ -31,11 +31,12 @@
 
 // Endianess handling.
 // WAD files are stored little endian.
-#ifdef __BIG_ENDIAN__
-short	SwapSHORT(short);
-long	SwapLONG(long);
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#include <stdint.h>
+unsigned short	SwapSHORT(unsigned short);
+uint32_t Swap32(uint32_t);
 #define SHORT(x)	((short)SwapSHORT((unsigned short) (x)))
-#define LONG(x)         ((long)SwapLONG((unsigned long) (x)))
+#define LONG(x)         ((uint32_t)Swap32((uint32_t) (x)))
 #else
 #define SHORT(x)	(x)
 #define LONG(x)         (x)

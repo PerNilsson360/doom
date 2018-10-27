@@ -35,8 +35,17 @@ rcsid[] = "$Id: m_bbox.c,v 1.1 1997/02/03 22:45:10 b1 Exp $";
 #endif
 #include "m_fixed.h"
 
+double 
+fixed_to_double(fixed_t a)
+{
+    return (double)a / FRACUNIT;
+}
 
-
+fixed_t 
+double_to_fixed(double d)
+{
+    return d * FRACUNIT;
+}
 
 // Fixme. __USE_C_FIXED__ or something.
 
@@ -48,8 +57,6 @@ FixedMul
     return ((long long) a * (long long) b) >> FRACBITS;
 }
 
-
-
 //
 // FixedDiv, C version.
 //
@@ -60,7 +67,7 @@ FixedDiv
   fixed_t	b )
 {
     if ( (abs(a)>>14) >= abs(b))
-	return (a^b)<0 ? MININT : MAXINT;
+	return (a^b)<0 ? INT_MIN : INT_MAX;
     return FixedDiv2 (a,b);
 }
 

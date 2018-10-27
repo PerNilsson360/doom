@@ -28,6 +28,8 @@ rcsid[] = "$Id: p_setup.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 
 #include <math.h>
 
+#include "BlockMap.hh"
+
 #include "z_zone.h"
 
 #include "m_swap.h"
@@ -66,7 +68,7 @@ int		numsubsectors;
 subsector_t*	subsectors;
 
 int		numnodes;
-node_t*		nodes;
+BspNode* nodes;
 
 int		numlines;
 line_t*		lines;
@@ -83,16 +85,19 @@ side_t*		sides;
 // by spatial subdivision in 2D.
 //
 // Blockmap size.
-int		bmapwidth;
-int		bmapheight;	// size in mapblocks
-short*		blockmap;	// int for larger maps
-// offsets in blockmap are from here
-short*		blockmaplump;		
-// origin of block map
-fixed_t		bmaporgx;
-fixed_t		bmaporgy;
-// for thing chains
-mobj_t**	blocklinks;		
+// int		bmapwidth;
+// int		bmapheight;	// size in mapblocks
+// short*		blockmap;	// int for larger maps
+// // offsets in blockmap are from here
+// short*		blockmaplump;		
+// // origin of block map
+// fixed_t		bmaporgx;
+// fixed_t		bmaporgy;
+// // for thing chains
+// mobj_t**	blocklinks;		
+
+
+BlockMap blockMap;
 
 
 // REJECT
@@ -131,10 +136,10 @@ void P_LoadVertexes (int lump)
     numvertexes = W_LumpLength (lump) / sizeof(mapvertex_t);
 
     // Allocate zone memory for buffer.
-    vertexes = Z_Malloc (numvertexes*sizeof(vertex_t),PU_LEVEL,0);	
+    vertexes = (vertex_t*)Z_Malloc (numvertexes*sizeof(vertex_t),PU_LEVEL,0);	
 
     // Load data into cache.
-    data = W_CacheLumpNum (lump,PU_STATIC);
+    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
 	
     ml = (mapvertex_t *)data;
     li = vertexes;
@@ -143,8 +148,8 @@ void P_LoadVertexes (int lump)
     // internal representation as fixed.
     for (i=0 ; i<numvertexes ; i++, li++, ml++)
     {
-	li->x = SHORT(ml->x)<<FRACBITS;
-	li->y = SHORT(ml->y)<<FRACBITS;
+        li->xx = SHORT(ml->x);
+        li->yy = SHORT(ml->y);
     }
 
     // Free buffer memory.
@@ -167,9 +172,9 @@ void P_LoadSegs (int lump)
     int			side;
 	
     numsegs = W_LumpLength (lump) / sizeof(mapseg_t);
-    segs = Z_Malloc (numsegs*sizeof(seg_t),PU_LEVEL,0);	
+    segs = (seg_t*)Z_Malloc (numsegs*sizeof(seg_t),PU_LEVEL,0);	
     memset (segs, 0, numsegs*sizeof(seg_t));
-    data = W_CacheLumpNum (lump,PU_STATIC);
+    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
 	
     ml = (mapseg_t *)data;
     li = segs;
@@ -178,7 +183,7 @@ void P_LoadSegs (int lump)
 	li->v1 = &vertexes[SHORT(ml->v1)];
 	li->v2 = &vertexes[SHORT(ml->v2)];
 					
-	li->angle = (SHORT(ml->angle))<<16;
+	li->aangle = Angle((angle_t)(SHORT(ml->angle))<<16);
 	li->offset = (SHORT(ml->offset))<<16;
 	linedef = SHORT(ml->linedef);
 	ldef = &lines[linedef];
@@ -207,8 +212,8 @@ void P_LoadSubsectors (int lump)
     subsector_t*	ss;
 	
     numsubsectors = W_LumpLength (lump) / sizeof(mapsubsector_t);
-    subsectors = Z_Malloc (numsubsectors*sizeof(subsector_t),PU_LEVEL,0);	
-    data = W_CacheLumpNum (lump,PU_STATIC);
+    subsectors = (subsector_t*)Z_Malloc (numsubsectors*sizeof(subsector_t),PU_LEVEL,0);	
+    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
 	
     ms = (mapsubsector_t *)data;
     memset (subsectors,0, numsubsectors*sizeof(subsector_t));
@@ -236,16 +241,16 @@ void P_LoadSectors (int lump)
     sector_t*		ss;
 	
     numsectors = W_LumpLength (lump) / sizeof(mapsector_t);
-    sectors = Z_Malloc (numsectors*sizeof(sector_t),PU_LEVEL,0);	
+    sectors = (sector_t*)Z_Malloc (numsectors*sizeof(sector_t),PU_LEVEL,0);	
     memset (sectors, 0, numsectors*sizeof(sector_t));
-    data = W_CacheLumpNum (lump,PU_STATIC);
+    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
 	
     ms = (mapsector_t *)data;
     ss = sectors;
     for (i=0 ; i<numsectors ; i++, ss++, ms++)
     {
-	ss->floorheight = SHORT(ms->floorheight)<<FRACBITS;
-	ss->ceilingheight = SHORT(ms->ceilingheight)<<FRACBITS;
+	ss->ffloorheight = SHORT(ms->floorheight);
+	ss->cceilingheight = SHORT(ms->ceilingheight);
 	ss->floorpic = R_FlatNumForName(ms->floorpic);
 	ss->ceilingpic = R_FlatNumForName(ms->ceilingpic);
 	ss->lightlevel = SHORT(ms->lightlevel);
@@ -268,27 +273,27 @@ void P_LoadNodes (int lump)
     int		j;
     int		k;
     mapnode_t*	mn;
-    node_t*	no;
+    BspNode* no;
 	
     numnodes = W_LumpLength (lump) / sizeof(mapnode_t);
-    nodes = Z_Malloc (numnodes*sizeof(node_t),PU_LEVEL,0);	
-    data = W_CacheLumpNum (lump,PU_STATIC);
+    nodes = (BspNode*)Z_Malloc (numnodes*sizeof(BspNode),PU_LEVEL,0);	
+    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
 	
     mn = (mapnode_t *)data;
     no = nodes;
     
     for (i=0 ; i<numnodes ; i++, no++, mn++)
     {
-	no->x = SHORT(mn->x)<<FRACBITS;
-	no->y = SHORT(mn->y)<<FRACBITS;
-	no->dx = SHORT(mn->dx)<<FRACBITS;
-	no->dy = SHORT(mn->dy)<<FRACBITS;
-	for (j=0 ; j<2 ; j++)
-	{
-	    no->children[j] = SHORT(mn->children[j]);
-	    for (k=0 ; k<4 ; k++)
-		no->bbox[j][k] = SHORT(mn->bbox[j][k])<<FRACBITS;
-	}
+        no->x = mn->x;
+        no->y = mn->y;
+        no->dx = mn->dx;
+        no->dy = mn->dy;
+        for (j=0 ; j<2 ; j++)
+        {
+            no->children[j] = SHORT(mn->children[j]);
+            for (k=0 ; k<4 ; k++)
+                no->bbbox[j][k] = SHORT(mn->bbbox[j][k]);
+        }
     }
 	
     Z_Free (data);
@@ -304,9 +309,9 @@ void P_LoadThings (int lump)
     int			i;
     mapthing_t*		mt;
     int			numthings;
-    boolean		spawn;
+    bool		spawn;
 	
-    data = W_CacheLumpNum (lump,PU_STATIC);
+    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
     numthings = W_LumpLength (lump) / sizeof(mapthing_t);
 	
     mt = (mapthing_t *)data;
@@ -364,9 +369,9 @@ void P_LoadLineDefs (int lump)
     vertex_t*		v2;
 	
     numlines = W_LumpLength (lump) / sizeof(maplinedef_t);
-    lines = Z_Malloc (numlines*sizeof(line_t),PU_LEVEL,0);	
+    lines = (line_t*)Z_Malloc (numlines*sizeof(line_t),PU_LEVEL,0);	
     memset (lines, 0, numlines*sizeof(line_t));
-    data = W_CacheLumpNum (lump,PU_STATIC);
+    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
 	
     mld = (maplinedef_t *)data;
     ld = lines;
@@ -377,41 +382,41 @@ void P_LoadLineDefs (int lump)
 	ld->tag = SHORT(mld->tag);
 	v1 = ld->v1 = &vertexes[SHORT(mld->v1)];
 	v2 = ld->v2 = &vertexes[SHORT(mld->v2)];
-	ld->dx = v2->x - v1->x;
-	ld->dy = v2->y - v1->y;
+	ld->ddx = v2->xx - v1->xx;
+	ld->ddy = v2->yy - v1->yy;
 	
-	if (!ld->dx)
+	if (ld->ddx == 0)
 	    ld->slopetype = ST_VERTICAL;
-	else if (!ld->dy)
+	else if (ld->ddy == 0)
 	    ld->slopetype = ST_HORIZONTAL;
 	else
 	{
-	    if (FixedDiv (ld->dy , ld->dx) > 0)
-		ld->slopetype = ST_POSITIVE;
+	    if (ld->ddy / ld->ddx > 0)
+            ld->slopetype = ST_POSITIVE;
 	    else
-		ld->slopetype = ST_NEGATIVE;
+            ld->slopetype = ST_NEGATIVE;
 	}
 		
-	if (v1->x < v2->x)
+	if (v1->xx < v2->xx)
 	{
-	    ld->bbox[BOXLEFT] = v1->x;
-	    ld->bbox[BOXRIGHT] = v2->x;
+	    ld->bbbox[BOXLEFT] = v1->xx;
+	    ld->bbbox[BOXRIGHT] = v2->xx;
 	}
 	else
 	{
-	    ld->bbox[BOXLEFT] = v2->x;
-	    ld->bbox[BOXRIGHT] = v1->x;
+	    ld->bbbox[BOXLEFT] = v2->xx;
+	    ld->bbbox[BOXRIGHT] = v1->xx;
 	}
 
-	if (v1->y < v2->y)
+	if (v1->yy < v2->yy)
 	{
-	    ld->bbox[BOXBOTTOM] = v1->y;
-	    ld->bbox[BOXTOP] = v2->y;
+	    ld->bbbox[BOXBOTTOM] = v1->yy;
+	    ld->bbbox[BOXTOP] = v2->yy;
 	}
 	else
 	{
-	    ld->bbox[BOXBOTTOM] = v2->y;
-	    ld->bbox[BOXTOP] = v1->y;
+	    ld->bbbox[BOXBOTTOM] = v2->yy;
+	    ld->bbbox[BOXTOP] = v1->yy;
 	}
 
 	ld->sidenum[0] = SHORT(mld->sidenum[0]);
@@ -443,16 +448,16 @@ void P_LoadSideDefs (int lump)
     side_t*		sd;
 	
     numsides = W_LumpLength (lump) / sizeof(mapsidedef_t);
-    sides = Z_Malloc (numsides*sizeof(side_t),PU_LEVEL,0);	
+    sides = (side_t*)Z_Malloc (numsides*sizeof(side_t),PU_LEVEL,0);	
     memset (sides, 0, numsides*sizeof(side_t));
-    data = W_CacheLumpNum (lump,PU_STATIC);
+    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
 	
     msd = (mapsidedef_t *)data;
     sd = sides;
     for (i=0 ; i<numsides ; i++, msd++, sd++)
     {
-	sd->textureoffset = SHORT(msd->textureoffset)<<FRACBITS;
-	sd->rowoffset = SHORT(msd->rowoffset)<<FRACBITS;
+	sd->ttextureoffset = SHORT(msd->textureoffset);
+	sd->rrowoffset = SHORT(msd->rowoffset);
 	sd->toptexture = R_TextureNumForName(msd->toptexture);
 	sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
 	sd->midtexture = R_TextureNumForName(msd->midtexture);
@@ -466,28 +471,31 @@ void P_LoadSideDefs (int lump)
 //
 // P_LoadBlockMap
 //
-void P_LoadBlockMap (int lump)
-{
-    int		i;
-    int		count;
+// void P_LoadBlockMap (int lump)
+// {
+//     int		i;
+//     int		count;
 	
-    blockmaplump = W_CacheLumpNum (lump,PU_LEVEL);
-    blockmap = blockmaplump+4;
-    count = W_LumpLength (lump)/2;
+//     blockmaplump = (short int*)W_CacheLumpNum (lump,PU_LEVEL);
+//     blockmap = blockmaplump+4;
+//     count = W_LumpLength (lump)/2;
 
-    for (i=0 ; i<count ; i++)
-	blockmaplump[i] = SHORT(blockmaplump[i]);
-		
-    bmaporgx = blockmaplump[0]<<FRACBITS;
-    bmaporgy = blockmaplump[1]<<FRACBITS;
-    bmapwidth = blockmaplump[2];
-    bmapheight = blockmaplump[3];
+//     for (i=0 ; i<count ; i++)
+//         blockmaplump[i] = SHORT(blockmaplump[i]);
+    
+//     bmaporgx = blockmaplump[0]<<FRACBITS;
+//     bmaporgy = blockmaplump[1]<<FRACBITS;
+//     bmapwidth = blockmaplump[2];
+//     bmapheight = blockmaplump[3];
 	
-    // clear out mobj chains
-    count = sizeof(*blocklinks)* bmapwidth*bmapheight;
-    blocklinks = Z_Malloc (count,PU_LEVEL, 0);
-    memset (blocklinks, 0, count);
-}
+//     printf("P_LoadBlockMap orgx: %d orgy: %d width: %d height: %d",
+//            blockmaplump[0], blockmaplump[1], blockmaplump[2], blockmaplump[3]);
+
+//     // clear out mobj chains
+//     count = sizeof(*blocklinks)* bmapwidth*bmapheight;
+//     blocklinks = (mobj_t**)Z_Malloc (count,PU_LEVEL, 0);
+//     memset (blocklinks, 0, count);
+// }
 
 
 
@@ -506,7 +514,7 @@ void P_GroupLines (void)
     sector_t*		sector;
     subsector_t*	ss;
     seg_t*		seg;
-    fixed_t		bbox[4];
+    double		bbbox[4];
     int			block;
 	
     // look up sector number for each subsector
@@ -533,11 +541,11 @@ void P_GroupLines (void)
     }
 	
     // build line tables for each sector	
-    linebuffer = Z_Malloc (total*4, PU_LEVEL, 0);
+    linebuffer = (line_t**)Z_Malloc (total*8, PU_LEVEL, 0);
     sector = sectors;
     for (i=0 ; i<numsectors ; i++, sector++)
     {
-	M_ClearBox (bbox);
+	MM_ClearBox (bbbox);
 	sector->lines = linebuffer;
 	li = lines;
 	for (j=0 ; j<numlines ; j++, li++)
@@ -545,31 +553,31 @@ void P_GroupLines (void)
 	    if (li->frontsector == sector || li->backsector == sector)
 	    {
 		*linebuffer++ = li;
-		M_AddToBox (bbox, li->v1->x, li->v1->y);
-		M_AddToBox (bbox, li->v2->x, li->v2->y);
+		MM_AddToBox (bbbox, li->v1->xx, li->v1->yy);
+		MM_AddToBox (bbbox, li->v2->xx, li->v2->yy);
 	    }
 	}
 	if (linebuffer - sector->lines != sector->linecount)
 	    I_Error ("P_GroupLines: miscounted");
 			
 	// set the degenmobj_t to the middle of the bounding box
-	sector->soundorg.x = (bbox[BOXRIGHT]+bbox[BOXLEFT])/2;
-	sector->soundorg.y = (bbox[BOXTOP]+bbox[BOXBOTTOM])/2;
+	sector->soundorg.x = double_to_fixed((bbbox[BOXRIGHT]+bbbox[BOXLEFT])/2);
+	sector->soundorg.y = double_to_fixed((bbbox[BOXTOP]+bbbox[BOXBOTTOM])/2);
 		
 	// adjust bounding box to map blocks
-	block = (bbox[BOXTOP]-bmaporgy+MAXRADIUS)>>MAPBLOCKSHIFT;
-	block = block >= bmapheight ? bmapheight-1 : block;
+	block = (bbbox[BOXTOP]-blockMap.oorgy+MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
+	block = block >= blockMap.height ? blockMap.height-1 : block;
 	sector->blockbox[BOXTOP]=block;
 
-	block = (bbox[BOXBOTTOM]-bmaporgy-MAXRADIUS)>>MAPBLOCKSHIFT;
+	block = (bbbox[BOXBOTTOM]-blockMap.oorgy-MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
 	block = block < 0 ? 0 : block;
 	sector->blockbox[BOXBOTTOM]=block;
 
-	block = (bbox[BOXRIGHT]-bmaporgx+MAXRADIUS)>>MAPBLOCKSHIFT;
-	block = block >= bmapwidth ? bmapwidth-1 : block;
+	block = (bbbox[BOXRIGHT]-blockMap.oorgx+MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
+	block = block >= blockMap.width ? blockMap.width-1 : block;
 	sector->blockbox[BOXRIGHT]=block;
 
-	block = (bbox[BOXLEFT]-bmaporgx-MAXRADIUS)>>MAPBLOCKSHIFT;
+	block = (bbbox[BOXLEFT]-blockMap.oorgx-MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
 	block = block < 0 ? 0 : block;
 	sector->blockbox[BOXLEFT]=block;
     }
@@ -601,7 +609,7 @@ P_SetupLevel
 
     // Initial height of PointOfView
     // will be set by player think.
-    players[consoleplayer].viewz = 1; 
+    players[consoleplayer].vviewz = 1; 
 
     // Make sure all sounds are stopped before Z_FreeTags.
     S_Start ();			
@@ -646,7 +654,7 @@ P_SetupLevel
     leveltime = 0;
 	
     // note: most of this ordering is important	
-    P_LoadBlockMap (lumpnum+ML_BLOCKMAP);
+    blockMap.load(lumpnum+ML_BLOCKMAP);
     P_LoadVertexes (lumpnum+ML_VERTEXES);
     P_LoadSectors (lumpnum+ML_SECTORS);
     P_LoadSideDefs (lumpnum+ML_SIDEDEFS);
@@ -656,7 +664,7 @@ P_SetupLevel
     P_LoadNodes (lumpnum+ML_NODES);
     P_LoadSegs (lumpnum+ML_SEGS);
 	
-    rejectmatrix = W_CacheLumpNum (lumpnum+ML_REJECT,PU_LEVEL);
+    rejectmatrix = (byte*)W_CacheLumpNum (lumpnum+ML_REJECT,PU_LEVEL);
     P_GroupLines ();
 
     bodyqueslot = 0;

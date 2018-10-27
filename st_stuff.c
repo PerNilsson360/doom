@@ -28,6 +28,7 @@ rcsid[] = "$Id: st_stuff.c,v 1.6 1997/02/03 22:45:13 b1 Exp $";
 
 
 #include <stdio.h>
+#include <memory>
 
 #include "i_system.h"
 #include "i_video.h"
@@ -61,6 +62,8 @@ rcsid[] = "$Id: st_stuff.c,v 1.6 1997/02/03 22:45:13 b1 Exp $";
 #include "dstrings.h"
 #include "sounds.h"
 
+#include "ImageScaler.hh"
+
 //
 // STATUS BAR DATA
 //
@@ -81,10 +84,6 @@ rcsid[] = "$Id: st_stuff.c,v 1.6 1997/02/03 22:45:13 b1 Exp $";
 
 // For Responder
 #define ST_TOGGLECHAT		KEY_ENTER
-
-// Location of status bar
-#define ST_X				0
-#define ST_X2				104
 
 #define ST_FX  			143
 #define ST_FY  			169
@@ -115,7 +114,7 @@ rcsid[] = "$Id: st_stuff.c,v 1.6 1997/02/03 22:45:13 b1 Exp $";
 #define ST_DEADFACE			(ST_GODFACE+1)
 
 #define ST_FACESX			143
-#define ST_FACESY			168
+#define ST_FACESY			0 // 168
 
 #define ST_EVILGRINCOUNT		(2*TICRATE)
 #define ST_STRAIGHTFACECOUNT	(TICRATE/2)
@@ -135,112 +134,110 @@ rcsid[] = "$Id: st_stuff.c,v 1.6 1997/02/03 22:45:13 b1 Exp $";
 //       or into the frame buffer?
 
 // AMMO number pos.
-#define ST_AMMOWIDTH		3	
-#define ST_AMMOX			44
-#define ST_AMMOY			171
+#define ST_AMMOWIDTH		        3	
+#define ST_AMMOX		        44
+#define ST_AMMOY			3 // 171
 
 // HEALTH number pos.
-#define ST_HEALTHWIDTH		3	
+#define ST_HEALTHWIDTH		        3	
 #define ST_HEALTHX			90
-#define ST_HEALTHY			171
+#define ST_HEALTHY			3 // 171
 
 // Weapon pos.
 #define ST_ARMSX			111
-#define ST_ARMSY			172
+#define ST_ARMSY			4 // 172
 #define ST_ARMSBGX			104
-#define ST_ARMSBGY			168
-#define ST_ARMSXSPACE		12
-#define ST_ARMSYSPACE		10
+#define ST_ARMSBGY			0 // 168
+#define ST_ARMSXSPACE		        12
+#define ST_ARMSYSPACE		        10
 
 // Frags pos.
-#define ST_FRAGSX			138
-#define ST_FRAGSY			171	
-#define ST_FRAGSWIDTH		2
+#define ST_FRAGSX		        138
+#define ST_FRAGSY			3 //171
+#define ST_FRAGSWIDTH		        2
 
 // ARMOR number pos.
-#define ST_ARMORWIDTH		3
+#define ST_ARMORWIDTH		        3
 #define ST_ARMORX			221
-#define ST_ARMORY			171
+#define ST_ARMORY			3 //171
 
 // Key icon positions.
-#define ST_KEY0WIDTH		8
-#define ST_KEY0HEIGHT		5
+#define ST_KEY0WIDTH		        8
+#define ST_KEY0HEIGHT		        5
 #define ST_KEY0X			239
-#define ST_KEY0Y			171
-#define ST_KEY1WIDTH		ST_KEY0WIDTH
+#define ST_KEY0Y			3 // 171
+#define ST_KEY1WIDTH		        ST_KEY0WIDTH
 #define ST_KEY1X			239
-#define ST_KEY1Y			181
-#define ST_KEY2WIDTH		ST_KEY0WIDTH
+#define ST_KEY1Y			13 // 181
+#define ST_KEY2WIDTH		        ST_KEY0WIDTH
 #define ST_KEY2X			239
-#define ST_KEY2Y			191
+#define ST_KEY2Y			23 // 191
 
 // Ammunition counter.
-#define ST_AMMO0WIDTH		3
-#define ST_AMMO0HEIGHT		6
+#define ST_AMMO0WIDTH		        3
+#define ST_AMMO0HEIGHT		        6
 #define ST_AMMO0X			288
-#define ST_AMMO0Y			173
-#define ST_AMMO1WIDTH		ST_AMMO0WIDTH
+#define ST_AMMO0Y			5 // 173
+#define ST_AMMO1WIDTH		        ST_AMMO0WIDTH
 #define ST_AMMO1X			288
-#define ST_AMMO1Y			179
-#define ST_AMMO2WIDTH		ST_AMMO0WIDTH
+#define ST_AMMO1Y			11 // 179
+#define ST_AMMO2WIDTH		        ST_AMMO0WIDTH
 #define ST_AMMO2X			288
-#define ST_AMMO2Y			191
-#define ST_AMMO3WIDTH		ST_AMMO0WIDTH
-#define ST_AMMO3X			288
-#define ST_AMMO3Y			185
+#define ST_AMMO2Y			23 // 191
+#define ST_AMMO3WIDTH		        ST_AMMO0WIDTH
+#define ST_AMMO3X		        288
+#define ST_AMMO3Y			17 // 185
 
 // Indicate maximum ammunition.
 // Only needed because backpack exists.
 #define ST_MAXAMMO0WIDTH		3
 #define ST_MAXAMMO0HEIGHT		5
-#define ST_MAXAMMO0X		314
-#define ST_MAXAMMO0Y		173
+#define ST_MAXAMMO0X		        314
+#define ST_MAXAMMO0Y		        5 // 173
 #define ST_MAXAMMO1WIDTH		ST_MAXAMMO0WIDTH
-#define ST_MAXAMMO1X		314
-#define ST_MAXAMMO1Y		179
+#define ST_MAXAMMO1X		        314
+#define ST_MAXAMMO1Y		        11 // 179
 #define ST_MAXAMMO2WIDTH		ST_MAXAMMO0WIDTH
-#define ST_MAXAMMO2X		314
-#define ST_MAXAMMO2Y		191
+#define ST_MAXAMMO2X		        314
+#define ST_MAXAMMO2Y		        23 // 191
 #define ST_MAXAMMO3WIDTH		ST_MAXAMMO0WIDTH
-#define ST_MAXAMMO3X		314
-#define ST_MAXAMMO3Y		185
+#define ST_MAXAMMO3X		        314
+#define ST_MAXAMMO3Y		        17 // 185
 
 // pistol
-#define ST_WEAPON0X			110 
-#define ST_WEAPON0Y			172
+#define ST_WEAPON0X		        110 
+#define ST_WEAPON0Y			4 // 172
 
 // shotgun
 #define ST_WEAPON1X			122 
-#define ST_WEAPON1Y			172
+#define ST_WEAPON1Y			4 // 172
 
 // chain gun
 #define ST_WEAPON2X			134 
-#define ST_WEAPON2Y			172
+#define ST_WEAPON2Y			4 // 172
 
 // missile launcher
 #define ST_WEAPON3X			110 
-#define ST_WEAPON3Y			181
+#define ST_WEAPON3Y			13 // 181
 
 // plasma gun
 #define ST_WEAPON4X			122 
-#define ST_WEAPON4Y			181
+#define ST_WEAPON4Y			13 // 181
 
  // bfg
 #define ST_WEAPON5X			134
-#define ST_WEAPON5Y			181
+#define ST_WEAPON5Y			13 // 181
 
 // WPNS title
 #define ST_WPNSX			109 
-#define ST_WPNSY			191
+#define ST_WPNSY			23 // 191
 
  // DETH title
 #define ST_DETHX			109
-#define ST_DETHY			191
+#define ST_DETHY			23 // 191
 
 //Incoming messages window location
 //UNUSED
-// #define ST_MSGTEXTX	   (viewwindowx)
-// #define ST_MSGTEXTY	   (viewwindowy+viewheight-18)
 #define ST_MSGTEXTX			0
 #define ST_MSGTEXTY			0
 // Dimensions given in characters.
@@ -269,9 +266,6 @@ rcsid[] = "$Id: st_stuff.c,v 1.6 1997/02/03 22:45:13 b1 Exp $";
 // main player in game
 static player_t*	plyr; 
 
-// ST_Start() has just been called
-static boolean		st_firsttime;
-
 // used to execute ST_Init() only once
 static int		veryfirsttime = 1;
 
@@ -291,25 +285,25 @@ static st_chatstateenum_t	st_chatstate;
 static st_stateenum_t	st_gamestate;
 
 // whether left-side main status bar is active
-static boolean		st_statusbaron;
+static bool		st_statusbaron;
 
 // whether status bar chat is active
-static boolean		st_chat;
+static bool		st_chat;
 
 // value of st_chat before message popped up
-static boolean		st_oldchat;
+static bool		st_oldchat;
 
 // whether chat window has the cursor on
-static boolean		st_cursoron;
+static bool		st_cursoron;
 
 // !deathmatch
-static boolean		st_notdeathmatch; 
+static bool		st_notdeathmatch; 
 
 // !deathmatch && st_statusbaron
-static boolean		st_armson;
+static bool		st_armson;
 
 // !deathmatch
-static boolean		st_fragson; 
+static bool		st_fragson; 
 
 // main bar left
 static patch_t*		sbar;
@@ -378,7 +372,7 @@ static int	st_fragscount;
 static int	st_oldhealth = -1;
 
 // used for evil grin
-static boolean	oldweaponsowned[NUMWEAPONS]; 
+static bool	oldweaponsowned[NUMWEAPONS]; 
 
  // count until face changes
 static int	st_facecount = 0;
@@ -490,31 +484,21 @@ cheatseq_t	cheat_mypos = { cheat_mypos_seq, 0 };
 // 
 extern char*	mapnames[];
 
+namespace
+{
+std::unique_ptr<ImageScaler> imageScaler(new ImageScaler(ST_WIDTH,
+							 ST_HEIGHT));
+}
 
 //
 // STATUS BAR CODE
 //
 void ST_Stop(void);
 
-void ST_refreshBackground(void)
-{
-
-    if (st_statusbaron)
-    {
-	V_DrawPatch(ST_X, 0, BG, sbar);
-
-	if (netgame)
-	    V_DrawPatch(ST_FX, 0, BG, faceback);
-
-	V_CopyRect(ST_X, 0, BG, ST_WIDTH, ST_HEIGHT, ST_X, ST_Y, FG);
-    }
-
-}
-
 
 // Respond to keyboard input events,
 //  intercept cheats.
-boolean
+bool
 ST_Responder (event_t* ev)
 {
   int		i;
@@ -527,7 +511,6 @@ ST_Responder (event_t* ev)
     {
       case AM_MSGENTERED:
 	st_gamestate = AutomapState;
-	st_firsttime = true;
 	break;
 	
       case AM_MSGEXITED:
@@ -664,10 +647,10 @@ ST_Responder (event_t* ev)
       else if (cht_CheckCheat(&cheat_mypos, ev->data1))
       {
 	static char	buf[ST_MSGWIDTH];
-	sprintf(buf, "ang=0x%x;x,y=(0x%x,0x%x)",
-		players[consoleplayer].mo->angle,
-		players[consoleplayer].mo->x,
-		players[consoleplayer].mo->y);
+	sprintf(buf, "ang=0x%f;x,y=(%f,%f)",
+		(double)players[consoleplayer].mo->_angle,
+		players[consoleplayer].mo->xx,
+		players[consoleplayer].mo->yy);
 	plyr->message = buf;
       }
     }
@@ -752,11 +735,9 @@ int ST_calcPainOffset(void)
 void ST_updateFaceWidget(void)
 {
     int		i;
-    angle_t	badguyangle;
-    angle_t	diffang;
     static int	lastattackdown = -1;
     static int	priority = 0;
-    boolean	doevilgrin;
+    bool	doevilgrin;
 
     if (priority < 10)
     {
@@ -811,29 +792,29 @@ void ST_updateFaceWidget(void)
 	    }
 	    else
 	    {
-		badguyangle = R_PointToAngle2(plyr->mo->x,
-					      plyr->mo->y,
-					      plyr->attacker->x,
-					      plyr->attacker->y);
-		
-		if (badguyangle > plyr->mo->angle)
+	        Angle badguyangle(plyr->mo->xx,
+                                  plyr->mo->yy,
+                                  plyr->attacker->xx,
+                                  plyr->attacker->yy);
+		double diffang;
+		if (badguyangle > plyr->mo->_angle)
 		{
 		    // whether right or left
-		    diffang = badguyangle - plyr->mo->angle;
-		    i = diffang > ANG180; 
+                    diffang = (double)badguyangle - (double)plyr->mo->_angle;
+                    i = diffang > (double)Angle::A180; 
 		}
 		else
 		{
 		    // whether left or right
-		    diffang = plyr->mo->angle - badguyangle;
-		    i = diffang <= ANG180; 
+                    diffang = (double)plyr->mo->_angle - (double)badguyangle;
+		    i = diffang <= (double)Angle::A180; 
 		} // confusing, aint it?
 
 		
 		st_facecount = ST_TURNCOUNT;
 		st_faceindex = ST_calcPainOffset();
 		
-		if (diffang < ANG45)
+		if (diffang < (double)Angle::A45)
 		{
 		    // head-on    
 		    st_faceindex += ST_RAMPAGEOFFSET;
@@ -1051,7 +1032,7 @@ void ST_doPaletteStuff(void)
 
 }
 
-void ST_drawWidgets(boolean refresh)
+void ST_drawWidgets()
 {
     int		i;
 
@@ -1061,64 +1042,52 @@ void ST_drawWidgets(boolean refresh)
     // used by w_frags widget
     st_fragson = deathmatch && st_statusbaron; 
 
-    STlib_updateNum(&w_ready, refresh);
+    STlib_updateNum(&w_ready, *imageScaler);
 
     for (i=0;i<4;i++)
     {
-	STlib_updateNum(&w_ammo[i], refresh);
-	STlib_updateNum(&w_maxammo[i], refresh);
+	STlib_updateNum(&w_ammo[i], *imageScaler);
+	STlib_updateNum(&w_maxammo[i], *imageScaler);
     }
 
-    STlib_updatePercent(&w_health, refresh);
-    STlib_updatePercent(&w_armor, refresh);
+    STlib_updatePercent(&w_health, *imageScaler);
+    STlib_updatePercent(&w_armor, *imageScaler);
 
-    STlib_updateBinIcon(&w_armsbg, refresh);
+    STlib_updateBinIcon(&w_armsbg, *imageScaler);
 
     for (i=0;i<6;i++)
-	STlib_updateMultIcon(&w_arms[i], refresh);
+	STlib_updateMultIcon(&w_arms[i], *imageScaler);
 
-    STlib_updateMultIcon(&w_faces, refresh);
+    STlib_updateMultIcon(&w_faces, *imageScaler);
 
     for (i=0;i<3;i++)
-	STlib_updateMultIcon(&w_keyboxes[i], refresh);
+	STlib_updateMultIcon(&w_keyboxes[i], *imageScaler);
 
-    STlib_updateNum(&w_frags, refresh);
-
+    STlib_updateNum(&w_frags, *imageScaler);
 }
 
-void ST_doRefresh(void)
+void
+ST_Draw()
 {
+    if (st_statusbaron)
+    {
+	imageScaler->drawPatch(0, 0, sbar);
+	
+	if (netgame)
+	    V_DrawPatch(ST_FACESX, ST_FACESY, BG, faceback);
 
-    st_firsttime = false;
+        ST_drawWidgets();
 
-    // draw status bar background to off-screen buff
-    ST_refreshBackground();
-
-    // and refresh all widgets
-    ST_drawWidgets(true);
-
+	imageScaler->display(ST_X, ST_Y, 2.0);
+    }
 }
 
-void ST_diffDraw(void)
-{
-    // update all widgets
-    ST_drawWidgets(false);
-}
-
-void ST_Drawer (boolean fullscreen, boolean refresh)
-{
-  
-    st_statusbaron = (!fullscreen) || automapactive;
-    st_firsttime = st_firsttime || refresh;
-
+void
+ST_Drawer()
+{  
     // Do red-/gold-shifts from damage/items
     ST_doPaletteStuff();
-
-    // If just after ST_Start(), refresh all
-    if (st_firsttime) ST_doRefresh();
-    // Otherwise, update as little as possible
-    else ST_diffDraw();
-
+    ST_Draw();
 }
 
 void ST_loadGraphics(void)
@@ -1180,21 +1149,21 @@ void ST_loadGraphics(void)
 	for (j=0;j<ST_NUMSTRAIGHTFACES;j++)
 	{
 	    sprintf(namebuf, "STFST%d%d", i, j);
-	    faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+	    faces[facenum++] = (patch_t*)W_CacheLumpName(namebuf, PU_STATIC);
 	}
 	sprintf(namebuf, "STFTR%d0", i);	// turn right
-	faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+	faces[facenum++] = (patch_t*)W_CacheLumpName(namebuf, PU_STATIC);
 	sprintf(namebuf, "STFTL%d0", i);	// turn left
-	faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+	faces[facenum++] = (patch_t*)W_CacheLumpName(namebuf, PU_STATIC);
 	sprintf(namebuf, "STFOUCH%d", i);	// ouch!
-	faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+	faces[facenum++] = (patch_t*)W_CacheLumpName(namebuf, PU_STATIC);
 	sprintf(namebuf, "STFEVL%d", i);	// evil grin ;)
-	faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+	faces[facenum++] = (patch_t*)W_CacheLumpName(namebuf, PU_STATIC);
 	sprintf(namebuf, "STFKILL%d", i);	// pissed off
-	faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+	faces[facenum++] = (patch_t*)W_CacheLumpName(namebuf, PU_STATIC);
     }
-    faces[facenum++] = W_CacheLumpName("STFGOD0", PU_STATIC);
-    faces[facenum++] = W_CacheLumpName("STFDEAD0", PU_STATIC);
+    faces[facenum++] = (patch_t*)W_CacheLumpName("STFGOD0", PU_STATIC);
+    faces[facenum++] = (patch_t*)W_CacheLumpName("STFDEAD0", PU_STATIC);
 
 }
 
@@ -1248,10 +1217,8 @@ void ST_unloadData(void)
 
 void ST_initData(void)
 {
-
     int		i;
 
-    st_firsttime = true;
     plyr = &players[consoleplayer];
 
     st_clock = 0;
@@ -1276,8 +1243,6 @@ void ST_initData(void)
     STlib_init();
 
 }
-
-
 
 void ST_createWidgets(void)
 {
@@ -1438,12 +1403,12 @@ void ST_createWidgets(void)
 
 }
 
-static boolean	st_stopped = true;
+static bool	st_stopped = true;
 
 
 void ST_Start (void)
 {
-
+    fprintf(stderr, "ST_Start\n");
     if (!st_stopped)
 	ST_Stop();
 
@@ -1458,7 +1423,7 @@ void ST_Stop (void)
     if (st_stopped)
 	return;
 
-    I_SetPalette (W_CacheLumpNum (lu_palette, PU_CACHE));
+    I_SetPalette((byte*)W_CacheLumpNum (lu_palette, PU_CACHE));
 
     st_stopped = true;
 }
@@ -1467,5 +1432,5 @@ void ST_Init (void)
 {
     veryfirsttime = 0;
     ST_loadData();
-    screens[4] = (byte *) Z_Malloc(ST_WIDTH*ST_HEIGHT, PU_STATIC, 0);
+    screens[BG] = (byte *) Z_Malloc(SCREENWIDTH*SCREENHEIGHT, PU_STATIC, 0);
 }

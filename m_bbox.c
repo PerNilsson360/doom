@@ -36,17 +36,17 @@ rcsid[] = "$Id: m_bbox.c,v 1.1 1997/02/03 22:45:10 b1 Exp $";
 
 
 
-void M_ClearBox (fixed_t *box)
+void MM_ClearBox (double *box)
 {
-    box[BOXTOP] = box[BOXRIGHT] = MININT;
-    box[BOXBOTTOM] = box[BOXLEFT] = MAXINT;
+    box[BOXTOP] = box[BOXRIGHT] = INT_MIN;
+    box[BOXBOTTOM] = box[BOXLEFT] = INT_MAX;
 }
 
 void
-M_AddToBox
-( fixed_t*	box,
-  fixed_t	x,
-  fixed_t	y )
+MM_AddToBox
+( double*	box,
+  double	x,
+  double	y )
 {
     if (x<box[BOXLEFT])
 	box[BOXLEFT] = x;

@@ -62,7 +62,7 @@ rcsid[] = "$Id: hu_stuff.c,v 1.4 1997/02/03 16:47:52 b1 Exp $";
 
 
 
-char*	chat_macros[] =
+const char*	chat_macros[] =
 {
     HUSTR_CHATMACRO0,
     HUSTR_CHATMACRO1,
@@ -76,7 +76,7 @@ char*	chat_macros[] =
     HUSTR_CHATMACRO9
 };
 
-char*	player_names[] =
+const char*	player_names[] =
 {
     HUSTR_PLRGREEN,
     HUSTR_PLRINDIGO,
@@ -89,30 +89,30 @@ char			chat_char; // remove later.
 static player_t*	plr;
 patch_t*		hu_font[HU_FONTSIZE];
 static hu_textline_t	w_title;
-boolean			chat_on;
+bool			chat_on;
 static hu_itext_t	w_chat;
-static boolean		always_off = false;
+static bool		always_off = false;
 static char		chat_dest[MAXPLAYERS];
 static hu_itext_t w_inputbuffer[MAXPLAYERS];
 
-static boolean		message_on;
-boolean			message_dontfuckwithme;
-static boolean		message_nottobefuckedwith;
+static bool		message_on;
+bool			message_dontfuckwithme;
+static bool		message_nottobefuckedwith;
 
 static hu_stext_t	w_message;
 static int		message_counter;
 
 extern int		showMessages;
-extern boolean		automapactive;
+extern bool		automapactive;
 
-static boolean		headsupactive = false;
+static bool		headsupactive = false;
 
 //
 // Builtin map names.
 // The actual names can be found in DStrings.h.
 //
 
-char*	mapnames[] =	// DOOM shareware/registered/retail (Ultimate) names.
+const char*	mapnames[] =	// DOOM shareware/registered/retail (Ultimate) names.
 {
 
     HUSTR_E1M1,
@@ -166,7 +166,7 @@ char*	mapnames[] =	// DOOM shareware/registered/retail (Ultimate) names.
     "NEWLEVEL"
 };
 
-char*	mapnames2[] =	// DOOM 2 map names.
+const char*	mapnames2[] =	// DOOM 2 map names.
 {
     HUSTR_1,
     HUSTR_2,
@@ -205,7 +205,7 @@ char*	mapnames2[] =	// DOOM 2 map names.
 };
 
 
-char*	mapnamesp[] =	// Plutonia WAD map names.
+const char*	mapnamesp[] =	// Plutonia WAD map names.
 {
     PHUSTR_1,
     PHUSTR_2,
@@ -244,7 +244,7 @@ char*	mapnamesp[] =	// Plutonia WAD map names.
 };
 
 
-char *mapnamest[] =	// TNT WAD map names.
+const char *mapnamest[] =	// TNT WAD map names.
 {
     THUSTR_1,
     THUSTR_2,
@@ -488,8 +488,8 @@ void HU_Drawer(void)
 
     HUlib_drawSText(&w_message);
     HUlib_drawIText(&w_chat);
-    if (automapactive)
-	HUlib_drawTextLine(&w_title, false);
+    // if (automapactive)
+	// HUlib_drawTextLine(&w_title, false);
 
 }
 
@@ -522,7 +522,7 @@ void HU_Ticker(void)
 	if ((plr->message && !message_nottobefuckedwith)
 	    || (plr->message && message_dontfuckwithme))
 	{
-	    HUlib_addMessageToSText(&w_message, 0, plr->message);
+	    HUlib_addMessageToSText(&w_message, 0, (char*)plr->message);
 	    plr->message = 0;
 	    message_on = true;
 	    message_counter = HU_MSGTIMEOUT;
@@ -614,14 +614,14 @@ char HU_dequeueChatChar(void)
     return c;
 }
 
-boolean HU_Responder(event_t *ev)
+bool HU_Responder(event_t *ev)
 {
 
     static char		lastmessage[HU_MAXLINELENGTH+1];
     char*		macromessage;
-    boolean		eatkey = false;
-    static boolean	shiftdown = false;
-    static boolean	altdown = false;
+    bool		eatkey = false;
+    static bool	shiftdown = false;
+    static bool	altdown = false;
     unsigned char 	c;
     int			i;
     int			numplayers;

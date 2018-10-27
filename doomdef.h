@@ -93,27 +93,23 @@ typedef enum
 
 //
 // For resize of screen, at start of game.
-// It will not work dynamically, see visplanes.
 //
-#define	BASE_WIDTH		320
+#define	BASE_WIDTH 320
+#define BASE_HEIGHT 200 
 
 // It is educational but futile to change this
 //  scaling e.g. to 2. Drawing of status bar,
 //  menues etc. is tied to the scale implied
 //  by the graphics.
-#define	SCREEN_MUL		1
-#define	INV_ASPECT_RATIO	0.625 // 0.75, ideally
+#define	SCREEN_MUL		4
+#define	INV_ASPECT_RATIO	0.5625 // 0.625
 
 // Defines suck. C sucks.
 // C++ might sucks for OOP, but it sure is a better C.
 // So there.
-#define SCREENWIDTH  320
-//SCREEN_MUL*BASE_WIDTH //320
-#define SCREENHEIGHT 200
-//(int)(SCREEN_MUL*BASE_WIDTH*INV_ASPECT_RATIO) //200
-
-
-
+// 720 546 , 1280, 720
+#define SCREENWIDTH ((int)(SCREEN_MUL*BASE_WIDTH)) //1280 // SCREEN_MUL*BASE_WIDTH //320
+#define SCREENHEIGHT ((int)(SCREEN_MUL*BASE_WIDTH*INV_ASPECT_RATIO)) //720 // (int)(SCREEN_MUL*BASE_WIDTH*INV_ASPECT_RATIO) //200
 
 // The maximum number of players, multiplayer/networking.
 #define MAXPLAYERS		4
@@ -126,6 +122,7 @@ typedef enum
 // the game final animation, or a demo. 
 typedef enum
 {
+    GS_WIPE,                    // @todo per instead of using -1
     GS_LEVEL,
     GS_INTERMISSION,
     GS_FINALE,
@@ -247,10 +244,10 @@ typedef enum
 // This is the stuff configured by Setup.Exe.
 // Most key data are simple ascii (uppercased).
 //
-#define KEY_RIGHTARROW	0xae
-#define KEY_LEFTARROW	0xac
-#define KEY_UPARROW	0xad
-#define KEY_DOWNARROW	0xaf
+#define KEY_RIGHTARROW 0xae //        0x64
+#define KEY_LEFTARROW  0xac //          0x61
+#define KEY_UPARROW	   0xad //        0x77
+#define KEY_DOWNARROW  0xaf //       0x73
 #define KEY_ESCAPE	27
 #define KEY_ENTER	13
 #define KEY_TAB		9
@@ -336,3 +333,4 @@ typedef enum
 // $Log:$
 //
 //-----------------------------------------------------------------------------
+
