@@ -157,10 +157,7 @@ int	fuzzpos = 0;
 //
 void R_DrawFuzzColumn (void) 
 { 
-    int			count; 
     byte*		dest; 
-    fixed_t		frac;
-    fixed_t		fracstep;	 
 
     // Adjust borders. Low... 
     if (!dc_yl) 
@@ -170,7 +167,7 @@ void R_DrawFuzzColumn (void)
     if (dc_yh == SCREENHEIGHT-1) 
 	dc_yh = SCREENHEIGHT - 2; 
 		 
-    count = dc_yh - dc_yl; 
+    int count = dc_yh - dc_yl; 
 
     // Zero length.
     if (count < 0) 
@@ -190,8 +187,8 @@ void R_DrawFuzzColumn (void)
     dest = screens[0] + dc_yl * SCREENWIDTH + dc_x;  
 
     // Looks familiar.
-    fracstep = double_to_fixed(dc_iscale); 
-    frac = double_to_fixed(dc_texturemid) + (dc_yl-centery)*fracstep; 
+    double fracstep = dc_iscale; 
+    double frac = dc_texturemid + (dc_yl-centery)*fracstep; 
 
     // Looks like an attempt at dithering,
     //  using the colormap #6 (of 0-31, a bit
@@ -233,8 +230,8 @@ void R_DrawTranslatedColumn (void)
 { 
     int			count; 
     byte*		dest; 
-    fixed_t		frac;
-    fixed_t		fracstep;	 
+    double		frac;
+    double		fracstep;	 
  
     count = dc_yh - dc_yl; 
     if (count < 0) 
@@ -251,11 +248,10 @@ void R_DrawTranslatedColumn (void)
     
 #endif     
     dest = screens[0] + dc_yl * SCREENWIDTH + dc_x;  
-    //dest = ylookup[dc_yl] + columnofs[dc_x];
 
     // Looks familiar.
-    fracstep = double_to_fixed(dc_iscale); 
-    frac = double_to_fixed(dc_texturemid) + (dc_yl-centery)*fracstep; 
+    fracstep = dc_iscale; 
+    frac = dc_texturemid + (dc_yl-centery)*fracstep; 
 
     // Here we do an additional index re-mapping.
     do 
@@ -265,15 +261,12 @@ void R_DrawTranslatedColumn (void)
 	//  used with PLAY sprites.
 	// Thus the "green" ramp of the player 0 sprite
 	//  is mapped to gray, red, black/indigo. 
-	*dest = dc_colormap[dc_translation[dc_source[frac>>FRACBITS]]];
+	*dest = dc_colormap[dc_translation[dc_source[int(frac)]]];
 	dest += SCREENWIDTH;
 	
 	frac += fracstep; 
     } while (count--); 
 } 
-
-
-
 
 //
 // R_InitTranslationTables
