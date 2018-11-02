@@ -144,16 +144,16 @@ R_RenderMaskedSegRange
     if (curline->linedef->flags & ML_DONTPEGBOTTOM)
     {
 	dc_texturemid = frontsector->ffloorheight > backsector->ffloorheight
-	    ? double_to_fixed(frontsector->ffloorheight) : double_to_fixed(backsector->ffloorheight);
-	dc_texturemid = dc_texturemid + double_to_fixed(ttextureheight[texnum]) - double_to_fixed(vviewz);
+	    ? frontsector->ffloorheight : backsector->ffloorheight;
+	dc_texturemid = dc_texturemid + ttextureheight[texnum] - vviewz;
     }
     else
     {
 	dc_texturemid = frontsector->cceilingheight < backsector->cceilingheight
-	    ? double_to_fixed(frontsector->cceilingheight) : double_to_fixed(backsector->cceilingheight);
-	dc_texturemid = dc_texturemid -double_to_fixed(vviewz);
+	    ? frontsector->cceilingheight : backsector->cceilingheight;
+	dc_texturemid = dc_texturemid - vviewz;
     }
-    dc_texturemid += double_to_fixed(curline->sidedef->rrowoffset);
+    dc_texturemid += curline->sidedef->rrowoffset;
 			
     if (fixedcolormap)
 	dc_colormap = fixedcolormap;
@@ -174,8 +174,8 @@ R_RenderMaskedSegRange
 		dc_colormap = walllights[index];
 	    }
 			
-	    sprtopscreen = double_to_fixed(ccenteryfrac) - FixedMul(dc_texturemid, spryscale);
-	    dc_iscale = 0xffffffffu / (unsigned)spryscale;
+	    sprtopscreen = double_to_fixed(ccenteryfrac) - FixedMul(double_to_fixed(dc_texturemid), spryscale);
+	    dc_iscale = fixed_to_double(0xffffffffu / (unsigned)spryscale);
 	    
 	    // draw the texture
 	    col = (column_t *)( 
@@ -273,7 +273,7 @@ void R_RenderSegLoop (void)
 	    
 	    dc_colormap = walllights[index];
 	    dc_x = rw_x;
-	    dc_iscale = 0xffffffffu / (unsigned)rw_scale;
+	    dc_iscale = fixed_to_double(0xffffffffu / (unsigned)rw_scale);
 	}
 	
 	// draw the wall tiers
@@ -282,7 +282,7 @@ void R_RenderSegLoop (void)
 	    // single sided line
 	    dc_yl = yl;
 	    dc_yh = yh;
-	    dc_texturemid = rw_midtexturemid;
+	    dc_texturemid = fixed_to_double(rw_midtexturemid);
 	    dc_source = R_GetColumn(midtexture,texturecolumn);
 	    colfunc ();
 	    ceilingclip[rw_x] = SCREENHEIGHT;
@@ -304,7 +304,7 @@ void R_RenderSegLoop (void)
 		{
 		    dc_yl = yl;
 		    dc_yh = mid;
-		    dc_texturemid = rw_toptexturemid;
+		    dc_texturemid = fixed_to_double(rw_toptexturemid);
 		    dc_source = R_GetColumn(toptexture,texturecolumn);
 		    colfunc ();
 		    ceilingclip[rw_x] = mid;
@@ -333,7 +333,7 @@ void R_RenderSegLoop (void)
 		{
 		    dc_yl = mid;
 		    dc_yh = yh;
-		    dc_texturemid = rw_bottomtexturemid;
+		    dc_texturemid = fixed_to_double(rw_bottomtexturemid);
 		    dc_source = R_GetColumn(bottomtexture,
 					    texturecolumn);
 		    colfunc ();

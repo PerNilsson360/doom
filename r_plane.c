@@ -142,20 +142,20 @@ R_MapPlane
     {
 	cachedheight[y] = planeheight;
 	distance = cacheddistance[y] = FixedMul (planeheight, yslope[y]);
-	ds_xstep = cachedxstep[y] = FixedMul (distance,basexscale);
-	ds_ystep = cachedystep[y] = FixedMul (distance,baseyscale);
+	ds_xstep = fixed_to_double(cachedxstep[y] = FixedMul (distance,basexscale));
+	ds_ystep = fixed_to_double(cachedystep[y] = FixedMul (distance,baseyscale));
     }
     else
     {
 	distance = cacheddistance[y];
-	ds_xstep = cachedxstep[y];
-	ds_ystep = cachedystep[y];
+	ds_xstep = double_to_fixed(cachedxstep[y]);
+	ds_ystep = double_to_fixed(cachedystep[y]);
     }
 	
     length = FixedMul (distance, double_to_fixed(ddistscale[x1]));
     Angle a = vviewangle + xxtoviewangle[x1]; 
-    ds_xfrac = double_to_fixed(vviewx + (cos(a) * fixed_to_double(length)));
-    ds_yfrac = -double_to_fixed(vviewy - (sin(a) * fixed_to_double(length)));
+    ds_xfrac = vviewx + (cos(a) * fixed_to_double(length));
+    ds_yfrac = -(vviewy - (sin(a) * fixed_to_double(length)));
 
     if (fixedcolormap)
 	ds_colormap = fixedcolormap;
@@ -392,14 +392,14 @@ void R_DrawPlanes (void)
 	// sky flat
 	if (pl->picnum == skyflatnum)
 	{
-	    dc_iscale = FRACUNIT;
+	    dc_iscale = 1;
 	    
 	    // Sky is allways drawn full bright,
 	    //  i.e. colormaps[0] is used.
 	    // Because of this hack, sky is not affected
 	    //  by INVUL inverse mapping.
 	    dc_colormap = colormaps;
-	    dc_texturemid = skytexturemid;
+	    dc_texturemid = fixed_to_double(skytexturemid);
 	    for (x=pl->minx ; x <= pl->maxx ; x++)
 	    {
 		dc_yl = pl->top[x];

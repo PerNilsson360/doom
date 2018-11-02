@@ -356,7 +356,7 @@ void R_DrawMaskedColumn (column_t* column)
     int 	bottomscreen;
     fixed_t	basetexturemid;
 	
-    basetexturemid = dc_texturemid;
+    basetexturemid = double_to_fixed(dc_texturemid);
 	
     for ( ; column->topdelta != 0xff ; ) 
     {
@@ -376,7 +376,7 @@ void R_DrawMaskedColumn (column_t* column)
 	if (dc_yl <= dc_yh)
 	{
 	    dc_source = (byte *)column + 3;
-	    dc_texturemid = basetexturemid - (column->topdelta<<FRACBITS);
+	    dc_texturemid = fixed_to_double(basetexturemid - (column->topdelta<<FRACBITS));
 	    // dc_source = (byte *)column + 3 - column->topdelta;
 
 	    // Drawn by either R_DrawColumn
@@ -386,7 +386,7 @@ void R_DrawMaskedColumn (column_t* column)
 	column = (column_t *)(  (byte *)column + column->length + 4);
     }
 	
-    dc_texturemid = basetexturemid;
+    dc_texturemid = fixed_to_double(basetexturemid);
 }
 
 
@@ -422,11 +422,11 @@ R_DrawVisSprite
 	    ( (vis->mobjflags & MF_TRANSLATION) >> (MF_TRANSSHIFT-8) );
     }
 	
-    dc_iscale = abs(double_to_fixed(vis->xxiscale));
-    dc_texturemid = double_to_fixed(vis->ttexturemid);
+    dc_iscale = fabs(vis->xxiscale);
+    dc_texturemid = vis->ttexturemid;
     double frac = vis->sstartfrac;
     spryscale = double_to_fixed(vis->sscale);
-    sprtopscreen = double_to_fixed(ccenteryfrac) - FixedMul(dc_texturemid,spryscale);
+    sprtopscreen = double_to_fixed(ccenteryfrac) - FixedMul(double_to_fixed(dc_texturemid),spryscale);
     for (dc_x=vis->x1 ; dc_x<=vis->x2 ; dc_x++, frac += vis->xxiscale)
     {
 	texturecolumn = frac;

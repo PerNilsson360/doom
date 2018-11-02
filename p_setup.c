@@ -83,20 +83,6 @@ side_t*		sides;
 // blocks of size ...
 // Used to speed up collision detection
 // by spatial subdivision in 2D.
-//
-// Blockmap size.
-// int		bmapwidth;
-// int		bmapheight;	// size in mapblocks
-// short*		blockmap;	// int for larger maps
-// // offsets in blockmap are from here
-// short*		blockmaplump;		
-// // origin of block map
-// fixed_t		bmaporgx;
-// fixed_t		bmaporgy;
-// // for thing chains
-// mobj_t**	blocklinks;		
-
-
 BlockMap blockMap;
 
 

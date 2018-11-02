@@ -69,8 +69,8 @@ lighttable_t*		dc_colormap;
 int			dc_x; 
 int			dc_yl; 
 int			dc_yh; 
-fixed_t			dc_iscale; 
-fixed_t			dc_texturemid;
+double			dc_iscale; 
+double			dc_texturemid;
 
 // first pixel in a column (possibly virtual) 
 byte*			dc_source;		
@@ -109,8 +109,8 @@ void R_DrawColumn (void)
 
     // Determine scaling,
     //  which is the only mapping to be done.
-    fracstep = dc_iscale;
-    frac = dc_texturemid + (dc_yl-centery)*fracstep; 
+    fracstep = double_to_fixed(dc_iscale);
+    frac = double_to_fixed(dc_texturemid) + (dc_yl-centery)*fracstep; 
 
     // Inner loop that does the actual texture mapping,
     //  e.g. a DDA-lile scaling.
@@ -193,8 +193,8 @@ void R_DrawFuzzColumn (void)
     dest = screens[0] + dc_yl * SCREENWIDTH + dc_x;  
 
     // Looks familiar.
-    fracstep = dc_iscale; 
-    frac = dc_texturemid + (dc_yl-centery)*fracstep; 
+    fracstep = double_to_fixed(dc_iscale); 
+    frac = double_to_fixed(dc_texturemid) + (dc_yl-centery)*fracstep; 
 
     // Looks like an attempt at dithering,
     //  using the colormap #6 (of 0-31, a bit
@@ -257,8 +257,8 @@ void R_DrawTranslatedColumn (void)
     //dest = ylookup[dc_yl] + columnofs[dc_x];
 
     // Looks familiar.
-    fracstep = dc_iscale; 
-    frac = dc_texturemid + (dc_yl-centery)*fracstep; 
+    fracstep = double_to_fixed(dc_iscale); 
+    frac = double_to_fixed(dc_texturemid) + (dc_yl-centery)*fracstep; 
 
     // Here we do an additional index re-mapping.
     do 
@@ -333,10 +333,10 @@ int			ds_x2;
 
 lighttable_t*		ds_colormap; 
 
-fixed_t			ds_xfrac; 
-fixed_t			ds_yfrac; 
-fixed_t			ds_xstep; 
-fixed_t			ds_ystep;
+double			ds_xfrac; 
+double			ds_yfrac; 
+double			ds_xstep; 
+double			ds_ystep;
 
 // start of a 64*64 tile image 
 byte*			ds_source;	
@@ -368,8 +368,8 @@ void R_DrawSpan (void)
 #endif 
 
     
-    xfrac = ds_xfrac; 
-    yfrac = ds_yfrac; 
+    xfrac = double_to_fixed(ds_xfrac); 
+    yfrac = double_to_fixed(ds_yfrac); 
 
     dest = screens[0] + ds_y * SCREENWIDTH + ds_x1;  
 
@@ -386,8 +386,8 @@ void R_DrawSpan (void)
 	*dest++ = ds_colormap[ds_source[spot]];
 
 	// Next step in u,v.
-	xfrac += ds_xstep; 
-	yfrac += ds_ystep;
+	xfrac += double_to_fixed(ds_xstep); 
+	yfrac += double_to_fixed(ds_ystep);
 	
     } while (count--); 
 } 

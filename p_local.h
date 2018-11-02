@@ -136,8 +136,6 @@ void P_NoiseAlert (Mob* target, Mob* emmiter);
 
 typedef struct
 {
-    fixed_t getFrac() { return double_to_fixed(fraction); }
-    void setFrac(fixed_t frac) { fraction = fixed_to_double(frac); }
     double fraction;		// along trace line
     bool	isaline;
     union {
