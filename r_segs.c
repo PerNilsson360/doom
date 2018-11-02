@@ -634,7 +634,7 @@ R_StoreWallRange
 	if ((angle_t)rrw_normalangle-(angle_t)rrw_angle1 < ANG180)
 	    rw_offset = -rw_offset;
 
-	rw_offset += double_to_fixed(sidedef->ttextureoffset) + curline->offset;
+	rw_offset += double_to_fixed(sidedef->ttextureoffset) + double_to_fixed(curline->ooffset);
 	rrw_centerangle = Angle(Angle::A90) + vviewangle - rrw_normalangle;
 	// calculate light table
 	//  use different light tables

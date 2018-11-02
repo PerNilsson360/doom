@@ -242,7 +242,7 @@ typedef struct
     vertex_t*	v1;
     vertex_t*	v2;
     
-    fixed_t	offset;
+    double	ooffset;
 
     Angle	aangle;
 
