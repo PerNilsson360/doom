@@ -625,8 +625,6 @@ AM_Responder
 
     rc = false;
 
-    printf("event data %d\n", (int)ev->data1);
-    
     if (!automapactive)
     {
 	if (ev->type == ev_keydown && ev->data1 == AM_STARTKEY)

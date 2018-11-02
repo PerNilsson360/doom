@@ -27,6 +27,7 @@
 static const char
 rcsid[] = "$Id: p_maputl.c,v 1.5 1997/02/03 22:45:11 b1 Exp $";
 
+#include <cmath>
 #include <math.h>
 #include <stdlib.h>
 
@@ -586,27 +587,13 @@ PP_TraverseIntercepts(traverser_t func,
 // for all lines.
 //
 bool
-P_PathTraverse
-( fixed_t		x1,
-  fixed_t		y1,
-  fixed_t		x2,
-  fixed_t		y2,
-  int			flags,
-  bool (*trav) (intercept_t *))
+P_PathTraverse(double x1,
+	       double y1,
+	       double x2,
+	       double y2,
+	       int flags,
+	       bool (*trav) (intercept_t *))
 {
-    fixed_t	xt1;
-    fixed_t	yt1;
-    fixed_t	xt2;
-    fixed_t	yt2;
-    
-    fixed_t	xstep;
-    fixed_t	ystep;
-    
-    fixed_t	partial;
-    
-    fixed_t	xintercept;
-    fixed_t	yintercept;
-    
     int		mapx;
     int		mapy;
     
@@ -619,71 +606,76 @@ P_PathTraverse
 		
     validcount++;
     intercept_p = intercepts;
-	
-    if ( ((x1-double_to_fixed(blockMap.oorgx))&(MAPBLOCKSIZE-1)) == 0)
+    
+    double intPart;
+    if (modf((x1 - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV, &intPart) == 0)
     {
-        x1 += FRACUNIT;	// don't side exactly on a line
+	x1 += 1;
     }
     
-    if ( ((y1-double_to_fixed(blockMap.oorgy))&(MAPBLOCKSIZE-1)) == 0)
-	y1 += FRACUNIT;	// don't side exactly on a line
+    if (modf((y1 - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV, &intPart) == 0)
+    {
+	y1 += 1;
+    }
 
-    trace.x = fixed_to_double(x1);
-    trace.y = fixed_to_double(y1);
-    trace.dx = fixed_to_double(x2 - x1);
-    trace.dy = fixed_to_double(y2 - y1);
+    trace.x = x1;
+    trace.y = y1;
+    trace.dx = x2 - x1;
+    trace.dy = y2 - y1;
 
-    x1 -= double_to_fixed(blockMap.oorgx);
-    y1 -= double_to_fixed(blockMap.oorgy);
-    xt1 = x1>>MAPBLOCKSHIFT;
-    yt1 = y1>>MAPBLOCKSHIFT;
+    x1 -= blockMap.oorgx;
+    y1 -= blockMap.oorgy;
+    double xt1 = x1 / DOUBLE_MAPBLOCKS_DIV;
+    double yt1 = y1 / DOUBLE_MAPBLOCKS_DIV;
 
-    x2 -= double_to_fixed(blockMap.oorgx);
-    y2 -= double_to_fixed(blockMap.oorgy);
-    xt2 = x2>>MAPBLOCKSHIFT;
-    yt2 = y2>>MAPBLOCKSHIFT;
+    x2 -= blockMap.oorgx;
+    y2 -= blockMap.oorgy;
+    double xt2 = x2 / DOUBLE_MAPBLOCKS_DIV;
+    double yt2 = y2 / DOUBLE_MAPBLOCKS_DIV;
 
+    double partial;
+    double ystep;
     if (xt2 > xt1)
     {
         mapxstep = 1;
-        partial = FRACUNIT - ((x1>>MAPBTOFRAC)&(FRACUNIT-1));
-        ystep = FixedDiv (y2-y1,abs(x2-x1));
+	partial = 1 - modf(x1 / DOUBLE_MAPBLOCKS_DIV, &intPart);
+	ystep = (y2-y1)/fabs(x2-x1);
     }
     else if (xt2 < xt1)
     {
         mapxstep = -1;
-        partial = (x1>>MAPBTOFRAC)&(FRACUNIT-1);
-        ystep = FixedDiv (y2-y1,abs(x2-x1));
+	partial = modf(x1 / DOUBLE_MAPBLOCKS_DIV, &intPart);
+	ystep = (y2-y1)/fabs(x2-x1);
     }
     else
     {
         mapxstep = 0;
-        partial = FRACUNIT;
-        ystep = 256*FRACUNIT;
+        partial = 1;
+        ystep = 256;
     }	
 
-    yintercept = (y1>>MAPBTOFRAC) + FixedMul (partial, ystep);
+    double yintercept = (y1 / DOUBLE_MAPBLOCKS_DIV) + (partial * ystep);
 
-	
+    double xstep;
     if (yt2 > yt1)
     {
         mapystep = 1;
-        partial = FRACUNIT - ((y1>>MAPBTOFRAC)&(FRACUNIT-1));
-        xstep = FixedDiv (x2-x1,abs(y2-y1));
+	partial = 1 - modf(y1 / DOUBLE_MAPBLOCKS_DIV, &intPart);
+	xstep = (x2-x1)/fabs(y2-y1);
     }
     else if (yt2 < yt1)
     {
         mapystep = -1;
-        partial = (y1>>MAPBTOFRAC)&(FRACUNIT-1);
-        xstep = FixedDiv (x2-x1,abs(y2-y1));
+	partial = modf(y1 / DOUBLE_MAPBLOCKS_DIV, &intPart);
+	xstep = (x2-x1)/fabs(y2-y1);
     }
     else
     {
         mapystep = 0;
-        partial = FRACUNIT;
-        xstep = 256*FRACUNIT;
+        partial = 1;
+        xstep = 256;
     }	
-    xintercept = (x1>>MAPBTOFRAC) + FixedMul (partial, xstep);
+    double xintercept = (x1 / DOUBLE_MAPBLOCKS_DIV) + (partial * xstep);
     
     // Step through map blocks.
     // Count is present to prevent a round off error
@@ -710,12 +702,12 @@ P_PathTraverse
             break;
         }
         
-        if ( (yintercept >> FRACBITS) == mapy)
+        if (int(yintercept) == mapy)
         {
             yintercept += ystep;
             mapx += mapxstep;
         }
-        else if ( (xintercept >> FRACBITS) == mapx)
+        else if (int(xintercept) == mapx)
         {
             xintercept += xstep;
             mapy += mapystep;

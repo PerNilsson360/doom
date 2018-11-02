@@ -717,12 +717,9 @@ retry:
 		
     bbestslidefrac = 1;
 	
-    P_PathTraverse(double_to_fixed(leadx), double_to_fixed(leady), double_to_fixed(leadx +  mo->mmomx), double_to_fixed(leady + mo->mmomy),
-		     PT_ADDLINES, PTR_SlideTraverse );
-    P_PathTraverse(double_to_fixed(trailx), double_to_fixed(leady), double_to_fixed(trailx +  mo->mmomx), double_to_fixed(leady + mo->mmomy),
-		     PT_ADDLINES, PTR_SlideTraverse );
-    P_PathTraverse (double_to_fixed(leadx), double_to_fixed(traily), double_to_fixed(leadx +  mo->mmomx), double_to_fixed(traily + mo->mmomy),
-		     PT_ADDLINES, PTR_SlideTraverse );
+    P_PathTraverse(leadx, leady, leadx +  mo->mmomx, leady + mo->mmomy, PT_ADDLINES, PTR_SlideTraverse);
+    P_PathTraverse(trailx, leady, trailx +  mo->mmomx , leady + mo->mmomy, PT_ADDLINES, PTR_SlideTraverse);
+    P_PathTraverse(leadx, traily, leadx +  mo->mmomx, traily + mo->mmomy, PT_ADDLINES, PTR_SlideTraverse);
     
     // move up to the wall
     if (bbestslidefrac == 1)
@@ -1033,8 +1030,8 @@ PP_AimLineAttack(Mob* t1,
     aattackrange = distance;
     linetarget = NULL;
 	
-    P_PathTraverse(double_to_fixed(t1->xx), double_to_fixed(t1->yy),
-                   double_to_fixed(x2), double_to_fixed(y2),
+    P_PathTraverse(t1->xx, t1->yy,
+                   x2, y2,
                    PT_ADDLINES|PT_ADDTHINGS,
                    PTR_AimTraverse );
 
@@ -1064,8 +1061,8 @@ PP_LineAttack(Mob* t1,
     shootzz = t1->zz + (t1->hheight / 2) + 8;
     aattackrange = distance;
     aaimslope = slope;
-    P_PathTraverse(double_to_fixed(t1->xx), double_to_fixed(t1->yy),
-                   double_to_fixed(x2), double_to_fixed(y2),
+    P_PathTraverse(t1->xx, t1->yy,
+                   x2, y2,
                    PT_ADDLINES|PT_ADDTHINGS,
                    PTR_ShootTraverse );
 }
@@ -1126,7 +1123,7 @@ void P_UseLines (player_t*	player)
     x2 = x1 + (UUSERANGE * cos(player->mo->_angle));
     y2 = y1 + (UUSERANGE * sin(player->mo->_angle));
 	
-    P_PathTraverse(double_to_fixed(x1), double_to_fixed(y1), double_to_fixed(x2), double_to_fixed(y2), PT_ADDLINES, PTR_UseTraverse);
+    P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse);
 }
 
 

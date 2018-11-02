@@ -43,7 +43,7 @@
 #define MAPBLOCKSHIFT	(FRACBITS+7)
 #define DOUBLE_MAPBLOCKS_DIV 128 // 2^7 
 #define MAPBMASK		(MAPBLOCKSIZE-1)
-#define MAPBTOFRAC		(MAPBLOCKSHIFT-FRACBITS)  // 16 - 16 +7
+#define MAPBTOFRAC		(MAPBLOCKSHIFT-FRACBITS)  // 16 + 7 - 16
 
 
 // player radius for movement checking
@@ -175,13 +175,13 @@ bool P_BlockThingsIterator (int x, int y, bool(*func)(Mob*) );
 extern DivLine trace;
 
 bool
-P_PathTraverse
-( fixed_t       x1,
-  fixed_t	y1,
-  fixed_t	x2,
-  fixed_t	y2,
-  int		flags,
-  bool	(*trav) (intercept_t *));
+P_PathTraverse(
+    double x1,
+    double y1,
+    double x2,
+    double y2,
+    int flags,
+    bool (*trav) (intercept_t *));
 
 void P_UnsetThingPosition (Mob* thing);
 void P_SetThingPosition (Mob* thing);
