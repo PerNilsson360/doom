@@ -294,18 +294,18 @@ typedef struct drawseg_s
     int			x1;
     int			x2;
 
-    fixed_t		scale1;
-    fixed_t		scale2;
-    fixed_t		scalestep;
+    double		sscale1;
+    double 		sscale2;
+    double		sscalestep;
 
     // 0=none, 1=bottom, 2=top, 3=both
     int			silhouette;
 
     // do not clip sprites above this
-    fixed_t		bsilheight;
+    double		bbsilheight;
 
     // do not clip sprites below this
-    fixed_t		tsilheight;
+    double		ttsilheight;
     
     // Pointers to lists for sprite clipping,
     //  all three adjusted so [x1] is first value.
@@ -314,8 +314,6 @@ typedef struct drawseg_s
     short*		maskedtexturecol;
     
 } drawseg_t;
-
-
 
 // Patches.
 // A patch holds one or more columns.
@@ -331,12 +329,6 @@ typedef struct
     int32_t		columnofs[8];	// only [width] used
     // the [0] is &columnofs[width] 
 } patch_t;
-
-
-
-
-
-
 
 // A vissprite_t is a thing
 //  that will be drawn during a refresh.

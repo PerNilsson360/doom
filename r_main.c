@@ -313,7 +313,7 @@ RR_ScaleFromGlobalAngle(Angle visangle)
     double sinea = sin(anglea);	
     double sineb = sin(angleb);
     double num = pprojection * sineb;
-    double den = fixed_to_double(rw_distance) * sinea;
+    double den = rw_distance * sinea;
     scale = num / den;
     if (scale > 64)
         scale = 64;

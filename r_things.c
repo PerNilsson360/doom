@@ -837,15 +837,15 @@ void R_DrawSprite (vissprite_t* spr)
 	r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
 	r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
 
-	if (ds->scale1 > ds->scale2)
+	if (ds->sscale1 > ds->sscale2)
 	{
-	    lowscale = ds->scale2;
-	    scale = ds->scale1;
+	    lowscale = double_to_fixed(ds->sscale2);
+	    scale = double_to_fixed(ds->sscale1);
 	}
 	else
 	{
-	    lowscale = ds->scale1;
-	    scale = ds->scale2;
+	    lowscale = double_to_fixed(ds->sscale1);
+	    scale = double_to_fixed(ds->sscale2);
 	}
 		
 	if (scale < double_to_fixed(spr->sscale)
@@ -863,10 +863,10 @@ void R_DrawSprite (vissprite_t* spr)
 	// clip this piece of the sprite
 	silhouette = ds->silhouette;
 	
-	if (double_to_fixed(spr->ggz) >= ds->bsilheight)
+	if (spr->ggz >= ds->bbsilheight)
 	    silhouette &= ~SIL_BOTTOM;
 
-	if (double_to_fixed(spr->ggzt) <= ds->tsilheight)
+	if (spr->ggzt <= ds->ttsilheight)
 	    silhouette &= ~SIL_TOP;
 			
 	if (silhouette == 1)

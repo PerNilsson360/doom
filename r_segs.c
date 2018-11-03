@@ -38,7 +38,7 @@ rcsid[] = "$Id: r_segs.c,v 1.3 1997/01/29 20:10:19 b1 Exp $";
 
 #include "r_local.h"
 #include "r_sky.h"
-
+#include <limits>
 
 // OPTIMIZE: closed two sided lines as single sided
 
@@ -65,13 +65,13 @@ Angle		rrw_angle1;
 int		rw_x;
 int		rw_stopx;
 Angle		rrw_centerangle;
-fixed_t		rw_offset;
-fixed_t		rw_distance;
+double		rw_offset;
+double		rw_distance;
 fixed_t		rw_scale;
 fixed_t		rw_scalestep;
-fixed_t		rw_midtexturemid;
-fixed_t		rw_toptexturemid;
-fixed_t		rw_bottomtexturemid;
+double		rw_midtexturemid;
+double		rw_toptexturemid;
+double		rw_bottomtexturemid;
 
 int		worldtop;
 int		worldbottom;
@@ -135,8 +135,8 @@ R_RenderMaskedSegRange
 
     maskedtexturecol = ds->maskedtexturecol;
 
-    rw_scalestep = ds->scalestep;		
-    spryscale = ds->scale1 + (x1 - ds->x1)*rw_scalestep;
+    rw_scalestep = double_to_fixed(ds->sscalestep);		
+    spryscale = double_to_fixed(ds->sscale1) + (x1 - ds->x1)*rw_scalestep;
     mfloorclip = ds->sprbottomclip;
     mceilingclip = ds->sprtopclip;
     
@@ -263,7 +263,7 @@ void R_RenderSegLoop (void)
 	    // calculate texture offset
 
 	    angle_t angle = ((angle_t)rrw_centerangle + (angle_t)xxtoviewangle[rw_x])>>ANGLETOFINESHIFT;
-	    texturecolumn = rw_offset-FixedMul(finetangent[angle],rw_distance);
+	    texturecolumn = double_to_fixed(rw_offset)-FixedMul(finetangent[angle], double_to_fixed(rw_distance));
 	    texturecolumn >>= FRACBITS;
 	    // calculate lighting
 	    index = rw_scale>>LIGHTSCALESHIFT;
@@ -282,7 +282,7 @@ void R_RenderSegLoop (void)
 	    // single sided line
 	    dc_yl = yl;
 	    dc_yh = yh;
-	    dc_texturemid = fixed_to_double(rw_midtexturemid);
+	    dc_texturemid = rw_midtexturemid;
 	    dc_source = R_GetColumn(midtexture,texturecolumn);
 	    colfunc ();
 	    ceilingclip[rw_x] = SCREENHEIGHT;
@@ -304,7 +304,7 @@ void R_RenderSegLoop (void)
 		{
 		    dc_yl = yl;
 		    dc_yh = mid;
-		    dc_texturemid = fixed_to_double(rw_toptexturemid);
+		    dc_texturemid = rw_toptexturemid;
 		    dc_source = R_GetColumn(toptexture,texturecolumn);
 		    colfunc ();
 		    ceilingclip[rw_x] = mid;
@@ -333,7 +333,7 @@ void R_RenderSegLoop (void)
 		{
 		    dc_yl = mid;
 		    dc_yh = yh;
-		    dc_texturemid = fixed_to_double(rw_bottomtexturemid);
+		    dc_texturemid = rw_bottomtexturemid;
 		    dc_source = R_GetColumn(bottomtexture,
 					    texturecolumn);
 		    colfunc ();
@@ -408,30 +408,28 @@ R_StoreWallRange
     distangle = ANG90 - offsetangle;
     hyp = double_to_fixed(RR_PointToDist(curline->v1->xx, curline->v1->yy));
     sineval = finesine[distangle>>ANGLETOFINESHIFT];
-    rw_distance = FixedMul (hyp, sineval);
+    rw_distance = fixed_to_double(FixedMul (hyp, sineval));
 		
-
-    
     ds_p->x1 = rw_x = start;
     ds_p->x2 = stop;
     ds_p->curline = curline;
     rw_stopx = stop+1;
     
     // calculate scale at both ends and step
-    ds_p->scale1 = rw_scale = 
-	double_to_fixed(RR_ScaleFromGlobalAngle (vviewangle + xxtoviewangle[start]));
+    ds_p->sscale1 = RR_ScaleFromGlobalAngle(vviewangle + xxtoviewangle[start]);
+    rw_scale = double_to_fixed(RR_ScaleFromGlobalAngle (vviewangle + xxtoviewangle[start]));
     
     if (stop > start )
     {
-	ds_p->scale2 = double_to_fixed(RR_ScaleFromGlobalAngle (vviewangle + xxtoviewangle[stop]));
-	ds_p->scalestep = rw_scalestep = 
-	    (ds_p->scale2 - rw_scale) / (stop-start);
+	ds_p->sscale2 = RR_ScaleFromGlobalAngle(vviewangle + xxtoviewangle[stop]);
+	ds_p->sscalestep = fixed_to_double((double_to_fixed(ds_p->sscale2) - rw_scale) / (stop-start));
+	rw_scalestep = (double_to_fixed(ds_p->sscale2) - rw_scale) / (stop-start);
     }
     else
     {
 	// UNUSED: try to fix the stretched line bug
 #if 0
-	if (rw_distance < FRACUNIT/2)
+	if (rw_distance < 0.5)
 	{
 	    fixed_t		trx,try;
 	    fixed_t		gxt,gyt;
@@ -444,7 +442,7 @@ R_StoreWallRange
 	    ds_p->scale1 = FixedDiv(projection, gxt-gyt);
 	}
 #endif
-	ds_p->scale2 = ds_p->scale1;
+	ds_p->sscale2 = ds_p->sscale1;
     }
     
     // calculate texture boundaries
@@ -463,23 +461,22 @@ R_StoreWallRange
 	markfloor = markceiling = true;
 	if (linedef->flags & ML_DONTPEGBOTTOM)
 	{
-	    vtop = double_to_fixed(frontsector->ffloorheight) +
-		double_to_fixed(ttextureheight[sidedef->midtexture]);
+	    vtop = frontsector->ffloorheight + ttextureheight[sidedef->midtexture];
 	    // bottom of texture at bottom
-	    rw_midtexturemid = vtop - double_to_fixed(vviewz);	
+	    rw_midtexturemid = vtop - vviewz;	
 	}
 	else
 	{
 	    // top of texture at top
-	    rw_midtexturemid = worldtop;
+	    rw_midtexturemid = fixed_to_double(worldtop);
 	}
-	rw_midtexturemid += double_to_fixed(sidedef->rrowoffset);
+	rw_midtexturemid += sidedef->rrowoffset;
 
 	ds_p->silhouette = SIL_BOTH;
 	ds_p->sprtopclip = screenheightarray;
 	ds_p->sprbottomclip = negonearray;
-	ds_p->bsilheight = INT_MAX;
-	ds_p->tsilheight = INT_MIN;
+	ds_p->bbsilheight = std::numeric_limits<double>::max();
+	ds_p->ttsilheight = std::numeric_limits<double>::min();
     }
     else
     {
@@ -490,38 +487,38 @@ R_StoreWallRange
 	if (frontsector->ffloorheight > backsector->ffloorheight)
 	{
 	    ds_p->silhouette = SIL_BOTTOM;
-	    ds_p->bsilheight = double_to_fixed(frontsector->ffloorheight);
+	    ds_p->bbsilheight = frontsector->ffloorheight;
 	}
 	else if (backsector->ffloorheight > vviewz)
 	{
 	    ds_p->silhouette = SIL_BOTTOM;
-	    ds_p->bsilheight = INT_MAX;
+	    ds_p->bbsilheight = std::numeric_limits<double>::min();
 	    // ds_p->sprbottomclip = negonearray;
 	}
 	
 	if (frontsector->cceilingheight < backsector->cceilingheight)
 	{
 	    ds_p->silhouette |= SIL_TOP;
-	    ds_p->tsilheight = double_to_fixed(frontsector->cceilingheight);
+	    ds_p->ttsilheight = frontsector->cceilingheight;
 	}
 	else if (backsector->cceilingheight < vviewz)
 	{
 	    ds_p->silhouette |= SIL_TOP;
-	    ds_p->tsilheight = INT_MIN;
+	    ds_p->ttsilheight = std::numeric_limits<double>::min();
 	    // ds_p->sprtopclip = screenheightarray;
 	}
 		
 	if (backsector->cceilingheight <= frontsector->ffloorheight)
 	{
 	    ds_p->sprbottomclip = negonearray;
-	    ds_p->bsilheight = INT_MAX;
+	    ds_p->bbsilheight = std::numeric_limits<double>::max();
 	    ds_p->silhouette |= SIL_BOTTOM;
 	}
 	
 	if (backsector->ffloorheight >= frontsector->cceilingheight)
 	{
 	    ds_p->sprtopclip = screenheightarray;
-	    ds_p->tsilheight = INT_MIN;
+	    ds_p->ttsilheight = std::numeric_limits<double>::min();
 	    ds_p->silhouette |= SIL_TOP;
 	}
 	
@@ -576,16 +573,14 @@ R_StoreWallRange
 	    if (linedef->flags & ML_DONTPEGTOP)
 	    {
 		// top of texture at top
-		rw_toptexturemid = worldtop;
+		rw_toptexturemid = fixed_to_double(worldtop);
 	    }
 	    else
 	    {
-		vtop =
-		    double_to_fixed(backsector->cceilingheight)
-		    + double_to_fixed(ttextureheight[sidedef->toptexture]);
+		vtop = backsector->cceilingheight + ttextureheight[sidedef->toptexture];
 		
 		// bottom of texture
-		rw_toptexturemid = vtop - double_to_fixed(vviewz);	
+		rw_toptexturemid = vtop - vviewz;	
 	    }
 	}
 	if (worldlow > worldbottom)
@@ -597,13 +592,13 @@ R_StoreWallRange
 	    {
 		// bottom of texture at bottom
 		// top of texture at top
-		rw_bottomtexturemid = worldtop;
+		rw_bottomtexturemid = fixed_to_double(worldtop);
 	    }
 	    else	// top of texture at top
-		rw_bottomtexturemid = worldlow;
+		rw_bottomtexturemid = fixed_to_double(worldlow);
 	}
-	rw_toptexturemid += double_to_fixed(sidedef->rrowoffset);
-	rw_bottomtexturemid += double_to_fixed(sidedef->rrowoffset);
+	rw_toptexturemid += sidedef->rrowoffset;
+	rw_bottomtexturemid += sidedef->rrowoffset;
 	
 	// allocate space for masked texture tables
 	if (sidedef->midtexture)
@@ -629,12 +624,12 @@ R_StoreWallRange
 	    offsetangle = ANG90;
 
 	sineval = finesine[offsetangle >>ANGLETOFINESHIFT];
-	rw_offset = FixedMul (hyp, sineval);
+	rw_offset = fixed_to_double(FixedMul (hyp, sineval));
 
 	if ((angle_t)rrw_normalangle-(angle_t)rrw_angle1 < ANG180)
 	    rw_offset = -rw_offset;
 
-	rw_offset += double_to_fixed(sidedef->ttextureoffset) + double_to_fixed(curline->ooffset);
+	rw_offset += sidedef->ttextureoffset + curline->ooffset;
 	rrw_centerangle = Angle(Angle::A90) + vviewangle - rrw_normalangle;
 	// calculate light table
 	//  use different light tables
@@ -735,12 +730,12 @@ R_StoreWallRange
     if (maskedtexture && !(ds_p->silhouette&SIL_TOP))
     {
 	ds_p->silhouette |= SIL_TOP;
-	ds_p->tsilheight = INT_MIN;
+	ds_p->ttsilheight = std::numeric_limits<double>::min();
     }
     if (maskedtexture && !(ds_p->silhouette&SIL_BOTTOM))
     {
 	ds_p->silhouette |= SIL_BOTTOM;
-	ds_p->bsilheight = INT_MAX;
+	ds_p->bbsilheight = std::numeric_limits<double>::max();
     }
     ds_p++;
 }
