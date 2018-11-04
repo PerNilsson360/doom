@@ -283,21 +283,6 @@ RR_PointToDist(double x, double y)
 //
 void R_InitPointToAngle (void)
 {
-    // UNUSED - now getting from tables.c
-#if 0
-    int	i;
-    long	t;
-    float	f;
-//
-// slope (tangent) to angle lookup
-//
-    for (i=0 ; i<=SLOPERANGE ; i++)
-    {
-	f = atan( (float)i/SLOPERANGE )/(3.141592657*2);
-	t = 0xffffffff*f;
-	tantoangle[i] = t;
-    }
-#endif
 }
 
 
@@ -331,32 +316,6 @@ RR_ScaleFromGlobalAngle(Angle visangle)
 //
 void R_InitTables (void)
 {
-    // UNUSED: now getting from tables.c
-#if 0
-    int		i;
-    float	a;
-    float	fv;
-    int		t;
-    
-    // viewangle tangent table
-    for (i=0 ; i<FINEANGLES/2 ; i++)
-    {
-	a = (i-FINEANGLES/4+0.5)*PI*2/FINEANGLES;
-	fv = FRACUNIT*tan (a);
-	t = fv;
-	finetangent[i] = t;
-    }
-    
-    // finesine table
-    for (i=0 ; i<5*FINEANGLES/4 ; i++)
-    {
-	// OPTIMIZE: mirror...
-	a = (i+0.5)*PI*2/FINEANGLES;
-	t = FRACUNIT*sin (a);
-	finesine[i] = t;
-    }
-#endif
-
 }
 
 int
@@ -389,7 +348,6 @@ void R_InitTextureMapping (void)
     int			i;
     int			x;
     int			t;
-//    fixed_t		focallength;
     
     // Use tangent table to generate viewangletox:
     //  viewangletox will give the next greatest x
@@ -397,12 +355,7 @@ void R_InitTextureMapping (void)
     //
     // Calc focallength
     //  so FIELDOFVIEW angles covers SCREENWIDTH.
-    // focallength = FixedDiv (double_to_fixed(ccenterxfrac),
-    //     		    finetangent[FINEANGLES/4+FIELDOFVIEW/2] );
     double focallength = SCREENWIDTH / (2 * tan((double)ANGLEOFVIEW/2));
-    // printf("focalLength %f %f centerx %f %d\n",
-    //        fixed_to_double(focallength), ffocalLength,
-    //        ccenterxfrac, centerx);
 
     for (i=0 ; i<FINEANGLES/2 ; i++)
     {

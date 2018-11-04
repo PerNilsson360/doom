@@ -515,8 +515,8 @@ void P_GroupLines (void)
 	    I_Error ("P_GroupLines: miscounted");
 			
 	// set the degenmobj_t to the middle of the bounding box
-	sector->soundorg.x = double_to_fixed((bbbox[BOXRIGHT]+bbbox[BOXLEFT])/2);
-	sector->soundorg.y = double_to_fixed((bbbox[BOXTOP]+bbbox[BOXBOTTOM])/2);
+	sector->soundorg.xx = (bbbox[BOXRIGHT]+bbbox[BOXLEFT])/2;
+	sector->soundorg.yy = (bbbox[BOXTOP]+bbbox[BOXBOTTOM])/2;
 		
 	// adjust bounding box to map blocks
 	block = (bbbox[BOXTOP]-blockMap.oorgy+MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;

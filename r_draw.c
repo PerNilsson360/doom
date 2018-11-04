@@ -339,11 +339,6 @@ int			dscount;
 // Draws the actual span.
 void R_DrawSpan (void) 
 { 
-    fixed_t		xfrac;
-    fixed_t		yfrac; 
-    byte*		dest; 
-    int			count;
-    int			spot; 
 	 
 #ifdef RANGECHECK 
     if (ds_x2 < ds_x1
@@ -358,26 +353,26 @@ void R_DrawSpan (void)
 #endif 
 
     
-    xfrac = double_to_fixed(ds_xfrac); 
-    yfrac = double_to_fixed(ds_yfrac); 
+    double xfrac = ds_xfrac; 
+    double yfrac = ds_yfrac; 
 
-    dest = screens[0] + ds_y * SCREENWIDTH + ds_x1;  
+    byte* dest = screens[0] + ds_y * SCREENWIDTH + ds_x1;  
 
     // We do not check for zero spans here?
-    count = ds_x2 - ds_x1; 
+    int count = ds_x2 - ds_x1; 
 
     do 
     {
 	// Current texture index in u,v.
-	spot = ((yfrac>>(16-6))&(63*64)) + ((xfrac>>16)&63);
+	int spot = (int(yfrac * 64)&(63*64)) + (int(xfrac)&63);
 
 	// Lookup pixel from flat texture tile,
 	//  re-index using light/colormap.
 	*dest++ = ds_colormap[ds_source[spot]];
 
 	// Next step in u,v.
-	xfrac += double_to_fixed(ds_xstep); 
-	yfrac += double_to_fixed(ds_ystep);
+	xfrac += ds_xstep; 
+	yfrac += ds_ystep;
 	
     } while (count--); 
 } 

@@ -377,9 +377,6 @@ R_StoreWallRange
 ( int	start,
   int	stop )
 {
-    fixed_t		hyp;
-    fixed_t		sineval;
-    angle_t		distangle, offsetangle;
     fixed_t		vtop;
     int			lightnum;
 
@@ -400,15 +397,15 @@ R_StoreWallRange
     
     // calculate rw_distance for scale calculation
     rrw_normalangle = (double)curline->aangle + Angle::A90;
-    offsetangle = abs((angle_t)rrw_normalangle-(angle_t)rrw_angle1);
+    Angle offsetangle = (angle_t)abs((angle_t)rrw_normalangle-(angle_t)rrw_angle1);
     
-    if (offsetangle > ANG90)
-	offsetangle = ANG90;
+    if (offsetangle > Angle(Angle::A90))
+	offsetangle = Angle::A90;
 
-    distangle = ANG90 - offsetangle;
-    hyp = double_to_fixed(RR_PointToDist(curline->v1->xx, curline->v1->yy));
-    sineval = finesine[distangle>>ANGLETOFINESHIFT];
-    rw_distance = fixed_to_double(FixedMul (hyp, sineval));
+    Angle distangle = Angle(Angle::A90) - offsetangle;
+    double hyp = RR_PointToDist(curline->v1->xx, curline->v1->yy);
+    double sineval = sin(distangle);
+    rw_distance = hyp * sineval;
 		
     ds_p->x1 = rw_x = start;
     ds_p->x2 = stop;
@@ -615,16 +612,16 @@ R_StoreWallRange
 
     if (segtextured)
     {
-	offsetangle = (angle_t)rrw_normalangle-(angle_t)rrw_angle1;
+	offsetangle = rrw_normalangle - rrw_angle1;
 	
-	if (offsetangle > ANG180)
+	if (offsetangle > Angle(Angle::A180))
 	    offsetangle = -offsetangle;
 
-	if (offsetangle > ANG90)
-	    offsetangle = ANG90;
+	if (offsetangle > Angle(Angle::A90))
+	    offsetangle = Angle::A90;
 
-	sineval = finesine[offsetangle >>ANGLETOFINESHIFT];
-	rw_offset = fixed_to_double(FixedMul (hyp, sineval));
+	sineval = sin(offsetangle);
+	rw_offset = hyp * sineval;
 
 	if ((angle_t)rrw_normalangle-(angle_t)rrw_angle1 < ANG180)
 	    rw_offset = -rw_offset;

@@ -88,9 +88,9 @@ struct line_s;
 typedef struct
 {
     thinker_t		thinker;	// not used for anything
-    fixed_t		x;
-    fixed_t		y;
-    fixed_t		z;
+    double		xx;
+    double		yy;
+    double              zz;
 
 } degenmobj_t;
 

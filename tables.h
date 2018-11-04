@@ -57,7 +57,7 @@
 #define ANGLETOFINESHIFT	19		
 
 // Effective size is 10240.
-extern  fixed_t		finesine[5*FINEANGLES/4];
+//extern  fixed_t		finesine[5*FINEANGLES/4];
 
 // Re-use data, is just PI/2 pahse shift.
 //extern  fixed_t*	finecosine;

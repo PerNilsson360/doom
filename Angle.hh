@@ -3,7 +3,8 @@
 
 #include <cmath>
 #include <cstdio>
-#include <assert.h>
+#include <cassert>
+#include <ostream>
 
 #include "tables.h"
 
@@ -101,4 +102,8 @@ inline Angle operator * (int s, const Angle& a) {
 }
 
 
+inline std::ostream& operator << (std::ostream& os, const Angle& angle) {
+    os << (double)angle;
+    return os;
+}
 #endif
