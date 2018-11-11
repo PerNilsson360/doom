@@ -187,8 +187,6 @@ Mob::xyMovement()
         }
     }
     
-    // @todo stopspeed and friction is most likely wrong 
-    // should be adapted to double now it is fixed_t
     if (mmomx > -STOPSPEED
         && mmomx < STOPSPEED
         && mmomy > -STOPSPEED

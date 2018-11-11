@@ -136,7 +136,7 @@ R_RenderMaskedSegRange
     maskedtexturecol = ds->maskedtexturecol;
 
     rw_scalestep = ds->sscalestep;		
-    spryscale = ds->sscale1 + fixed_to_double((x1 - ds->x1)*double_to_fixed(rw_scalestep));
+    spryscale = ds->sscale1 + fixed_to_double(x1 - ds->x1)*double_to_fixed(rw_scalestep));
     mfloorclip = ds->sprbottomclip;
     mceilingclip = ds->sprtopclip;
     
@@ -209,12 +209,10 @@ void R_RenderSegLoop (void)
     int			yl;
     int			yh;
     int			mid;
-    fixed_t		texturecolumn;
+    double		texturecolumn;
     int			top;
     int			bottom;
 
-    //texturecolumn = 0;				// shut up compiler warning
-	
     for ( ; rw_x < rw_stopx ; rw_x++)
     {
 	// mark floor / ceiling areas
@@ -263,8 +261,7 @@ void R_RenderSegLoop (void)
 	    // calculate texture offset
 
 	    angle_t angle = ((angle_t)rrw_centerangle + (angle_t)xxtoviewangle[rw_x])>>ANGLETOFINESHIFT;
-	    texturecolumn = double_to_fixed(rw_offset)-FixedMul(finetangent[angle], double_to_fixed(rw_distance));
-	    texturecolumn >>= FRACBITS;
+	    texturecolumn = rw_offset - fixed_to_double(finetangent[angle]) * rw_distance;
 	    // calculate lighting
 	    index = double_to_fixed(rw_scale)>>LIGHTSCALESHIFT;
 	    
@@ -377,7 +374,7 @@ R_StoreWallRange
 ( int	start,
   int	stop )
 {
-    fixed_t		vtop;
+    double		vtop;
     int			lightnum;
 
     // don't overflow and crash
@@ -428,8 +425,8 @@ R_StoreWallRange
 #if 0
 	if (rw_distance < 0.5)
 	{
-	    fixed_t		trx,try;
-	    fixed_t		gxt,gyt;
+	    double		trx,try;
+	    double		gxt,gyt;
 
 	    trx = curline->v1->x - viewx;
 	    try = curline->v1->y - viewy;
