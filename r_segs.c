@@ -78,16 +78,16 @@ int		worldbottom;
 int		worldhigh;
 int		worldlow;
 
-fixed_t		pixhigh;
-fixed_t		pixlow;
-fixed_t		pixhighstep;
-fixed_t		pixlowstep;
+double		pixhigh;
+double		pixlow;
+double		pixhighstep;
+double		pixlowstep;
 
-fixed_t		topfrac;
-fixed_t		topstep;
+double		topfrac;
+double		topstep;
 
-fixed_t		bottomfrac;
-fixed_t		bottomstep;
+double		bottomfrac;
+double		bottomstep;
 
 
 lighttable_t**	walllights;
@@ -218,7 +218,7 @@ void R_RenderSegLoop (void)
     for ( ; rw_x < rw_stopx ; rw_x++)
     {
 	// mark floor / ceiling areas
-	yl = (topfrac+HEIGHTUNIT-1)>>HEIGHTBITS;
+	yl = (double_to_fixed(topfrac)+HEIGHTUNIT-1)>>HEIGHTBITS;
 
 	// no space above wall?
 	if (yl < ceilingclip[rw_x]+1)
@@ -239,7 +239,7 @@ void R_RenderSegLoop (void)
 	    }
 	}
 		
-	yh = bottomfrac>>HEIGHTBITS;
+	yh = double_to_fixed(bottomfrac)>>HEIGHTBITS;
 
 	if (yh >= floorclip[rw_x])
 	    yh = floorclip[rw_x]-1;
@@ -294,7 +294,7 @@ void R_RenderSegLoop (void)
 	    if (toptexture)
 	    {
 		// top wall
-		mid = pixhigh>>HEIGHTBITS;
+		mid = double_to_fixed(pixhigh)>>HEIGHTBITS;
 		pixhigh += pixhighstep;
 
 		if (mid >= floorclip[rw_x])
@@ -322,7 +322,7 @@ void R_RenderSegLoop (void)
 	    if (bottomtexture)
 	    {
 		// bottom wall
-		mid = (pixlow+HEIGHTUNIT-1)>>HEIGHTBITS;
+		mid = (double_to_fixed(pixlow)+HEIGHTUNIT-1)>>HEIGHTBITS;
 		pixlow += pixlowstep;
 
 		// no space above wall?
@@ -673,11 +673,11 @@ R_StoreWallRange
     worldtop >>= 4;
     worldbottom >>= 4;
     
-    topstep = -FixedMul (double_to_fixed(rw_scalestep), worldtop);
-    topfrac = (double_to_fixed(ccenteryfrac)>>4) - FixedMul (worldtop, double_to_fixed(rw_scale));
+    topstep = -(rw_scalestep * fixed_to_double(worldtop));
+    topfrac = (ccenteryfrac / 16) - (fixed_to_double(worldtop) * rw_scale);
     
-    bottomstep = -FixedMul (double_to_fixed(rw_scalestep),worldbottom);
-    bottomfrac = (double_to_fixed(ccenteryfrac)>>4) - FixedMul (worldbottom, double_to_fixed(rw_scale));
+    bottomstep = -(rw_scalestep * fixed_to_double(worldbottom));
+    bottomfrac = (ccenteryfrac / 16) - (fixed_to_double(worldbottom) *  rw_scale);
 	
     if (backsector)
     {	
@@ -686,14 +686,14 @@ R_StoreWallRange
 
 	if (worldhigh < worldtop)
 	{
-	    pixhigh = (double_to_fixed(ccenteryfrac)>>4) - FixedMul (worldhigh, double_to_fixed(rw_scale));
-	    pixhighstep = -FixedMul (double_to_fixed(rw_scalestep),worldhigh);
+	    pixhigh = (ccenteryfrac / 16) - (fixed_to_double(worldhigh) * rw_scale);
+	    pixhighstep = -(rw_scalestep * fixed_to_double(worldhigh));
 	}
 	
 	if (worldlow > worldbottom)
 	{
-	    pixlow = (double_to_fixed(ccenteryfrac)>>4) - FixedMul (worldlow, double_to_fixed(rw_scale));
-	    pixlowstep = -FixedMul (double_to_fixed(rw_scalestep),worldlow);
+	    pixlow = (ccenteryfrac / 16) - (fixed_to_double(worldlow) * rw_scale);
+	    pixlowstep = -(rw_scalestep * fixed_to_double(worldlow));
 	}
     }
     
