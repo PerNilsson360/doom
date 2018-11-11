@@ -111,7 +111,6 @@ void (*colfunc) (void);
 void (*basecolfunc) (void);
 void (*fuzzcolfunc) (void);
 void (*transcolfunc) (void);
-void (*spanfunc) (void);
 
 //
 // R_PointOnSide
@@ -461,7 +460,6 @@ void R_ExecuteSetViewSize (void)
     colfunc = basecolfunc = R_DrawColumn;
     fuzzcolfunc = R_DrawFuzzColumn;
     transcolfunc = R_DrawTranslatedColumn;
-    spanfunc = R_DrawSpan;
     
     R_InitTextureMapping ();
         
@@ -474,12 +472,12 @@ void R_ExecuteSetViewSize (void)
     {
         dy = ((i-SCREENHEIGHT/2)<<FRACBITS)+FRACUNIT/2;
         dy = abs(dy);
-        yslope[i] = FixedDiv (SCREENWIDTH/2*FRACUNIT, dy);
+        yslope[i] = (SCREENWIDTH/2) / fixed_to_double(dy);
     }
 	
     for (i=0 ; i<SCREENWIDTH ; i++)
     {
-	double cosadj = abs(sin(xxtoviewangle[i]));
+	double cosadj = fabs(cos(xxtoviewangle[i]));
         ddistscale[i] = 1 / cosadj;
     }
     

@@ -43,7 +43,7 @@ extern planefunction_t	ceilingfunc_t;
 extern short		floorclip[SCREENWIDTH];
 extern short		ceilingclip[SCREENWIDTH];
 
-extern fixed_t		yslope[SCREENHEIGHT];
+extern double		yslope[SCREENHEIGHT];
 extern double		ddistscale[SCREENWIDTH];
 
 void R_InitPlanes (void);

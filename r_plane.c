@@ -81,17 +81,17 @@ int			spanstop[SCREENHEIGHT];
 // texture mapping
 //
 lighttable_t**		planezlight;
-fixed_t			planeheight;
+double			planeheight;
 
-fixed_t			yslope[SCREENHEIGHT];
+double			yslope[SCREENHEIGHT];
 double			ddistscale[SCREENWIDTH];
-fixed_t			basexscale;
-fixed_t			baseyscale;
+double			basexscale;
+double			baseyscale;
 
-fixed_t			cachedheight[SCREENHEIGHT];
-fixed_t			cacheddistance[SCREENHEIGHT];
-fixed_t			cachedxstep[SCREENHEIGHT];
-fixed_t			cachedystep[SCREENHEIGHT];
+double			cachedheight[SCREENHEIGHT];
+double			cacheddistance[SCREENHEIGHT];
+double			cachedxstep[SCREENHEIGHT];
+double			cachedystep[SCREENHEIGHT];
 
 
 
@@ -124,8 +124,6 @@ R_MapPlane
   int		x1,
   int		x2 )
 {
-    fixed_t	distance;
-    fixed_t	length;
     unsigned	index;
 	
 #ifdef RANGECHECK
@@ -138,30 +136,32 @@ R_MapPlane
     }
 #endif
 
+    double distance;
+
     if (planeheight != cachedheight[y])
     {
 	cachedheight[y] = planeheight;
-	distance = cacheddistance[y] = FixedMul (planeheight, yslope[y]);
-	ds_xstep = fixed_to_double(cachedxstep[y] = FixedMul (distance,basexscale));
-	ds_ystep = fixed_to_double(cachedystep[y] = FixedMul (distance,baseyscale));
+	distance = cacheddistance[y] = planeheight * yslope[y];
+	ds_xstep = cachedxstep[y] = distance * basexscale;
+	ds_ystep = cachedystep[y] = distance * baseyscale;
     }
     else
     {
 	distance = cacheddistance[y];
-	ds_xstep = double_to_fixed(cachedxstep[y]);
-	ds_ystep = double_to_fixed(cachedystep[y]);
+	ds_xstep = cachedxstep[y];
+	ds_ystep = cachedystep[y];
     }
 	
-    length = FixedMul (distance, double_to_fixed(ddistscale[x1]));
-    Angle a = vviewangle + xxtoviewangle[x1]; 
-    ds_xfrac = vviewx + (cos(a) * fixed_to_double(length));
-    ds_yfrac = -(vviewy - (sin(a) * fixed_to_double(length)));
-
+    double length = distance * ddistscale[x1];
+    Angle a = vviewangle + xxtoviewangle[x1];
+    ds_xfrac = vviewx + (cos(a) * length);
+    ds_yfrac = -vviewy - (sin(a) * length);
+    
     if (fixedcolormap)
 	ds_colormap = fixedcolormap;
     else
     {
-	index = distance >> LIGHTZSHIFT;
+	index = double_to_fixed(distance) >> LIGHTZSHIFT;
 	
 	if (index >= MAXLIGHTZ )
 	    index = MAXLIGHTZ-1;
@@ -173,8 +173,7 @@ R_MapPlane
     ds_x1 = x1;
     ds_x2 = x2;
 
-    // high or low detail
-    spanfunc ();	
+    R_DrawSpan();	
 }
 
 
@@ -203,8 +202,8 @@ void R_ClearPlanes (void)
     Angle angle(vviewangle - Angle(Angle::A90));
 	
     // scale will be unit scale at SCREENWIDTH/2 distance
-    basexscale = double_to_fixed(cos(angle) / ccenterxfrac);
-    baseyscale = -double_to_fixed(sin(angle) / ccenterxfrac);
+    basexscale = cos(angle) / ccenterxfrac;
+    baseyscale = -(sin(angle) / ccenterxfrac);
 }
 
 
@@ -422,7 +421,7 @@ void R_DrawPlanes (void)
 				   flattranslation[pl->picnum],
 				   PU_STATIC);
 	
-	planeheight = double_to_fixed(abs(pl->hheight - vviewz));
+	planeheight = fabs(pl->hheight - vviewz);
 	light = (pl->lightlevel >> LIGHTSEGSHIFT)+extralight;
 
 	if (light >= LIGHTLEVELS)
