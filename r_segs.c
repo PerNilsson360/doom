@@ -136,7 +136,7 @@ R_RenderMaskedSegRange
     maskedtexturecol = ds->maskedtexturecol;
 
     rw_scalestep = double_to_fixed(ds->sscalestep);		
-    spryscale = double_to_fixed(ds->sscale1) + (x1 - ds->x1)*rw_scalestep;
+    spryscale = ds->sscale1 + fixed_to_double((x1 - ds->x1)*rw_scalestep);
     mfloorclip = ds->sprbottomclip;
     mceilingclip = ds->sprtopclip;
     
@@ -166,7 +166,7 @@ R_RenderMaskedSegRange
 	{
 	    if (!fixedcolormap)
 	    {
-		index = spryscale>>LIGHTSCALESHIFT;
+		index = double_to_fixed(spryscale)>>LIGHTSCALESHIFT;
 
 		if (index >=  MAXLIGHTSCALE )
 		    index = MAXLIGHTSCALE-1;
@@ -174,8 +174,8 @@ R_RenderMaskedSegRange
 		dc_colormap = walllights[index];
 	    }
 			
-	    sprtopscreen = ccenteryfrac - (dc_texturemid * fixed_to_double( spryscale));
-	    dc_iscale = fixed_to_double(0xffffffffu / (unsigned)spryscale);
+	    sprtopscreen = ccenteryfrac - (dc_texturemid * spryscale);
+	    dc_iscale = fixed_to_double(0xffffffffu / (unsigned)double_to_fixed(spryscale));
 	    
 	    // draw the texture
 	    col = (column_t *)( 
@@ -184,7 +184,7 @@ R_RenderMaskedSegRange
 	    R_DrawMaskedColumn (col);
 	    maskedtexturecol[dc_x] = SHRT_MAX;
 	}
-	spryscale += rw_scalestep;
+	spryscale += fixed_to_double(rw_scalestep);
     }
 	
 }

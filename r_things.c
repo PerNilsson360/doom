@@ -331,7 +331,6 @@ vissprite_t* R_NewVisSprite (void)
 {
     if (vissprite_p == &vissprites[MAXVISSPRITES])
 	return &overflowsprite;
-    
     vissprite_p++;
     return vissprite_p-1;
 }
@@ -347,7 +346,7 @@ vissprite_t* R_NewVisSprite (void)
 short*		mfloorclip;
 short*		mceilingclip;
 
-fixed_t		spryscale;
+double		spryscale;
 double		sprtopscreen;
 
 void R_DrawMaskedColumn (column_t* column)
@@ -361,8 +360,8 @@ void R_DrawMaskedColumn (column_t* column)
     {
 	// calculate unclipped screen coordinates
 	//  for post
-	topscreen = double_to_fixed(sprtopscreen) + spryscale*column->topdelta;
-	bottomscreen = topscreen + spryscale*column->length;
+	topscreen = double_to_fixed(sprtopscreen) + double_to_fixed(spryscale)*column->topdelta;
+	bottomscreen = topscreen + double_to_fixed(spryscale)*column->length;
 
 	dc_yl = (topscreen+FRACUNIT-1)>>FRACBITS;
 	dc_yh = (bottomscreen-1)>>FRACBITS;
@@ -424,8 +423,8 @@ R_DrawVisSprite
     dc_iscale = fabs(vis->xxiscale);
     dc_texturemid = vis->ttexturemid;
     double frac = vis->sstartfrac;
-    spryscale = double_to_fixed(vis->sscale);
-    sprtopscreen = ccenteryfrac - (dc_texturemid * fixed_to_double(spryscale));
+    spryscale = vis->sscale;
+    sprtopscreen = ccenteryfrac - (dc_texturemid * spryscale);
     for (dc_x=vis->x1 ; dc_x<=vis->x2 ; dc_x++, frac += vis->xxiscale)
     {
 	texturecolumn = frac;
@@ -548,7 +547,6 @@ void R_ProjectSprite (Mob* thing)
 
     if (flip)
     {
-	//vis->sstartfrac = fixed_to_double(double_to_fixed(sspritewidth[lump])-1);
 	vis->sstartfrac = sspritewidth[lump] - 1;
 	vis->xxiscale = -iscale;
     }
