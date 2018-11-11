@@ -67,8 +67,8 @@ int		rw_stopx;
 Angle		rrw_centerangle;
 double		rw_offset;
 double		rw_distance;
-fixed_t		rw_scale;
-fixed_t		rw_scalestep;
+double		rw_scale;
+double		rw_scalestep;
 double		rw_midtexturemid;
 double		rw_toptexturemid;
 double		rw_bottomtexturemid;
@@ -135,8 +135,8 @@ R_RenderMaskedSegRange
 
     maskedtexturecol = ds->maskedtexturecol;
 
-    rw_scalestep = double_to_fixed(ds->sscalestep);		
-    spryscale = ds->sscale1 + fixed_to_double((x1 - ds->x1)*rw_scalestep);
+    rw_scalestep = ds->sscalestep;		
+    spryscale = ds->sscale1 + fixed_to_double((x1 - ds->x1)*double_to_fixed(rw_scalestep));
     mfloorclip = ds->sprbottomclip;
     mceilingclip = ds->sprtopclip;
     
@@ -184,7 +184,7 @@ R_RenderMaskedSegRange
 	    R_DrawMaskedColumn (col);
 	    maskedtexturecol[dc_x] = SHRT_MAX;
 	}
-	spryscale += fixed_to_double(rw_scalestep);
+	spryscale += rw_scalestep;
     }
 	
 }
@@ -266,14 +266,14 @@ void R_RenderSegLoop (void)
 	    texturecolumn = double_to_fixed(rw_offset)-FixedMul(finetangent[angle], double_to_fixed(rw_distance));
 	    texturecolumn >>= FRACBITS;
 	    // calculate lighting
-	    index = rw_scale>>LIGHTSCALESHIFT;
+	    index = double_to_fixed(rw_scale)>>LIGHTSCALESHIFT;
 	    
 	    if (index >=  MAXLIGHTSCALE )
 	      index = MAXLIGHTSCALE-1;
 	    
 	    dc_colormap = walllights[index];
 	    dc_x = rw_x;
-	    dc_iscale = fixed_to_double(0xffffffffu / (unsigned)rw_scale);
+	    dc_iscale = fixed_to_double(0xffffffffu / (unsigned)double_to_fixed(rw_scale));
 	}
 	
 	// draw the wall tiers
@@ -414,13 +414,13 @@ R_StoreWallRange
     
     // calculate scale at both ends and step
     ds_p->sscale1 = RR_ScaleFromGlobalAngle(vviewangle + xxtoviewangle[start]);
-    rw_scale = double_to_fixed(RR_ScaleFromGlobalAngle (vviewangle + xxtoviewangle[start]));
+    rw_scale = RR_ScaleFromGlobalAngle(vviewangle + xxtoviewangle[start]);
     
     if (stop > start )
     {
 	ds_p->sscale2 = RR_ScaleFromGlobalAngle(vviewangle + xxtoviewangle[stop]);
-	ds_p->sscalestep = fixed_to_double((double_to_fixed(ds_p->sscale2) - rw_scale) / (stop-start));
-	rw_scalestep = (double_to_fixed(ds_p->sscale2) - rw_scale) / (stop-start);
+	ds_p->sscalestep = fixed_to_double((double_to_fixed(ds_p->sscale2 - rw_scale)) / (stop-start));
+	rw_scalestep = fixed_to_double((double_to_fixed(ds_p->sscale2 - rw_scale)) / (stop-start));
     }
     else
     {
@@ -672,12 +672,12 @@ R_StoreWallRange
     // calculate incremental stepping values for texture edges
     worldtop >>= 4;
     worldbottom >>= 4;
-	
-    topstep = -FixedMul (rw_scalestep, worldtop);
-    topfrac = (double_to_fixed(ccenteryfrac)>>4) - FixedMul (worldtop, rw_scale);
-
-    bottomstep = -FixedMul (rw_scalestep,worldbottom);
-    bottomfrac = (double_to_fixed(ccenteryfrac)>>4) - FixedMul (worldbottom, rw_scale);
+    
+    topstep = -FixedMul (double_to_fixed(rw_scalestep), worldtop);
+    topfrac = (double_to_fixed(ccenteryfrac)>>4) - FixedMul (worldtop, double_to_fixed(rw_scale));
+    
+    bottomstep = -FixedMul (double_to_fixed(rw_scalestep),worldbottom);
+    bottomfrac = (double_to_fixed(ccenteryfrac)>>4) - FixedMul (worldbottom, double_to_fixed(rw_scale));
 	
     if (backsector)
     {	
@@ -686,14 +686,14 @@ R_StoreWallRange
 
 	if (worldhigh < worldtop)
 	{
-	    pixhigh = (double_to_fixed(ccenteryfrac)>>4) - FixedMul (worldhigh, rw_scale);
-	    pixhighstep = -FixedMul (rw_scalestep,worldhigh);
+	    pixhigh = (double_to_fixed(ccenteryfrac)>>4) - FixedMul (worldhigh, double_to_fixed(rw_scale));
+	    pixhighstep = -FixedMul (double_to_fixed(rw_scalestep),worldhigh);
 	}
 	
 	if (worldlow > worldbottom)
 	{
-	    pixlow = (double_to_fixed(ccenteryfrac)>>4) - FixedMul (worldlow, rw_scale);
-	    pixlowstep = -FixedMul (rw_scalestep,worldlow);
+	    pixlow = (double_to_fixed(ccenteryfrac)>>4) - FixedMul (worldlow, double_to_fixed(rw_scale));
+	    pixlowstep = -FixedMul (double_to_fixed(rw_scalestep),worldlow);
 	}
     }
     
