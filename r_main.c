@@ -389,9 +389,6 @@ void R_InitTextureMapping (void)
     // Take out the fencepost cases from viewangletox.
     for (i=0 ; i<FINEANGLES/2 ; i++)
     {
-	t = FixedMul (finetangent[i], double_to_fixed(focallength));
-	t = centerx - t;
-	
 	if (viewangletox[i] == -1)
 	    viewangletox[i] = 0;
 	else if (viewangletox[i] == SCREENWIDTH+1)

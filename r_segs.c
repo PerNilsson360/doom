@@ -174,7 +174,7 @@ R_RenderMaskedSegRange
 		dc_colormap = walllights[index];
 	    }
 			
-	    sprtopscreen = double_to_fixed(ccenteryfrac) - FixedMul(double_to_fixed(dc_texturemid), spryscale);
+	    sprtopscreen = ccenteryfrac - (dc_texturemid * fixed_to_double( spryscale));
 	    dc_iscale = fixed_to_double(0xffffffffu / (unsigned)spryscale);
 	    
 	    // draw the texture

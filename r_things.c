@@ -348,21 +348,20 @@ short*		mfloorclip;
 short*		mceilingclip;
 
 fixed_t		spryscale;
-fixed_t		sprtopscreen;
+double		sprtopscreen;
 
 void R_DrawMaskedColumn (column_t* column)
 {
     int		topscreen;
     int 	bottomscreen;
-    fixed_t	basetexturemid;
 	
-    basetexturemid = double_to_fixed(dc_texturemid);
+    double basetexturemid = dc_texturemid;
 	
     for ( ; column->topdelta != 0xff ; ) 
     {
 	// calculate unclipped screen coordinates
 	//  for post
-	topscreen = sprtopscreen + spryscale*column->topdelta;
+	topscreen = double_to_fixed(sprtopscreen) + spryscale*column->topdelta;
 	bottomscreen = topscreen + spryscale*column->length;
 
 	dc_yl = (topscreen+FRACUNIT-1)>>FRACBITS;
@@ -376,7 +375,7 @@ void R_DrawMaskedColumn (column_t* column)
 	if (dc_yl <= dc_yh)
 	{
 	    dc_source = (byte *)column + 3;
-	    dc_texturemid = fixed_to_double(basetexturemid - (column->topdelta<<FRACBITS));
+	    dc_texturemid = basetexturemid - column->topdelta;
 	    // dc_source = (byte *)column + 3 - column->topdelta;
 
 	    // Drawn by either R_DrawColumn
@@ -386,7 +385,7 @@ void R_DrawMaskedColumn (column_t* column)
 	column = (column_t *)(  (byte *)column + column->length + 4);
     }
 	
-    dc_texturemid = fixed_to_double(basetexturemid);
+    dc_texturemid = basetexturemid;
 }
 
 
@@ -426,7 +425,7 @@ R_DrawVisSprite
     dc_texturemid = vis->ttexturemid;
     double frac = vis->sstartfrac;
     spryscale = double_to_fixed(vis->sscale);
-    sprtopscreen = double_to_fixed(ccenteryfrac) - FixedMul(double_to_fixed(dc_texturemid),spryscale);
+    sprtopscreen = ccenteryfrac - (dc_texturemid * fixed_to_double(spryscale));
     for (dc_x=vis->x1 ; dc_x<=vis->x2 ; dc_x++, frac += vis->xxiscale)
     {
 	texturecolumn = frac;
@@ -812,8 +811,6 @@ void R_DrawSprite (vissprite_t* spr)
     int			x;
     int			r1;
     int			r2;
-    fixed_t		scale;
-    fixed_t		lowscale;
     int			silhouette;
 		
     for (x = spr->x1 ; x<=spr->x2 ; x++)
@@ -837,20 +834,22 @@ void R_DrawSprite (vissprite_t* spr)
 	r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
 	r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
 
+	double lowscale;
+	double scale;
 	if (ds->sscale1 > ds->sscale2)
 	{
-	    lowscale = double_to_fixed(ds->sscale2);
-	    scale = double_to_fixed(ds->sscale1);
+	    lowscale = ds->sscale2;
+	    scale = ds->sscale1;
 	}
 	else
 	{
-	    lowscale = double_to_fixed(ds->sscale1);
-	    scale = double_to_fixed(ds->sscale2);
+	    lowscale = ds->sscale1;
+	    scale = ds->sscale2;
 	}
 		
-	if (scale < double_to_fixed(spr->sscale)
-	    || ( lowscale < double_to_fixed(spr->sscale)
-		 && !RR_PointOnSegSide(spr->ggx, spr->ggy, ds->curline) ) )
+	if (scale < spr->sscale ||
+	    (lowscale < spr->sscale) &&
+	    !RR_PointOnSegSide(spr->ggx, spr->ggy, ds->curline))
 	{
 	    // masked mid texture?
 	    if (ds->maskedtexturecol)	

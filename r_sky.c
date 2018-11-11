@@ -46,7 +46,7 @@ rcsid[] = "$Id: m_bbox.c,v 1.1 1997/02/03 22:45:10 b1 Exp $";
 //
 int			skyflatnum;
 int			skytexture;
-int			skytexturemid;
+double			skytexturemid;
 
 
 
@@ -57,6 +57,6 @@ int			skytexturemid;
 void R_InitSkyMap (void)
 {
   // skyflatnum = R_FlatNumForName ( SKYFLATNAME );
-    skytexturemid = 100*FRACUNIT;
+    skytexturemid = 100;
 }
 

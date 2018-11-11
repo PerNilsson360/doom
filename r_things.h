@@ -43,7 +43,7 @@ extern short		screenheightarray[SCREENWIDTH];
 extern short*		mfloorclip;
 extern short*		mceilingclip;
 extern fixed_t		spryscale;
-extern fixed_t		sprtopscreen;
+extern double		sprtopscreen;
 
 void R_DrawMaskedColumn (column_t* column);
 
