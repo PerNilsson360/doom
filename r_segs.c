@@ -73,10 +73,10 @@ double		rw_midtexturemid;
 double		rw_toptexturemid;
 double		rw_bottomtexturemid;
 
-int		worldtop;
-int		worldbottom;
-int		worldhigh;
-int		worldlow;
+double		worldtop;
+double		worldbottom;
+double		worldhigh;
+double		worldlow;
 
 double		pixhigh;
 double		pixlow;
@@ -444,8 +444,8 @@ R_StoreWallRange
     
     // calculate texture boundaries
     //  and decide if floor / ceiling marks are needed
-    worldtop = double_to_fixed(frontsector->cceilingheight) - double_to_fixed(vviewz);
-    worldbottom = double_to_fixed(frontsector->ffloorheight) - double_to_fixed(vviewz);
+    worldtop = frontsector->cceilingheight - vviewz;
+    worldbottom = frontsector->ffloorheight - vviewz;
 	
     midtexture = toptexture = bottomtexture = maskedtexture = 0;
     ds_p->maskedtexturecol = NULL;
@@ -465,7 +465,7 @@ R_StoreWallRange
 	else
 	{
 	    // top of texture at top
-	    rw_midtexturemid = fixed_to_double(worldtop);
+	    rw_midtexturemid = worldtop;
 	}
 	rw_midtexturemid += sidedef->rrowoffset;
 
@@ -519,8 +519,8 @@ R_StoreWallRange
 	    ds_p->silhouette |= SIL_TOP;
 	}
 	
-	worldhigh = double_to_fixed(backsector->cceilingheight) - double_to_fixed(vviewz);
-	worldlow = double_to_fixed(backsector->ffloorheight) - double_to_fixed(vviewz);
+	worldhigh = backsector->cceilingheight - vviewz;
+	worldlow = backsector->ffloorheight - vviewz;
 		
 	// hack to allow height changes in outdoor areas
 	if (frontsector->ceilingpic == skyflatnum 
@@ -530,7 +530,7 @@ R_StoreWallRange
 	}
 	
 			
-	if (worldlow != worldbottom 
+	if (double_to_fixed(worldlow) != worldbottom 
 	    || backsector->floorpic != frontsector->floorpic
 	    || backsector->lightlevel != frontsector->lightlevel)
 	{
@@ -570,7 +570,7 @@ R_StoreWallRange
 	    if (linedef->flags & ML_DONTPEGTOP)
 	    {
 		// top of texture at top
-		rw_toptexturemid = fixed_to_double(worldtop);
+		rw_toptexturemid = worldtop;
 	    }
 	    else
 	    {
@@ -589,10 +589,10 @@ R_StoreWallRange
 	    {
 		// bottom of texture at bottom
 		// top of texture at top
-		rw_bottomtexturemid = fixed_to_double(worldtop);
+		rw_bottomtexturemid = worldtop;
 	    }
 	    else	// top of texture at top
-		rw_bottomtexturemid = fixed_to_double(worldlow);
+		rw_bottomtexturemid = worldlow;
 	}
 	rw_toptexturemid += sidedef->rrowoffset;
 	rw_bottomtexturemid += sidedef->rrowoffset;
@@ -670,30 +670,30 @@ R_StoreWallRange
 
     
     // calculate incremental stepping values for texture edges
-    worldtop >>= 4;
-    worldbottom >>= 4;
+    worldtop /= 16;
+    worldbottom /= 16;
     
-    topstep = -(rw_scalestep * fixed_to_double(worldtop));
-    topfrac = (ccenteryfrac / 16) - (fixed_to_double(worldtop) * rw_scale);
+    topstep = -(rw_scalestep * worldtop);
+    topfrac = (ccenteryfrac / 16) - (worldtop * rw_scale);
     
-    bottomstep = -(rw_scalestep * fixed_to_double(worldbottom));
-    bottomfrac = (ccenteryfrac / 16) - (fixed_to_double(worldbottom) *  rw_scale);
+    bottomstep = -(rw_scalestep * worldbottom);
+    bottomfrac = (ccenteryfrac / 16) - (worldbottom *  rw_scale);
 	
     if (backsector)
     {	
-	worldhigh >>= 4;
-	worldlow >>= 4;
+	worldhigh /= 16;
+	worldlow /= 16;
 
 	if (worldhigh < worldtop)
 	{
-	    pixhigh = (ccenteryfrac / 16) - (fixed_to_double(worldhigh) * rw_scale);
-	    pixhighstep = -(rw_scalestep * fixed_to_double(worldhigh));
+	    pixhigh = (ccenteryfrac / 16) - (worldhigh * rw_scale);
+	    pixhighstep = -(rw_scalestep * worldhigh);
 	}
 	
 	if (worldlow > worldbottom)
 	{
-	    pixlow = (ccenteryfrac / 16) - (fixed_to_double(worldlow) * rw_scale);
-	    pixlowstep = -(rw_scalestep * fixed_to_double(worldlow));
+	    pixlow = (ccenteryfrac / 16) - (worldlow * rw_scale);
+	    pixlowstep = -(rw_scalestep * worldlow);
 	}
     }
     

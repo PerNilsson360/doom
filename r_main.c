@@ -442,7 +442,6 @@ void R_InitLightTables (void)
 //
 void R_ExecuteSetViewSize (void)
 {
-    fixed_t	dy;
     int		i;
     int		j;
     int		level;
@@ -467,9 +466,9 @@ void R_ExecuteSetViewSize (void)
     // planes
     for (i=0 ; i<SCREENHEIGHT ; i++)
     {
-        dy = ((i-SCREENHEIGHT/2)<<FRACBITS)+FRACUNIT/2;
-        dy = abs(dy);
-        yslope[i] = (SCREENWIDTH/2) / fixed_to_double(dy);
+        double dy = i - (SCREENHEIGHT / 2) + (1 / 2);
+        dy = fabs(dy);
+        yslope[i] = (SCREENWIDTH / 2) / dy;
     }
 	
     for (i=0 ; i<SCREENWIDTH ; i++)
