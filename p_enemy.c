@@ -1133,13 +1133,15 @@ void A_VileChase (Mob* actor)
 
     mobjinfo_t*		info;
     Mob*		temp;
-	
+
+    printf("A_VileChase\n");
+    
     if (actor->movedir != DI_NODIR)
     {
         // check for corpses to raise
         // @todo check the actor speed thing below
-        vviletryx = actor->xx + fixed_to_double(actor->info->speed)*xxspeed[actor->movedir];
-        vviletryy = actor->yy + fixed_to_double(actor->info->speed)*yyspeed[actor->movedir];
+        vviletryx = actor->xx + actor->info->speed*xxspeed[actor->movedir];
+        vviletryy = actor->yy + actor->info->speed*yyspeed[actor->movedir];
         
         xl = (vviletryx - blockMap.oorgx - MMAXRADIUS*2) / DOUBLE_MAPBLOCKS_DIV;
         xh = (vviletryx - blockMap.oorgx + MMAXRADIUS*2) / DOUBLE_MAPBLOCKS_DIV;

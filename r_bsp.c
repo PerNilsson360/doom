@@ -258,8 +258,8 @@ void R_ClearClipSegs (void)
 //
 void R_AddLine (seg_t*	line)
 {
-    int			x1;
-    int			x2;
+    //int			x1;
+    //int			x2;
     
     curline = line;
 
@@ -302,16 +302,8 @@ void R_AddLine (seg_t*	line)
         angle2 = -cclipangle;
     }
     
-    // The seg is in the view range,
-    // but not necessarily visible.
-    angle1 += Angle::A90;
-    angle2 += Angle::A90;
-    x1 = viewangletox[((angle_t)angle1)>>ANGLETOFINESHIFT];
-    x2 = viewangletox[((angle_t)angle2)>>ANGLETOFINESHIFT];
-
-    // @todo trying to fix something here
-    int xx1 = R_ViewAngleToX(angle1);
-    int xx2 = R_ViewAngleToX(angle2);
+    int x1 = R_ViewAngleToX(angle1);
+    int x2 = R_ViewAngleToX(angle2);
     
     // Does not cross a pixel?
     if (x1 == x2)
@@ -445,11 +437,10 @@ bool RR_CheckBBox (double* bspcoord)
     // Find the first clippost
     //  that touches the source post
     //  (adjacent pixels are touching).
-    angle1 += Angle::A90;
-    angle2 += Angle::A90;
-    int sx1 = viewangletox[((angle_t)angle1)>>ANGLETOFINESHIFT];
-    int sx2 = viewangletox[((angle_t)angle2)>>ANGLETOFINESHIFT];
 
+    int sx1 = R_ViewAngleToX(angle1);
+    int sx2 = R_ViewAngleToX(angle2);
+    
     // Does not cross a pixel.
     if (sx1 == sx2)
 	return false;			

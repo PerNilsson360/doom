@@ -74,12 +74,6 @@ typedef uint32_t angle_t;
 // @todo mapthing should be class
 double getMapThingAngle(mapthing_t* m);
 
-// Effective size is 2049;
-// The +1 size is to handle the case when x==y
-//  without additional checking.
-extern angle_t		tantoangle[SLOPERANGE+1];
-
-
 // Utility function,
 //  called by R_PointToAngle.
 int

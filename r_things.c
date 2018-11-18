@@ -462,8 +462,6 @@ void R_ProjectSprite (Mob* thing)
 
     vissprite_t*	vis;
     
-    angle_t		ang;
-    
     // transform the origin point
     double tr_x = thing->xx - vviewx;
     double tr_y = thing->yy - vviewy;
@@ -587,9 +585,6 @@ void R_ProjectSprite (Mob* thing)
 	vis->colormap = spritelights[index];
     }	
 }
-
-
-
 
 //
 // R_AddSprites
@@ -844,7 +839,7 @@ void R_DrawSprite (vissprite_t* spr)
 	    lowscale = ds->sscale1;
 	    scale = ds->sscale2;
 	}
-		
+
 	if (scale < spr->sscale ||
 	    (lowscale < spr->sscale) &&
 	    !RR_PointOnSegSide(spr->ggx, spr->ggy, ds->curline))

@@ -777,6 +777,7 @@ void
 testStuff()
 {
     printf("##### testing start\n");
+    printf("%d", (int32_t) 0xffffffffu);
     printf("##### testing end\n");
 }
 

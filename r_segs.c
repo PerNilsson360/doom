@@ -136,7 +136,7 @@ R_RenderMaskedSegRange
     maskedtexturecol = ds->maskedtexturecol;
 
     rw_scalestep = ds->sscalestep;		
-    spryscale = ds->sscale1 + fixed_to_double(x1 - ds->x1)*double_to_fixed(rw_scalestep));
+    spryscale = ds->sscale1 + (x1 - ds->x1) * rw_scalestep;
     mfloorclip = ds->sprbottomclip;
     mceilingclip = ds->sprtopclip;
     
@@ -157,7 +157,7 @@ R_RenderMaskedSegRange
 			
     if (fixedcolormap)
 	dc_colormap = fixedcolormap;
-    
+
     // draw the columns
     for (dc_x = x1 ; dc_x <= x2 ; dc_x++)
     {
@@ -175,8 +175,7 @@ R_RenderMaskedSegRange
 	    }
 			
 	    sprtopscreen = ccenteryfrac - (dc_texturemid * spryscale);
-	    dc_iscale = fixed_to_double(0xffffffffu / (unsigned)double_to_fixed(spryscale));
-	    
+	    dc_iscale = 1 / spryscale;
 	    // draw the texture
 	    col = (column_t *)( 
 		(byte *)R_GetColumn(texnum,maskedtexturecol[dc_x]) -3);
@@ -260,8 +259,9 @@ void R_RenderSegLoop (void)
 	{
 	    // calculate texture offset
 
-	    angle_t angle = ((angle_t)rrw_centerangle + (angle_t)xxtoviewangle[rw_x])>>ANGLETOFINESHIFT;
-	    texturecolumn = rw_offset - fixed_to_double(finetangent[angle]) * rw_distance;
+	    Angle angle = rrw_centerangle + xxtoviewangle[rw_x];
+	    // @todo figure out why you need to deduct 90 degrees below
+	    texturecolumn = rw_offset - tan((double)angle - Angle::A90) * rw_distance;
 	    // calculate lighting
 	    index = double_to_fixed(rw_scale)>>LIGHTSCALESHIFT;
 	    
@@ -270,7 +270,7 @@ void R_RenderSegLoop (void)
 	    
 	    dc_colormap = walllights[index];
 	    dc_x = rw_x;
-	    dc_iscale = fixed_to_double(0xffffffffu / (unsigned)double_to_fixed(rw_scale));
+	    dc_iscale = 1 / rw_scale;
 	}
 	
 	// draw the wall tiers
@@ -416,8 +416,8 @@ R_StoreWallRange
     if (stop > start )
     {
 	ds_p->sscale2 = RR_ScaleFromGlobalAngle(vviewangle + xxtoviewangle[stop]);
-	ds_p->sscalestep = fixed_to_double((double_to_fixed(ds_p->sscale2 - rw_scale)) / (stop-start));
-	rw_scalestep = fixed_to_double((double_to_fixed(ds_p->sscale2 - rw_scale)) / (stop-start));
+	ds_p->sscalestep = (ds_p->sscale2 - rw_scale) / (stop - start);
+	rw_scalestep = (ds_p->sscale2 - rw_scale) / (stop - start);
     }
     else
     {

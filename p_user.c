@@ -144,10 +144,10 @@ void P_MovePlayer (player_t* player)
     onground = (player->mo->zz <= player->mo->ffloorz);
 	
     if (cmd->forwardmove && onground)
-        PP_Thrust(player, a, fixed_to_double(cmd->forwardmove*2048));
+        PP_Thrust(player, a, cmd->forwardmove / 32.0);
         
     if (cmd->sidemove && onground)
-        PP_Thrust(player, a - (M_PI/2), fixed_to_double(cmd->sidemove*2048));
+        PP_Thrust(player, a - (M_PI/2), cmd->sidemove / 32.0);
     
     if ( (cmd->forwardmove || cmd->sidemove) 
          && player->mo->state == &states[S_PLAY] )

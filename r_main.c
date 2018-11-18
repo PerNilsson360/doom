@@ -87,12 +87,7 @@ player_t*		viewplayer;
 //
 Angle cclipangle;
 
-// The viewangletox[viewangle + FINEANGLES/4] lookup
-// maps the visible view angles to screen X coordinates,
-// flattening the arc to a flat projection plane.
-// There will be many angles mapped to the same X. 
 int			viewangletox[FINEANGLES/2];
-
 // The xtoviewangleangle[] table maps a screen pixel
 // to the lowest viewangle that maps back to x ranges
 // from clipangle to -clipangle.
@@ -299,13 +294,13 @@ RR_ScaleFromGlobalAngle(Angle visangle)
     double num = pprojection * sineb;
     double den = rw_distance * sinea;
     scale = num / den;
-    if (scale > 64)
+
+    if (scale > 64) {
         scale = 64;
-    else if (scale < fixed_to_double(256)) {
-        // @todo this seems to be a unnessasary if branch
-        printf("******** fixing scale *******%f\n", scale);
-        scale = fixed_to_double(256);
+    } else if (scale < 0.001) {
+        scale = 0.001;
     }
+    
     return scale;
 }
 
@@ -385,16 +380,7 @@ void R_InitTextureMapping (void)
 	    i++;
 	xxtoviewangle[x] = Angle((static_cast<angle_t>(i)<<ANGLETOFINESHIFT)-ANG90);
     }
-    
-    // Take out the fencepost cases from viewangletox.
-    for (i=0 ; i<FINEANGLES/2 ; i++)
-    {
-	if (viewangletox[i] == -1)
-	    viewangletox[i] = 0;
-	else if (viewangletox[i] == SCREENWIDTH+1)
-	    viewangletox[i] = SCREENWIDTH;
-    }
-	
+    	
     cclipangle = xxtoviewangle[0];
 }
 

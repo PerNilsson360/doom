@@ -679,7 +679,9 @@ A_FireShotgun2
 	PP_LineAttack(player->mo,
                       angle,
 		      MMISSILERANGE,
-		      bbulletslope + fixed_to_double(((P_Random()-P_Random())<<5)), damage);
+		      /* << 5 on fixed == >> 11 = /2^11 = 2048*/
+		      bbulletslope + (P_Random()-P_Random()) / 2048.0,
+		      damage);
     }
 }
 
