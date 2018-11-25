@@ -52,16 +52,16 @@ const char snd_prefixen[]
 
 // when to clip out sounds
 // Does not fit the large outdoor areas.
-#define S_CLIPPING_DIST		(1200*0x10000)
+#define S_CLIPPING_DIST		1200
 
 // Distance tp origin when sounds should be maxed out.
 // This should relate to movement clipping resolution
 // (see BLOCKMAP handling).
 // Originally: (200*0x10000).
-#define S_CLOSE_DIST		(160*0x10000)
+#define S_CLOSE_DIST		160
 
 
-#define S_ATTENUATOR		((S_CLIPPING_DIST-S_CLOSE_DIST)>>FRACBITS)
+#define S_ATTENUATOR		(S_CLIPPING_DIST-S_CLOSE_DIST)
 
 // Adjustable by menu.
 #define NORM_VOLUME    		snd_MaxVolume
@@ -757,19 +757,19 @@ S_AdjustSoundParams
   int*		sep,
   int*		pitch )
 {
-    fixed_t	approx_dist;
-    fixed_t	adx;
-    fixed_t	ady;
+    double	approx_dist;
+    double	adx;
+    double	ady;
     angle_t	angle;
 
     // calculate the distance to sound origin
     //  and clip it if necessary
-    adx = double_to_fixed(fabs(listener->xx - source->xx));
-    ady = double_to_fixed(fabs(listener->yy - source->yy));
+    adx = fabs(listener->xx - source->xx);
+    ady = fabs(listener->yy - source->yy);
 
     // From _GG1_ p.428. Appox. eucledian distance fast.
-    approx_dist = adx + ady - ((adx < ady ? adx : ady)>>1);
-    
+    approx_dist = adx + ady - ((adx < ady ? adx : ady) / 2);
+
     if (gamemap != 8
 	&& approx_dist > S_CLIPPING_DIST)
     {
@@ -799,16 +799,14 @@ S_AdjustSoundParams
 	if (approx_dist > S_CLIPPING_DIST)
 	    approx_dist = S_CLIPPING_DIST;
 
-	*vol = 15+ ((snd_SfxVolume-15)
-		    *((S_CLIPPING_DIST - approx_dist)>>FRACBITS))
-	    / S_ATTENUATOR;
+	*vol = 15 + ((snd_SfxVolume-15) * (S_CLIPPING_DIST - approx_dist))
+		     / S_ATTENUATOR;
     }
     else
     {
 	// distance effect
-	*vol = (snd_SfxVolume
-		* ((S_CLIPPING_DIST - approx_dist)>>FRACBITS))
-	    / S_ATTENUATOR; 
+	*vol = (snd_SfxVolume * (S_CLIPPING_DIST - approx_dist))
+	/ S_ATTENUATOR; 
     }
     
     return (*vol > 0);

@@ -113,7 +113,6 @@ extern Angle		cclipangle;
 
 extern int viewangletox[FINEANGLES/2];
 extern Angle xxtoviewangle[SCREENWIDTH+1];
-//extern fixed_t		finetangent[FINEANGLES/2];
 
 extern double		rw_distance;
 extern Angle		rrw_normalangle;

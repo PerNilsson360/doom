@@ -98,8 +98,7 @@ void F_StartFinale (void)
     gameaction = ga_nothing;
     gamestate = GS_FINALE;
     viewactive = false;
-    // @todo double fix
-    //automapactive = false;
+    automapactive = false;
 
     // Okay - IWAD dependend stuff.
     // This has been changed severly, and

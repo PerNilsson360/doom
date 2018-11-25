@@ -488,8 +488,8 @@ void HU_Drawer(void)
 
     HUlib_drawSText(&w_message);
     HUlib_drawIText(&w_chat);
-    // if (automapactive)
-	// HUlib_drawTextLine(&w_title, false);
+    if (automapactive)
+	HUlib_drawTextLine(&w_title, false);
 
 }
 

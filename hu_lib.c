@@ -168,7 +168,7 @@ void HUlib_eraseTextLine(hu_textline_t* l)
     //     }
     // }
 
-    /*lastautomapactive = automapactive; */
+    lastautomapactive = automapactive;
     if (l->needsupdate) l->needsupdate--;
 
 }

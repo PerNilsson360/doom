@@ -712,8 +712,7 @@ P_KillMobj
 	{
 	    // don't die in auto map,
 	    // switch view prior to dying
-        // @todo double fix
-	    //AM_Stop ();
+	    AM_Stop ();
 	}
 	
     }

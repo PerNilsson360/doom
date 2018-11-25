@@ -34,6 +34,8 @@ rcsid[] = "$Id: i_unix.c,v 1.5 1997/02/03 22:45:10 b1 Exp $";
 #include <sys/time.h>
 #include <sys/types.h>
 
+#include <string>
+
 #ifndef LINUX
 #include <sys/filio.h>
 #endif
@@ -213,8 +215,10 @@ getsfx
     // I do not do runtime patches to that
     //  variable. Instead, we will use a
     //  default sound for replacement.
-    if ( W_CheckNumForName(name) == -1 )
-      sfxlump = W_GetNumForName("dspistol");
+    if ( W_CheckNumForName(name) == -1 ) {
+	printf("Failed to load  soundfile %s\n", name);
+	sfxlump = W_GetNumForName("dspistol");
+    }
     else
       sfxlump = W_GetNumForName(name);
     
@@ -754,7 +758,9 @@ I_InitSound()
   if ( !access(buffer, X_OK) )
   {
     strcat(buffer, " -quiet");
-    sndserver = popen(buffer, "w");
+    std::string soundServer("padsp ");
+    soundServer += buffer;
+    sndserver = popen(soundServer.c_str(), "w");
   }
   else
     fprintf(stderr, "Could not start sound server [%s]\n", buffer);

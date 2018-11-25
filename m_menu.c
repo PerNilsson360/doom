@@ -1551,15 +1551,15 @@ bool M_Responder (event_t* ev)
 	switch(ch)
 	{
 	  case KEY_MINUS:         // Screen size down
-	    // if (automapactive || chat_on)
-		// return false;
+	      if (automapactive || chat_on)
+		  return false;
 	    M_SizeDisplay(0);
 	    S_StartSound(NULL,sfx_stnmov);
 	    return true;
 				
 	  case KEY_EQUALS:        // Screen size up
-	    // if (automapactive || chat_on)
-		// return false;
+	      if (automapactive || chat_on)
+		  return false;
          M_SizeDisplay(1);
 	    S_StartSound(NULL,sfx_stnmov);
 	    return true;

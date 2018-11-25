@@ -391,8 +391,8 @@ void AM_addMark(void)
 void AM_findMinMaxBoundaries(void)
 {
     int i;
-    fixed_t a;
-    fixed_t b;
+    double a;
+    double b;
 
     // @todo double max
     min_x = min_y =  INT_MAX;
@@ -619,7 +619,6 @@ AM_Responder
 {
 
     int rc;
-    static int cheatstate=0;
     static int bigstate=0;
     static char buffer[20];
 
@@ -698,7 +697,6 @@ AM_Responder
 	    plr->message = AMSTR_MARKSCLEARED;
 	    break;
 	  default:
-	    cheatstate=0;
 	    rc = false;
 	}
 	if (!deathmatch && cht_CheckCheat(&cheat_amap, ev->data1))
