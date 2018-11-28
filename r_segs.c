@@ -486,7 +486,7 @@ R_StoreWallRange
 	else if (backsector->ffloorheight > vviewz)
 	{
 	    ds_p->silhouette = SIL_BOTTOM;
-	    ds_p->bbsilheight = std::numeric_limits<double>::min();
+	    ds_p->bbsilheight = std::numeric_limits<double>::max();
 	    // ds_p->sprbottomclip = negonearray;
 	}
 	
