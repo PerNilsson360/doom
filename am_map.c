@@ -25,6 +25,7 @@ static const char rcsid[] = "$Id: am_map.c,v 1.4 1997/02/03 21:24:33 b1 Exp $";
 
 #include <stdio.h>
 #include <limits.h>
+#include <memory>
 
 #include "z_zone.h"
 #include "doomdef.h"
@@ -46,6 +47,8 @@ static const char rcsid[] = "$Id: am_map.c,v 1.4 1997/02/03 21:24:33 b1 Exp $";
 #include "dstrings.h"
 
 #include "am_map.h"
+
+#include "ImageScaler.hh"
 
 
 // For use if I do walls with outsides/insides
@@ -220,8 +223,8 @@ static int 	grid = 0;
 static int 	leveljuststarted = 1; 	// kluge until AM_LevelInit() is called
 
 bool    	automapactive = false;
-static int 	finit_width = SCREENWIDTH;
-static int 	finit_height = SCREENHEIGHT - 32;
+static int 	finit_width = BASE_WIDTH;
+static int 	finit_height = BASE_HEIGHT;
 
 // location of window on screen
 static int 	f_x;
@@ -232,6 +235,13 @@ static int 	f_w;
 static int	f_h;
 
 static int 	lightlev; 		// used for funky strobing effect
+
+namespace
+{
+std::unique_ptr<ImageScaler> mapView(
+    new ImageScaler(BASE_WIDTH, BASE_HEIGHT));
+}
+
 static byte*	fb; 			// pseudo-frame buffer
 static int 	amclock;
 
@@ -833,7 +843,8 @@ void AM_Ticker (void)
 //
 void AM_clearFB(int color)
 {
-    memset(fb, color, f_w*f_h);
+    //@todo Well the automap is transparent 
+    mapView->reset();
 }
 
 
@@ -1002,7 +1013,7 @@ AM_drawFline
 	return;
     }
 
-#define PUTDOT(xx,yy,cc) fb[(yy)*f_w+(xx)]=(cc)
+#define PUTDOT(xx,yy,cc) mapView->draw(xx, yy,cc)
 
     dx = fl->b.x - fl->a.x;
     ax = 2 * (dx<0 ? -dx : dx);
@@ -1311,10 +1322,11 @@ void AM_drawMarks(void)
     {
 	if (markpoints[i].x != -1)
 	{
-	          w = SHORT(marknums[i]->width);
-	          h = SHORT(marknums[i]->height);
-		  //w = 5; // because something's wrong with the wad, i guess
-		  //h = 6; // because something's wrong with the wad, i guess
+	    //@todo marks are not drawn correctly or?
+	    //w = SHORT(marknums[i]->width);
+	    //h = SHORT(marknums[i]->height);
+	    w = 5; // because something's wrong with the wad, i guess
+	    h = 6; // because something's wrong with the wad, i guess
 	    fx = CXMTOF(markpoints[i].x);
 	    fy = CYMTOF(markpoints[i].y);
 	    if (fx >= f_x && fx <= f_w - w && fy >= f_y && fy <= f_h - h)
@@ -1326,7 +1338,8 @@ void AM_drawMarks(void)
 
 void AM_drawCrosshair(int color)
 {
-    fb[(f_w*(f_h+1))/2] = color; // single point for now
+    //@todo drwing a cross hair at the start point cant be hard 
+    //fb[(f_w*(f_h+1))/2] = color; // single point for now
 
 }
 
@@ -1344,7 +1357,8 @@ void AM_Drawer (void)
     AM_drawCrosshair(XHAIRCOLORS);
 
     AM_drawMarks();
-
+    // Put the map upper left corner
+    mapView->display(SCREENWIDTH - BASE_WIDTH * 2.0, 0, 2.0);
     //V_MarkRect(f_x, f_y, f_w, f_h);
 
 }
