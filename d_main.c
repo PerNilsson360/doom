@@ -225,8 +225,6 @@ void D_Display (void)
     case GS_LEVEL:
 	if (!gametic)
 	    break;
-	if (automapactive)
-	    AM_Drawer ();
 	break;
     //     if (wipe || (viewheight != SCREENHEIGHT && fullscreen) )
     //         redrawsbar = true;
@@ -250,9 +248,13 @@ void D_Display (void)
     }
     
     // draw the view directly
-    if (gamestate == GS_LEVEL && !automapactive && gametic)
+    if (gamestate == GS_LEVEL && gametic)
 	R_RenderPlayerView (&players[displayplayer]);
 
+    if (automapactive)
+	AM_Drawer ();
+
+    
     if (gamestate == GS_LEVEL && gametic)
 	HU_Drawer ();
     
@@ -275,7 +277,6 @@ void D_Display (void)
     // draw pause pic
     if (paused)
     {
-        printf("Draw pause\n");
 	// if (automapactive)
 	//     y = 4;
 	// else
@@ -412,7 +413,6 @@ std::unique_ptr<ImageScaler> pageScaler(
 void D_PageDrawer (void)
 {
     patch_t* patch = W_CacheLumpName(pagename, PU_CACHE);
-    //V_DrawPatch (0,0, 0, patch);
     pageScaler->drawPatch(0, 0, patch);
     // The aspect ratio is different in the orignal
     // and the scaled up screen.
