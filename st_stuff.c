@@ -281,9 +281,6 @@ static int		st_msgcounter=0;
 // used when in chat 
 static st_chatstateenum_t	st_chatstate;
 
-// whether in automap or first-person
-static st_stateenum_t	st_gamestate;
-
 // whether left-side main status bar is active
 static bool		st_statusbaron;
 
@@ -503,25 +500,8 @@ ST_Responder (event_t* ev)
 {
   int		i;
     
-  // Filter automap on/off.
-  if (ev->type == ev_keyup
-      && ((ev->data1 & 0xffff0000) == AM_MSGHEADER))
-  {
-    switch(ev->data1)
-    {
-      case AM_MSGENTERED:
-	st_gamestate = AutomapState;
-	break;
-	
-      case AM_MSGEXITED:
-	//	fprintf(stderr, "AM exited\n");
-	st_gamestate = FirstPersonState;
-	break;
-    }
-  }
-
   // if a user keypress...
-  else if (ev->type == ev_keydown)
+  if (ev->type == ev_keydown)
   {
     if (!netgame)
     {
@@ -1223,7 +1203,6 @@ void ST_initData(void)
 
     st_clock = 0;
     st_chatstate = StartChatState;
-    st_gamestate = FirstPersonState;
 
     st_statusbaron = true;
     st_oldchat = st_chat = false;
