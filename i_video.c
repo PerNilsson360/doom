@@ -32,6 +32,7 @@ rcsid[] = "$Id: i_x.c,v 1.6 1997/02/03 22:45:10 b1 Exp $";
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
+#include <X11/XKBlib.h>
 
 #include <X11/extensions/XShm.h>
 // Had to dig up XShm.c for this one.
@@ -90,9 +91,12 @@ int		doPointerWarp = POINTER_WARP_COUNTDOWN;
 int xlatekey(void)
 {
 
-    int rc;
-
-    switch(rc = XKeycodeToKeysym(X_display, X_event.xkey.keycode, 0))
+    int rc = XkbKeycodeToKeysym(X_display,
+				X_event.xkey.keycode, 
+				0,
+				X_event.xkey.state & ShiftMask ? 1 : 0);
+    
+    switch (rc)
     {
       case XK_Left:	rc = KEY_LEFTARROW;	break;
       case XK_Right:	rc = KEY_RIGHTARROW;	break;

@@ -151,7 +151,8 @@ int 		eventtail;
 void D_PostEvent (event_t* ev)
 {
     events[eventhead] = *ev;
-    eventhead = (++eventhead)&(MAXEVENTS-1);
+    ++eventhead;
+    eventhead = (eventhead)&(MAXEVENTS-1);
 }
 
 
@@ -168,7 +169,7 @@ void D_ProcessEvents (void)
 	 && (W_CheckNumForName("map01")<0) )
       return;
 	
-    for ( ; eventtail != eventhead ; eventtail = (++eventtail)&(MAXEVENTS-1) )
+    for ( ; eventtail != eventhead ; ++eventtail, eventtail = (eventtail)&(MAXEVENTS-1) )
     {
 	ev = &events[eventtail];
 	if (M_Responder (ev))
@@ -192,9 +193,6 @@ void R_ExecuteSetViewSize (void);
 
 void D_Display (void)
 {
-    static  bool		viewactivestate = false;
-    static  bool		menuactivestate = false;
-    static  bool		inhelpscreensstate = false;
     static  gamestate_t		oldgamestate = GS_WIPE;
     int				nowtime;
     int				tics;
@@ -245,6 +243,9 @@ void D_Display (void)
     case GS_DEMOSCREEN:
 	D_PageDrawer ();
 	break;
+    case GS_WIPE:
+	// Silence compiler warnings
+	break;
     }
     
     // draw the view directly
@@ -268,10 +269,6 @@ void D_Display (void)
         }
     }
 
-    
-    menuactivestate = menuactive;
-    viewactivestate = viewactive;
-    inhelpscreensstate = inhelpscreens;
     oldgamestate = wipegamestate = gamestate;
     
     // draw pause pic
@@ -412,7 +409,7 @@ std::unique_ptr<ImageScaler> pageScaler(
 //
 void D_PageDrawer (void)
 {
-    patch_t* patch = W_CacheLumpName(pagename, PU_CACHE);
+    patch_t* patch = (patch_t*)W_CacheLumpName(pagename, PU_CACHE);
     pageScaler->drawPatch(0, 0, patch);
     // The aspect ratio is different in the orignal
     // and the scaled up screen.

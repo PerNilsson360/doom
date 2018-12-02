@@ -730,8 +730,7 @@ void G_Ticker (void)
       case GS_LEVEL: 
 	P_Ticker (); 
 	ST_Ticker (); 
-    // @todo fix auto map to support double
-	//AM_Ticker (); 
+	AM_Ticker (); 
 	HU_Ticker ();            
 	break; 
 	 
@@ -745,7 +744,8 @@ void G_Ticker (void)
  
       case GS_DEMOSCREEN: 
 	D_PageTicker (); 
-	break; 
+	break;
+	
     }        
 } 
  
@@ -1272,10 +1272,7 @@ void G_DoSaveGame (void)
     int		length; 
     int		i; 
 	
-    if (M_CheckParm("-cdrom"))
-	sprintf(name,"c:\\doomdata\\"SAVEGAMENAME"%d.dsg",savegameslot);
-    else
-	sprintf (name,SAVEGAMENAME"%d.dsg",savegameslot); 
+    sprintf (name, SAVEGAMENAME "%d.dsg",savegameslot); 
     description = savedescription; 
 	 
     save_p = savebuffer = screens[1]+0x4000; 

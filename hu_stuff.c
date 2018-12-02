@@ -52,7 +52,7 @@ rcsid[] = "$Id: hu_stuff.c,v 1.4 1997/02/03 16:47:52 b1 Exp $";
 #define HU_TITLET	(mapnamest[gamemap-1])
 #define HU_TITLEHEIGHT	1
 #define HU_TITLEX	0
-#define HU_TITLEY	(167 - SHORT(hu_font[0]->height))
+#define HU_TITLEY	(SCREENHEIGHT - SHORT(hu_font[0]->height))
 
 #define HU_INPUTTOGGLE	't'
 #define HU_INPUTX	HU_MSGX
@@ -420,7 +420,7 @@ void HU_Start(void)
 {
 
     int		i;
-    char*	s;
+    const char*	s;
 
     if (headsupactive)
 	HU_Stop();
@@ -522,7 +522,7 @@ void HU_Ticker(void)
 	if ((plr->message && !message_nottobefuckedwith)
 	    || (plr->message && message_dontfuckwithme))
 	{
-	    HUlib_addMessageToSText(&w_message, 0, (char*)plr->message);
+	    HUlib_addMessageToSText(&w_message, 0, plr->message);
 	    plr->message = 0;
 	    message_on = true;
 	    message_counter = HU_MSGTIMEOUT;

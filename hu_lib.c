@@ -142,10 +142,10 @@ HUlib_drawTextLine
 // sorta called by HU_Erase and just better darn get things straight
 void HUlib_eraseTextLine(hu_textline_t* l)
 {
-    int			lh;
-    int			y;
-    int			yoffset;
-    static bool	lastautomapactive = true;
+    //int			lh;
+    //int			y;
+    //int			yoffset;
+    //static bool	lastautomapactive = true;
 
     // Only erases when NOT in automap and the screen is reduced,
     // and the text must either need updating or refreshing
@@ -168,7 +168,7 @@ void HUlib_eraseTextLine(hu_textline_t* l)
     //     }
     // }
 
-    lastautomapactive = automapactive;
+    //lastautomapactive = automapactive;
     if (l->needsupdate) l->needsupdate--;
 
 }
@@ -216,8 +216,8 @@ void HUlib_addLineToSText(hu_stext_t* s)
 void
 HUlib_addMessageToSText
 ( hu_stext_t*	s,
-  char*		prefix,
-  char*		msg )
+  const char*		prefix,
+  const char*		msg )
 {
     HUlib_addLineToSText(s);
     if (prefix)
