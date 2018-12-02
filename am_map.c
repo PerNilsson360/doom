@@ -518,7 +518,7 @@ void AM_loadPics(void)
     for (i=0;i<10;i++)
     {
 	sprintf(namebuf, "AMMNUM%d", i);
-	marknums[i] = W_CacheLumpName(namebuf, PU_STATIC);
+	marknums[i] = (patch_t*)W_CacheLumpName(namebuf, PU_STATIC);
     }
 
 }
@@ -570,11 +570,8 @@ void AM_LevelInit(void)
 //
 void AM_Stop (void)
 {
-    static event_t st_notify = { 0, ev_keyup, AM_MSGEXITED };
-
     AM_unloadPics();
     automapactive = false;
-    ST_Responder(&st_notify);
     stopped = true;
 }
 
@@ -627,7 +624,6 @@ AM_Responder
 {
 
     int rc;
-    static int cheatstate=0;
     static int bigstate=0;
     static char buffer[20];
 
@@ -706,7 +702,6 @@ AM_Responder
 	    plr->message = AMSTR_MARKSCLEARED;
 	    break;
 	  default:
-	    cheatstate=0;
 	    rc = false;
 	}
 	if (!deathmatch && cht_CheckCheat(&cheat_amap, ev->data1))

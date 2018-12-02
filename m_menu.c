@@ -31,6 +31,7 @@ rcsid[] = "$Id: m_menu.c,v 1.7 1997/02/03 22:45:10 b1 Exp $";
 #include <fcntl.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <iostream>
 
 #include <memory>
 
@@ -89,7 +90,7 @@ int			quickSaveSlot;
  // 1 = message to be printed
 int			messageToPrint;
 // ...and here is the message string!
-char*			messageString;		
+const char* messageString;		
 
 // message x & y
 int			messx;			
@@ -223,11 +224,11 @@ void M_SetupNextMenu(menu_t *menudef);
 void M_DrawThermo(int x,int y,int thermWidth,int thermDot);
 void M_DrawEmptyCell(menu_t *menu,int item);
 void M_DrawSelCell(menu_t *menu,int item);
-void M_WriteText(int x, int y, char *string);
+void M_WriteText(int x, int y, const char *string);
 int  M_StringWidth(char *string);
 int  M_StringHeight(char *string);
 void M_StartControlPanel(void);
-void M_StartMessage(char *string,void (*routine)(int),bool input);
+void M_StartMessage(const char *string,void (*routine)(int),bool input);
 void M_StopMessage(void);
 void M_ClearMenus (void);
 
@@ -510,17 +511,12 @@ menu_t  SaveDef =
 void M_ReadSaveStrings(void)
 {
     int             handle;
-    int             count;
     int             i;
     char    name[256];
 	
     for (i = 0;i < load_end;i++)
     {
-	if (M_CheckParm("-cdrom"))
-	    sprintf(name,"c:\\doomdata\\" SAVEGAMENAME "%d.dsg",i);
-	else
-	    sprintf(name,SAVEGAMENAME"%d.dsg",i);
-
+	sprintf(name, SAVEGAMENAME "%d.dsg", i);
 	handle = open (name, O_RDONLY | 0, 0666);
 	if (handle == -1)
 	{
@@ -528,7 +524,11 @@ void M_ReadSaveStrings(void)
 	    LoadMenu[i].status = 0;
 	    continue;
 	}
-	count = read (handle, &savegamestrings[i], SAVESTRINGSIZE);
+	int count = read (handle, &savegamestrings[i], SAVESTRINGSIZE);
+	if (count < 0) {
+	    std::cerr << "M_ReadSaveStrings: could not read from: "
+		      << savegamestrings[i] << std::endl;
+	}
 	close (handle);
 	LoadMenu[i].status = 1;
     }
@@ -542,10 +542,9 @@ void M_DrawLoad(void)
 {
     int             i;
 	
-    //V_DrawPatchDirect (72,28,0,(patch_t*)W_CacheLumpName("M_LOADG",PU_CACHE));
     menuScaler->drawPatch(72,
 			 28,
-			 W_CacheLumpName("M_LOADG",PU_CACHE));
+			  (patch_t*)W_CacheLumpName("M_LOADG",PU_CACHE));
     for (i = 0;i < load_end; i++)
     {
 	M_DrawSaveLoadBorder(LoadDef.x,LoadDef.y+LINEHEIGHT*i);
@@ -562,23 +561,20 @@ void M_DrawSaveLoadBorder(int x,int y)
 {
     int             i;
 	
-    //V_DrawPatchDirect (x-8,y+7,0,(patch_t*)W_CacheLumpName("M_LSLEFT",PU_CACHE));
     menuScaler->drawPatch(x-8,
 			 y+7,
-			 W_CacheLumpName("M_LSLEFT",PU_CACHE));
+			  (patch_t*) W_CacheLumpName("M_LSLEFT",PU_CACHE));
     for (i = 0;i < 24;i++)
     {
-	//V_DrawPatchDirect (x,y+7,0,(patch_t*)W_CacheLumpName("M_LSCNTR",PU_CACHE));
 	menuScaler->drawPatch(x,
 			     y+7,
-			     W_CacheLumpName("M_LSCNTR",PU_CACHE));
+			     (patch_t*)W_CacheLumpName("M_LSCNTR",PU_CACHE));
 	x += 8;
     }
 
-    //V_DrawPatchDirect (x,y+7,0,(patch_t*)W_CacheLumpName("M_LSRGHT",PU_CACHE));
     menuScaler->drawPatch(x,
 			 y+7,
-			 W_CacheLumpName("M_LSRGHT",PU_CACHE));
+			  (patch_t*)W_CacheLumpName("M_LSRGHT",PU_CACHE));
 }
 
 
@@ -624,7 +620,7 @@ void M_DrawSave(void)
     //V_DrawPatchDirect (72,28,0,(patch_t*)W_CacheLumpName("M_SAVEG",PU_CACHE));
     menuScaler->drawPatch(72,
 			 28,
-			 W_CacheLumpName("M_SAVEG",PU_CACHE));
+			  (patch_t*)W_CacheLumpName("M_SAVEG",PU_CACHE));
     for (i = 0;i < load_end; i++)
     {
 	M_DrawSaveLoadBorder(LoadDef.x,LoadDef.y+LINEHEIGHT*i);
@@ -768,18 +764,16 @@ void M_DrawReadThis1(void)
     switch ( gamemode )
     {
       case commercial:
-	  //V_DrawPatchDirect (0,0,0,(patch_t*)W_CacheLumpName("HELP",PU_CACHE));
 	  menuScaler->drawPatch(0,
 			       0,
-			       W_CacheLumpName("HELP",PU_CACHE));
+				(patch_t*)W_CacheLumpName("HELP",PU_CACHE));
 	break;
       case shareware:
       case registered:
       case retail:
-	  //V_DrawPatchDirect (0,0,0,(patch_t*)W_CacheLumpName("HELP1",PU_CACHE));
 	  menuScaler->drawPatch(0,
 			       0,
-			       W_CacheLumpName("HELP1",PU_CACHE));
+			       (patch_t*)W_CacheLumpName("HELP1",PU_CACHE));
 	break;
       default:
 	break;
@@ -794,23 +788,20 @@ void M_DrawReadThis1(void)
 //
 void M_DrawReadThis2(void)
 {
-    inhelpscreens = true;
     switch ( gamemode )
     {
       case retail:
       case commercial:
 	// This hack keeps us from having to change menus.
-	//V_DrawPatchDirect (0,0,0,(patch_t*)W_CacheLumpName("CREDIT",PU_CACHE));
 	menuScaler->drawPatch(0,
-			     0,
-			     W_CacheLumpName("CREDIT",PU_CACHE));
+			      0,
+			      (patch_t*)W_CacheLumpName("CREDIT",PU_CACHE));
 	break;
       case shareware:
       case registered:
-	  //V_DrawPatchDirect (0,0,0,(patch_t*)W_CacheLumpName("HELP2",PU_CACHE));
 	  menuScaler->drawPatch(0,
-			       0,
-			       W_CacheLumpName("HELP2",PU_CACHE));
+				0,
+				(patch_t*)W_CacheLumpName("HELP2",PU_CACHE));
 	break;
       default:
 	break;
@@ -824,10 +815,9 @@ void M_DrawReadThis2(void)
 //
 void M_DrawSound(void)
 {
-    //V_DrawPatchDirect (60,38,0,(patch_t*)W_CacheLumpName("M_SVOL",PU_CACHE));
     menuScaler->drawPatch(60,
 			 38,
-			 W_CacheLumpName("M_SVOL",PU_CACHE));
+			  (patch_t*)W_CacheLumpName("M_SVOL",PU_CACHE));
     M_DrawThermo(SoundDef.x,SoundDef.y+LINEHEIGHT*(sfx_vol+1),
 		 16,snd_SfxVolume);
 
@@ -882,10 +872,9 @@ void M_MusicVol(int choice)
 //
 void M_DrawMainMenu(void)
 {
-    //V_DrawPatchDirect (94,2,0,(patch_t*)W_CacheLumpName("M_DOOM",PU_CACHE));
     menuScaler->drawPatch(94,
 			 2,
-			 W_CacheLumpName("M_DOOM",PU_CACHE));
+			  (patch_t*)W_CacheLumpName("M_DOOM",PU_CACHE));
 }
 
 
@@ -896,14 +885,12 @@ void M_DrawMainMenu(void)
 //
 void M_DrawNewGame(void)
 {
-    //V_DrawPatchDirect (96,14,0,(patch_t*)W_CacheLumpName("M_NEWG",PU_CACHE));
-    //V_DrawPatchDirect (54,38,0,(patch_t*)W_CacheLumpName("M_SKILL",PU_CACHE));
     menuScaler->drawPatch(96,
 			 14,
-			 W_CacheLumpName("M_NEWG",PU_CACHE));
+			 (patch_t*)W_CacheLumpName("M_NEWG",PU_CACHE));
     menuScaler->drawPatch(54,
 			 38,
-			 W_CacheLumpName("M_SKILL",PU_CACHE));
+			 (patch_t*)W_CacheLumpName("M_SKILL",PU_CACHE));
 }
 
 void M_NewGame(int choice)
@@ -928,10 +915,9 @@ int     epi;
 
 void M_DrawEpisode(void)
 {
-    V_DrawPatchDirect (54,38,0,(patch_t*)W_CacheLumpName("M_EPISOD",PU_CACHE));
     menuScaler->drawPatch(54,
 			 38,
-			 W_CacheLumpName("M_EPISOD",PU_CACHE));
+			 (patch_t*)W_CacheLumpName("M_EPISOD",PU_CACHE));
 }
 
 void M_VerifyNightmare(int ch)
@@ -988,15 +974,12 @@ char	msgNames[2][9]		= {"M_MSGOFF","M_MSGON"};
 
 void M_DrawOptions(void)
 {
-    //V_DrawPatchDirect (108,15,0,(patch_t*)W_CacheLumpName("M_OPTTTL",PU_CACHE));
     menuScaler->drawPatch(108,
 			 15,
-			 W_CacheLumpName("M_OPTTTL",PU_CACHE));
-    //V_DrawPatchDirect (OptionsDef.x + 120,OptionsDef.y+LINEHEIGHT*messages,0,
-    //		       (patch_t*)W_CacheLumpName(msgNames[showMessages],PU_CACHE));
+			 (patch_t*)W_CacheLumpName("M_OPTTTL",PU_CACHE));
     menuScaler->drawPatch(OptionsDef.x + 120,
 			 OptionsDef.y+LINEHEIGHT*messages,
-			 W_CacheLumpName(msgNames[showMessages],PU_CACHE));
+			 (patch_t*)W_CacheLumpName(msgNames[showMessages],PU_CACHE));
     
     M_DrawThermo(OptionsDef.x,OptionsDef.y+LINEHEIGHT*(mousesens+1),
 		 10,mouseSensitivity);
@@ -1201,28 +1184,23 @@ M_DrawThermo
     int		i;
 
     xx = x;
-    //V_DrawPatchDirect (xx,y,0,(patch_t*)W_CacheLumpName("M_THERML",PU_CACHE));
     menuScaler->drawPatch(xx,
 			 y,
-			 W_CacheLumpName("M_THERML",PU_CACHE));
+			 (patch_t*)W_CacheLumpName("M_THERML",PU_CACHE));
     xx += 8;
     for (i=0;i<thermWidth;i++)
     {
-	//V_DrawPatchDirect (xx,y,0,(patch_t*)W_CacheLumpName("M_THERMM",PU_CACHE));
 	menuScaler->drawPatch(xx,
 			     y,
-			     W_CacheLumpName("M_THERMM",PU_CACHE));
+			     (patch_t*)W_CacheLumpName("M_THERMM",PU_CACHE));
 	xx += 8;
     }
-    //V_DrawPatchDirect (xx,y,0,(patch_t*)W_CacheLumpName("M_THERMR",PU_CACHE));
     menuScaler->drawPatch(xx,
 			 y,
-			 W_CacheLumpName("M_THERMR",PU_CACHE));
-    //V_DrawPatchDirect ((x+8) + thermDot*8,y,
-    //		       0,(patch_t*)W_CacheLumpName("M_THERMO",PU_CACHE));
+			 (patch_t*)W_CacheLumpName("M_THERMR",PU_CACHE));
     menuScaler->drawPatch((x+8) + thermDot*8,
 			 y,
-			 W_CacheLumpName("M_THERMO",PU_CACHE));
+			 (patch_t*)W_CacheLumpName("M_THERMO",PU_CACHE));
 }
 
 
@@ -1232,11 +1210,10 @@ M_DrawEmptyCell
 ( menu_t*	menu,
   int		item )
 {
-    //V_DrawPatchDirect (menu->x - 10,        menu->y+item*LINEHEIGHT - 1, 0,
-    //		       (patch_t*)W_CacheLumpName("M_CELL1",PU_CACHE));
+
     menuScaler->drawPatch(menu->x - 10,
 			 menu->y+item*LINEHEIGHT - 1,
-			 W_CacheLumpName("M_CELL1",PU_CACHE));
+			 (patch_t*)W_CacheLumpName("M_CELL1",PU_CACHE));
 }
 
 void
@@ -1244,17 +1221,15 @@ M_DrawSelCell
 ( menu_t*	menu,
   int		item )
 {
-    //V_DrawPatchDirect (menu->x - 10,        menu->y+item*LINEHEIGHT - 1, 0,
-    //		       (patch_t*)W_CacheLumpName("M_CELL2",PU_CACHE));
     menuScaler->drawPatch(menu->x - 10,
 			 menu->y+item*LINEHEIGHT - 1,
-			 W_CacheLumpName("M_CELL2",PU_CACHE));
+			 (patch_t*)W_CacheLumpName("M_CELL2",PU_CACHE));
 }
 
 
 void
 M_StartMessage
-( char*		string,
+( const char* string,
   void    (*routine)(int),
   bool	input )
 {
@@ -1282,11 +1257,10 @@ void M_StopMessage(void)
 //
 int M_StringWidth(char* string)
 {
-    int             i;
     int             w = 0;
     int             c;
 	
-    for (i = 0;i < strlen(string);i++)
+    for (size_t i = 0; i < strlen(string); i++)
     {
 	c = toupper(string[i]) - HU_FONTSTART;
 	if (c < 0 || c >= HU_FONTSIZE)
@@ -1303,14 +1277,13 @@ int M_StringWidth(char* string)
 //
 //      Find string height from hu_font chars
 //
-int M_StringHeight(char* string)
+int M_StringHeight(const char* string)
 {
-    int             i;
     int             h;
     int             height = SHORT(hu_font[0]->height);
 	
     h = height;
-    for (i = 0;i < strlen(string);i++)
+    for (size_t i = 0; i < strlen(string); i++)
 	if (string[i] == '\n')
 	    h += height;
 		
@@ -1325,10 +1298,10 @@ void
 M_WriteText
 ( int		x,
   int		y,
-  char*		string)
+  const char*		string)
 {
     int		w;
-    char*	ch;
+    const char*	ch;
     int		c;
     int		cx;
     int		cy;
@@ -1773,13 +1746,12 @@ void M_Drawer (void)
     // Horiz. & Vertically center string and print it.
     if (messageToPrint)
     {
-	printf("messageToPrint %s len %d\n", messageString, strlen(messageString));
 	int start = 0;
 	char string[40];
 	int y = 100 - M_StringHeight(messageString)/2;
 	while (*(messageString+start))
 	{
-	    short i;
+	    size_t i;
 	    for (i = 0;i < strlen(messageString+start);i++) {
 		if (*(messageString+start+i) == '\n') {
 		    memset(string,0,40);
@@ -1806,7 +1778,7 @@ void M_Drawer (void)
 	int max = currentMenu->numitems;
 	for (int i = 0; i < max; i++) {
 	    if (currentMenu->menuitems[i].name[0]) {
-		patch_t* patch =  W_CacheLumpName(
+		patch_t* patch =  (patch_t*)W_CacheLumpName(
 		    currentMenu->menuitems[i].name ,
 		    PU_CACHE);
 		menuScaler->drawPatch(x, y, patch);
@@ -1815,7 +1787,7 @@ void M_Drawer (void)
 	}
 	menuScaler->drawPatch(x + SKULLXOFF,
 			      currentMenu->y - 5 + itemOn*LINEHEIGHT,
-			      W_CacheLumpName(skullName[whichSkull],PU_CACHE));
+			      (patch_t*)W_CacheLumpName(skullName[whichSkull],PU_CACHE));
     }
     // The aspect ratio is different in the orignal
     // and the scaled up screen.
