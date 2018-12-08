@@ -38,6 +38,8 @@ rcsid[] = "$Id: hu_stuff.c,v 1.4 1997/02/03 16:47:52 b1 Exp $";
 #include "s_sound.h"
 
 #include "doomstat.h"
+#include "ImageScaler.hh"
+#include "am_map.h"
 
 // Data.
 #include "dstrings.h"
@@ -52,7 +54,7 @@ rcsid[] = "$Id: hu_stuff.c,v 1.4 1997/02/03 16:47:52 b1 Exp $";
 #define HU_TITLET	(mapnamest[gamemap-1])
 #define HU_TITLEHEIGHT	1
 #define HU_TITLEX	0
-#define HU_TITLEY	(SCREENHEIGHT - SHORT(hu_font[0]->height))
+#define HU_TITLEY	0//(BASE_HEIGHT - SHORT(hu_font[0]->height))
 
 #define HU_INPUTTOGGLE	't'
 #define HU_INPUTX	HU_MSGX
@@ -384,6 +386,10 @@ char frenchKeyMap[128]=
     'P','A','R','S','T','U','V','Z','X','Y','W','^','\\','$','^',127
 };
 
+namespace {
+ImageScaler huView(BASE_WIDTH, BASE_HEIGHT);
+}
+
 char ForeignTranslation(unsigned char ch)
 {
     return ch < 128 ? frenchKeyMap[ch] : ch;
@@ -488,8 +494,10 @@ void HU_Drawer(void)
 
     HUlib_drawSText(&w_message);
     HUlib_drawIText(&w_chat);
-    if (automapactive)
-	HUlib_drawTextLine(&w_title, false);
+    if (automapactive) {
+	ImageScaler& mapImage = AM_GetImageScaler();
+	mapImage.drawText(w_title, false);
+    }
 
 }
 
@@ -618,7 +626,7 @@ bool HU_Responder(event_t *ev)
 {
 
     static char		lastmessage[HU_MAXLINELENGTH+1];
-    char*		macromessage;
+    const char*		macromessage;
     bool		eatkey = false;
     static bool	shiftdown = false;
     static bool	altdown = false;

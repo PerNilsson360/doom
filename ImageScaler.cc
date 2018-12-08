@@ -49,6 +49,46 @@ ImageScaler::drawPatch(int x, int y, const patch_t* patch)
 }
 
 void
+ImageScaler::drawText(const hu_textline_t& line, bool drawcursor)
+{
+
+    int			i;
+    int			w;
+    int			x;
+    unsigned char	c;
+
+    // draw the new stuff
+    x = line.x;
+    for (i=0;i<line.len;i++)
+    {
+	c = toupper(line.l[i]);
+	if (c != ' '
+	    && c >= line.sc
+	    && c <= '_')
+	{
+	    w = SHORT(line.f[c - line.sc]->width);
+	    if (x+w > _width)
+		break;
+	    drawPatch(x, line.y, line.f[c - line.sc]);
+	    x += w;
+	}
+	else
+	{
+	    x += 4;
+	    if (x >= _width)
+		break;
+	}
+    }
+
+    // draw the cursor if requested
+    if (drawcursor
+	&& x + SHORT(line.f['_' - line.sc]->width) <= _width)
+    {
+	drawPatch(x, line.y, line.f['_' - line.sc]);
+    }
+}
+
+void
 ImageScaler::draw(int x, int y, unsigned char color)
 {
     _image[x][y] = color;

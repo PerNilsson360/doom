@@ -481,7 +481,7 @@ W_CacheLumpNum
 ( int		lump,
   int		tag )
 {
-    if ((unsigned)lump >= numlumps)
+    if (lump >= numlumps)
 	I_Error ("W_CacheLumpNum: %i >= numlumps",lump);
 		
     if (!lumpcache[lump])

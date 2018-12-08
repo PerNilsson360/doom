@@ -575,6 +575,12 @@ void AM_Stop (void)
     stopped = true;
 }
 
+ImageScaler&
+AM_GetImageScaler()
+{
+    return *mapView; 
+}
+
 //
 //
 //
@@ -832,18 +838,6 @@ void AM_Ticker (void)
 
 }
 
-
-//
-// Clear automap frame buffer.
-//
-void AM_clearFB(int color)
-{
-    //@todo Well the automap is transparent 
-    mapView->reset();
-}
-
-
-//
 // Automap clipping of lines.
 //
 // Based on Cohen-Sutherland clipping algorithm but with a slightly
@@ -1317,7 +1311,7 @@ void AM_drawMarks(void)
     {
 	if (markpoints[i].x != -1)
 	{
-	    //@todo marks are not drawn correctly or?
+	    // @todo
 	    //w = SHORT(marknums[i]->width);
 	    //h = SHORT(marknums[i]->height);
 	    w = 5; // because something's wrong with the wad, i guess
@@ -1325,7 +1319,7 @@ void AM_drawMarks(void)
 	    fx = CXMTOF(markpoints[i].x);
 	    fy = CYMTOF(markpoints[i].y);
 	    if (fx >= f_x && fx <= f_w - w && fy >= f_y && fy <= f_h - h)
-		V_DrawPatch(fx, fy, FB, marknums[i]);
+		mapView->drawPatch(fx, fy, marknums[i]);
 	}
     }
 
@@ -1342,7 +1336,6 @@ void AM_Drawer (void)
 {
     if (!automapactive) return;
 
-    AM_clearFB(BACKGROUND);
     if (grid)
 	AM_drawGrid(GRIDCOLORS);
     AM_drawWalls();
@@ -1354,6 +1347,7 @@ void AM_Drawer (void)
     AM_drawMarks();
     // Put the map upper left corner
     mapView->display(SCREENWIDTH - BASE_WIDTH * 2.0, 0, 2.0);
+    mapView->reset();
     //V_MarkRect(f_x, f_y, f_w, f_h);
 
 }
