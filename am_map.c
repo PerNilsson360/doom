@@ -25,6 +25,7 @@ static const char rcsid[] = "$Id: am_map.c,v 1.4 1997/02/03 21:24:33 b1 Exp $";
 
 #include <stdio.h>
 #include <limits.h>
+#include <iostream>
 #include <memory>
 
 #include "z_zone.h"
@@ -88,7 +89,6 @@ static const char rcsid[] = "$Id: am_map.c,v 1.4 1997/02/03 21:24:33 b1 Exp $";
 #define XHAIRCOLORS	GRAYS
 
 // drawing stuff
-#define	FB		0
 
 #define AM_PANDOWNKEY	KEY_DOWNARROW
 #define AM_PANUPKEY	KEY_UPARROW
@@ -138,16 +138,51 @@ typedef struct
     fpoint_t a, b;
 } fline_t;
 
-typedef struct
+class MPoint
 {
-    fixed_t		x,y;
-} mpoint_t;
+public:
+    MPoint() : _x(0), _y(0) {}
+    MPoint(fixed_t x, fixed_t y) :
+	_x(fixed_to_double(x)),
+	_y(fixed_to_double(y)) {}
+    MPoint(double x, double y) : _x(x), _y(y) {}
+    void setX(fixed_t x) { _x = fixed_to_double(x); }
+    void setY(fixed_t y) { _y = fixed_to_double(y); }
+    void incX(fixed_t x) { _x += fixed_to_double(x); }
+    void incY(fixed_t y) { _y += fixed_to_double(y); }
+    fixed_t getX() const { return double_to_fixed(_x); }
+    fixed_t getY() const { return double_to_fixed(_y); }
+    void rotate(angle_t a) {
+	double x = _x * cos(Angle(a)) - _y * sin(Angle(a));
+	_y   = _x * sin(Angle(a)) + _y * cos(Angle(a));
+	_x = x;
+    }
+private:
+    friend std::ostream& operator << (std::ostream& out, const MPoint& p);
+    double _x;
+    double _y;
+};
 
-typedef struct
+std::ostream& operator << (std::ostream& out, const MPoint& p) {
+    out << "<"<< p._x << ", " << p._y << ">";
+    return out;
+}
+
+class MLine
 {
-    mpoint_t a, b;
-} mline_t;
+public:
+    MLine() : _a(), _b() {}
+    MLine(const MPoint& a, const MPoint& b) : _a(a), _b(b) {}
+    MPoint _a;
+    MPoint _b;
+};
 
+std::ostream& operator << (std::ostream& out, const MLine& l) {
+    out << "[" << l._a << ", " << l._b; 
+    return out;
+}
+
+    
 typedef struct
 {
     fixed_t slp, islp;
@@ -162,7 +197,7 @@ typedef struct
 //   starting from the middle.
 //
 #define R ((8*PLAYERRADIUS)/7)
-mline_t player_arrow[] = {
+MLine player_arrow[] = {
     { { -R+R/8, 0 }, { R, 0 } }, // -----
     { { R, 0 }, { R-R/2, R/4 } },  // ----->
     { { R, 0 }, { R-R/2, -R/4 } },
@@ -172,10 +207,10 @@ mline_t player_arrow[] = {
     { { -R+3*R/8, 0 }, { -R+R/8, -R/4 } }
 };
 #undef R
-#define NUMPLYRLINES (sizeof(player_arrow)/sizeof(mline_t))
+#define NUMPLYRLINES (sizeof(player_arrow)/sizeof(MLine))
 
 #define R ((8*PLAYERRADIUS)/7)
-mline_t cheat_player_arrow[] = {
+MLine cheat_player_arrow[] = {
     { { -R+R/8, 0 }, { R, 0 } }, // -----
     { { R, 0 }, { R-R/2, R/6 } },  // ----->
     { { R, 0 }, { R-R/2, -R/6 } },
@@ -194,25 +229,25 @@ mline_t cheat_player_arrow[] = {
     { { R/6+R/32, -R/7-R/32 }, { R/6+R/10, -R/7 } }
 };
 #undef R
-#define NUMCHEATPLYRLINES (sizeof(cheat_player_arrow)/sizeof(mline_t))
+#define NUMCHEATPLYRLINES (sizeof(cheat_player_arrow)/sizeof(MLine))
 
 #define R (FRACUNIT)
-mline_t triangle_guy[] = {
+MLine triangle_guy[] = {
     { { static_cast<fixed_t>(-.867*R), static_cast<fixed_t>(-.5*R) }, { static_cast<fixed_t>(.867*R), static_cast<fixed_t>(-.5*R) } },
     { { static_cast<fixed_t>(.867*R), static_cast<fixed_t>(-.5*R) } , { 0, R } },
     { { 0, R }, { static_cast<fixed_t>(-.867*R), static_cast<fixed_t>(-.5*R) } }
 };
 #undef R
-#define NUMTRIANGLEGUYLINES (sizeof(triangle_guy)/sizeof(mline_t))
+#define NUMTRIANGLEGUYLINES (sizeof(triangle_guy)/sizeof(MLine))
 
 #define R (FRACUNIT)
-mline_t thintriangle_guy[] = {
+MLine thintriangle_guy[] = {
     { { static_cast<fixed_t>(-.5*R), static_cast<fixed_t>(-.7*R) }, { R, 0 } },
     { { R, 0 }, { static_cast<fixed_t>(-.5*R), static_cast<fixed_t>(.7*R) } },
     { { static_cast<fixed_t>(-.5*R), static_cast<fixed_t>(.7*R) }, { static_cast<fixed_t>(-.5*R), static_cast<fixed_t>(-.7*R) } }
 };
 #undef R
-#define NUMTHINTRIANGLEGUYLINES (sizeof(thintriangle_guy)/sizeof(mline_t))
+#define NUMTHINTRIANGLEGUYLINES (sizeof(thintriangle_guy)/sizeof(MLine))
 
 
 
@@ -242,10 +277,9 @@ std::unique_ptr<ImageScaler> mapView(
     new ImageScaler(BASE_WIDTH, BASE_HEIGHT));
 }
 
-static byte*	fb; 			// pseudo-frame buffer
 static int 	amclock;
 
-static mpoint_t m_paninc; // how far the window pans each tic (map coords)
+static MPoint m_paninc; // how far the window pans each tic (map coords)
 static fixed_t 	mtof_zoommul; // how far the window zooms in each tic (map coords)
 static fixed_t 	ftom_zoommul; // how far the window zooms in each tic (fb coords)
 
@@ -280,7 +314,7 @@ static fixed_t old_m_w, old_m_h;
 static fixed_t old_m_x, old_m_y;
 
 // old location used by the Follower routine
-static mpoint_t f_oldloc;
+static MPoint f_oldloc;
 
 // used by MTOF to scale from map-to-frame-buffer coords
 static fixed_t scale_mtof = INITSCALEMTOF;
@@ -290,7 +324,7 @@ static fixed_t scale_ftom;
 static player_t *plr; // the player represented by an arrow
 
 static patch_t *marknums[10]; // numbers used for marking by the automap
-static mpoint_t markpoints[AM_NUMMARKPOINTS]; // where the points are
+static MPoint markpoints[AM_NUMMARKPOINTS]; // where the points are
 static int markpointnum = 0; // next point to be assigned
 
 static int followplayer = 1; // specifies whether to follow the player around
@@ -301,36 +335,6 @@ static cheatseq_t cheat_amap = { cheat_amap_seq, 0 };
 static bool stopped = true;
 
 extern bool viewactive;
-//extern byte screens[][SCREENWIDTH*SCREENHEIGHT];
-
-
-
-void
-V_MarkRect
-( int	x,
-  int	y,
-  int	width,
-  int	height );
-
-// Calculates the slope and slope according to the x-axis of a line
-// segment in map coordinates (with the upright y-axis n' all) so
-// that it can be used with the brain-dead drawing stuff.
-
-void
-AM_getIslope
-( mline_t*	ml,
-  islope_t*	is )
-{
-    int dx, dy;
-
-    dy = ml->a.y - ml->b.y;
-    dx = ml->b.x - ml->a.x;
-    if (!dy) is->islp = (dx<0?-INT_MAX:INT_MAX);
-    else is->islp = FixedDiv(dx, dy);
-    if (!dx) is->slp = (dy<0?-INT_MAX:INT_MAX);
-    else is->slp = FixedDiv(dy, dx);
-
-}
 
 //
 //
@@ -387,8 +391,7 @@ void AM_restoreScaleAndLoc(void)
 //
 void AM_addMark(void)
 {
-    markpoints[markpointnum].x = m_x + m_w/2;
-    markpoints[markpointnum].y = m_y + m_h/2;
+    markpoints[markpointnum] = MPoint(m_x + m_w/2, m_y + m_h/2);
     markpointnum = (markpointnum + 1) % AM_NUMMARKPOINTS;
     
 }
@@ -439,14 +442,14 @@ void AM_findMinMaxBoundaries(void)
 //
 void AM_changeWindowLoc(void)
 {
-    if (m_paninc.x || m_paninc.y)
+    if (m_paninc.getX() || m_paninc.getY())
     {
 	followplayer = 0;
-	f_oldloc.x = INT_MAX;
+	f_oldloc.setX(INT_MAX);
     }
 
-    m_x += m_paninc.x;
-    m_y += m_paninc.y;
+    m_x += m_paninc.getX();
+    m_y += m_paninc.getY();
 
     if (m_x + m_w/2 > max_x)
 	m_x = max_x - m_w/2;
@@ -472,13 +475,12 @@ void AM_initVariables(void)
     static event_t st_notify = { ev_keyup, AM_MSGENTERED };
 
     automapactive = true;
-    fb = screens[0];
 
-    f_oldloc.x = INT_MAX;
+    f_oldloc.setX(INT_MAX);
     amclock = 0;
     lightlev = 0;
 
-    m_paninc.x = m_paninc.y = 0;
+    m_paninc = MPoint(0, 0);
     ftom_zoommul = FRACUNIT;
     mtof_zoommul = FRACUNIT;
 
@@ -537,7 +539,7 @@ void AM_clearMarks(void)
     int i;
 
     for (i=0;i<AM_NUMMARKPOINTS;i++)
-	markpoints[i].x = -1; // means empty
+	markpoints[i].setX(-1); // means empty
     markpointnum = 0;
 }
 
@@ -652,19 +654,19 @@ AM_Responder
 	switch(ev->data1)
 	{
 	  case AM_PANRIGHTKEY: // pan right
-	    if (!followplayer) m_paninc.x = FTOM(F_PANINC);
+	      if (!followplayer) m_paninc.setX(FTOM(F_PANINC));
 	    else rc = false;
 	    break;
 	  case AM_PANLEFTKEY: // pan left
-	    if (!followplayer) m_paninc.x = -FTOM(F_PANINC);
+	      if (!followplayer) m_paninc.setX(-FTOM(F_PANINC));
 	    else rc = false;
 	    break;
 	  case AM_PANUPKEY: // pan up
-	    if (!followplayer) m_paninc.y = FTOM(F_PANINC);
+	      if (!followplayer) m_paninc.setY(FTOM(F_PANINC));
 	    else rc = false;
 	    break;
 	  case AM_PANDOWNKEY: // pan down
-	    if (!followplayer) m_paninc.y = -FTOM(F_PANINC);
+	      if (!followplayer) m_paninc.setY(-FTOM(F_PANINC));
 	    else rc = false;
 	    break;
 	  case AM_ZOOMOUTKEY: // zoom out
@@ -691,7 +693,7 @@ AM_Responder
 	    break;
 	  case AM_FOLLOWKEY:
 	    followplayer = !followplayer;
-	    f_oldloc.x = INT_MAX;
+	    f_oldloc.setX(INT_MAX);
 	    plr->message = followplayer ? AMSTR_FOLLOWON : AMSTR_FOLLOWOFF;
 	    break;
 	  case AM_GRIDKEY:
@@ -723,16 +725,16 @@ AM_Responder
 	switch (ev->data1)
 	{
 	  case AM_PANRIGHTKEY:
-	    if (!followplayer) m_paninc.x = 0;
+	      if (!followplayer) m_paninc.setX(0);
 	    break;
 	  case AM_PANLEFTKEY:
-	    if (!followplayer) m_paninc.x = 0;
+	      if (!followplayer) m_paninc.setX(0);
 	    break;
 	  case AM_PANUPKEY:
-	    if (!followplayer) m_paninc.y = 0;
+	      if (!followplayer) m_paninc.setY(0);
 	    break;
 	  case AM_PANDOWNKEY:
-	    if (!followplayer) m_paninc.y = 0;
+	      if (!followplayer) m_paninc.setY(0);
 	    break;
 	  case AM_ZOOMOUTKEY:
 	  case AM_ZOOMINKEY:
@@ -772,14 +774,13 @@ void AM_changeWindowScale(void)
 void AM_doFollowPlayer(void)
 {
 
-    if (f_oldloc.x != double_to_fixed(plr->mo->xx) || f_oldloc.y != double_to_fixed(plr->mo->yy))
+    if (f_oldloc.getX() != double_to_fixed(plr->mo->xx) || f_oldloc.getY() != double_to_fixed(plr->mo->yy))
     {
 	m_x = FTOM(MTOF(double_to_fixed(plr->mo->xx))) - m_w/2;
 	m_y = FTOM(MTOF(double_to_fixed(plr->mo->yy))) - m_h/2;
 	m_x2 = m_x + m_w;
 	m_y2 = m_y + m_h;
-	f_oldloc.x = double_to_fixed(plr->mo->xx);
-	f_oldloc.y = double_to_fixed(plr->mo->yy);
+	f_oldloc = MPoint(plr->mo->xx, plr->mo->yy);
 
 	//  m_x = FTOM(MTOF(plr->mo->x - m_w/2));
 	//  m_y = FTOM(MTOF(plr->mo->y - m_h/2));
@@ -830,7 +831,7 @@ void AM_Ticker (void)
 	AM_changeWindowScale();
 
     // Change x,y location
-    if (m_paninc.x || m_paninc.y)
+    if (m_paninc.getX() || m_paninc.getY())
 	AM_changeWindowLoc();
 
     // Update light level
@@ -846,7 +847,7 @@ void AM_Ticker (void)
 //
 bool
 AM_clipMline
-( mline_t*	ml,
+( MLine*	ml,
   fline_t*	fl )
 {
     enum
@@ -875,37 +876,37 @@ AM_clipMline
 
     
     // do trivial rejects and outcodes
-    if (ml->a.y > m_y2)
+    if (ml->_a.getY() > m_y2)
 	outcode1 = TOP;
-    else if (ml->a.y < m_y)
+    else if (ml->_a.getY() < m_y)
 	outcode1 = BOTTOM;
 
-    if (ml->b.y > m_y2)
+    if (ml->_b.getY() > m_y2)
 	outcode2 = TOP;
-    else if (ml->b.y < m_y)
+    else if (ml->_b.getY() < m_y)
 	outcode2 = BOTTOM;
     
     if (outcode1 & outcode2)
 	return false; // trivially outside
 
-    if (ml->a.x < m_x)
+    if (ml->_a.getX() < m_x)
 	outcode1 |= LEFT;
-    else if (ml->a.x > m_x2)
+    else if (ml->_a.getX() > m_x2)
 	outcode1 |= RIGHT;
     
-    if (ml->b.x < m_x)
+    if (ml->_b.getX() < m_x)
 	outcode2 |= LEFT;
-    else if (ml->b.x > m_x2)
+    else if (ml->_b.getX() > m_x2)
 	outcode2 |= RIGHT;
     
     if (outcode1 & outcode2)
 	return false; // trivially outside
 
     // transform to frame-buffer coordinates.
-    fl->a.x = CXMTOF(ml->a.x);
-    fl->a.y = CYMTOF(ml->a.y);
-    fl->b.x = CXMTOF(ml->b.x);
-    fl->b.y = CYMTOF(ml->b.y);
+    fl->a.x = CXMTOF(ml->_a.getX());
+    fl->a.y = CYMTOF(ml->_a.getY());
+    fl->b.x = CXMTOF(ml->_b.getX());
+    fl->b.y = CYMTOF(ml->_b.getY());
 
     DOOUTCODE(outcode1, fl->a.x, fl->a.y);
     DOOUTCODE(outcode2, fl->b.x, fl->b.y);
@@ -1055,7 +1056,7 @@ AM_drawFline
 //
 void
 AM_drawMline
-( mline_t*	ml,
+( MLine*	ml,
   int		color )
 {
     static fline_t fl;
@@ -1073,7 +1074,7 @@ void AM_drawGrid(int color)
 {
     fixed_t x, y;
     fixed_t start, end;
-    mline_t ml;
+    MLine ml;
 
     // Figure out start of vertical gridlines
     start = m_x;
@@ -1083,12 +1084,12 @@ void AM_drawGrid(int color)
     end = m_x + m_w;
 
     // draw vertical gridlines
-    ml.a.y = m_y;
-    ml.b.y = m_y+m_h;
+    ml._a.setY(m_y);
+    ml._b.setY(m_y+m_h);
     for (x=start; x<end; x+=(MAPBLOCKUNITS<<FRACBITS))
     {
-	ml.a.x = x;
-	ml.b.x = x;
+	ml._a.setX(x);
+	ml._b.setX(x);
 	AM_drawMline(&ml, color);
     }
 
@@ -1100,15 +1101,14 @@ void AM_drawGrid(int color)
     end = m_y + m_h;
 
     // draw horizontal gridlines
-    ml.a.x = m_x;
-    ml.b.x = m_x + m_w;
+    ml._a.setX(m_x);
+    ml._b.setX(m_x + m_w);
     for (y=start; y<end; y+=(MAPBLOCKUNITS<<FRACBITS))
     {
-	ml.a.y = y;
-	ml.b.y = y;
+	ml._a.setY(y);
+	ml._b.setY(y);
 	AM_drawMline(&ml, color);
     }
-
 }
 
 //
@@ -1118,14 +1118,14 @@ void AM_drawGrid(int color)
 void AM_drawWalls(void)
 {
     int i;
-    static mline_t l;
+    static MLine l;
 
     for (i=0;i<numlines;i++)
     {
-	l.a.x = double_to_fixed(lines[i].v1->xx);
-	l.a.y = double_to_fixed(lines[i].v1->yy);
-	l.b.x = double_to_fixed(lines[i].v2->xx);
-	l.b.y = double_to_fixed(lines[i].v2->yy);
+	l._a.setX(double_to_fixed(lines[i].v1->xx));
+	l._a.setY(double_to_fixed(lines[i].v1->yy));
+	l._b.setX(double_to_fixed(lines[i].v2->xx));
+	l._b.setY(double_to_fixed(lines[i].v2->yy));
 	if (cheating || (lines[i].flags & ML_MAPPED))
 	{
 	    if ((lines[i].flags & LINE_NEVERSEE) && !cheating)
@@ -1191,7 +1191,7 @@ AM_rotate
 
 void
 AM_drawLineCharacter
-( mline_t*	lineguy,
+( MLine*	lineguy,
   int		lineguylines,
   fixed_t	scale,
   angle_t	angle,
@@ -1199,40 +1199,35 @@ AM_drawLineCharacter
   fixed_t	x,
   fixed_t	y )
 {
-    int		i;
-    mline_t	l;
+    MLine	l;
 
-    for (i=0;i<lineguylines;i++)
+    for (int i = 0; i < lineguylines; i++)
     {
-	l.a.x = lineguy[i].a.x;
-	l.a.y = lineguy[i].a.y;
+	l._a = lineguy[i]._a;
 
 	if (scale)
 	{
-	    l.a.x = FixedMul(scale, l.a.x);
-	    l.a.y = FixedMul(scale, l.a.y);
+	    l._a = MPoint(FixedMul(scale, l._a.getX()), FixedMul(scale, l._a.getY()));
 	}
 
 	if (angle)
-	    AM_rotate(&l.a.x, &l.a.y, angle);
+	    l._a.rotate(angle);
 
-	l.a.x += x;
-	l.a.y += y;
+	l._a.incX(x);
+	l._a.incY(y);
 
-	l.b.x = lineguy[i].b.x;
-	l.b.y = lineguy[i].b.y;
+	l._b = lineguy[i]._b;
 
 	if (scale)
 	{
-	    l.b.x = FixedMul(scale, l.b.x);
-	    l.b.y = FixedMul(scale, l.b.y);
+	    l._b = MPoint(FixedMul(scale, l._b.getX()), FixedMul(scale, l._b.getY()));
 	}
 
 	if (angle)
-	    AM_rotate(&l.b.x, &l.b.y, angle);
+	    l._b.rotate(angle);
 	
-	l.b.x += x;
-	l.b.y += y;
+	l._b.incX(x);
+	l._b.incY(y);
 
 	AM_drawMline(&l, color);
     }
@@ -1309,15 +1304,15 @@ void AM_drawMarks(void)
 
     for (i=0;i<AM_NUMMARKPOINTS;i++)
     {
-	if (markpoints[i].x != -1)
+	if (markpoints[i].getX() != -1)
 	{
 	    // @todo
 	    //w = SHORT(marknums[i]->width);
 	    //h = SHORT(marknums[i]->height);
 	    w = 5; // because something's wrong with the wad, i guess
 	    h = 6; // because something's wrong with the wad, i guess
-	    fx = CXMTOF(markpoints[i].x);
-	    fy = CYMTOF(markpoints[i].y);
+	    fx = CXMTOF(markpoints[i].getX());
+	    fy = CYMTOF(markpoints[i].getY());
 	    if (fx >= f_x && fx <= f_w - w && fy >= f_y && fy <= f_h - h)
 		mapView->drawPatch(fx, fy, marknums[i]);
 	}
@@ -1348,6 +1343,4 @@ void AM_Drawer (void)
     // Put the map upper left corner
     mapView->display(SCREENWIDTH - BASE_WIDTH * 2.0, 0, 2.0);
     mapView->reset();
-    //V_MarkRect(f_x, f_y, f_w, f_h);
-
 }
