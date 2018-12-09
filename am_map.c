@@ -21,8 +21,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char rcsid[] = "$Id: am_map.c,v 1.4 1997/02/03 21:24:33 b1 Exp $";
-
 #include <stdio.h>
 #include <limits.h>
 #include <iostream>
@@ -46,7 +44,7 @@ static const char rcsid[] = "$Id: am_map.c,v 1.4 1997/02/03 21:24:33 b1 Exp $";
 
 // Data.
 #include "dstrings.h"
-
+#include "m_swap.h"
 #include "am_map.h"
 
 #include "ImageScaler.hh"
@@ -121,9 +119,6 @@ static const char rcsid[] = "$Id: am_map.c,v 1.4 1997/02/03 21:24:33 b1 Exp $";
 // translates between frame-buffer and map distances
 #define FTOM(x) FixedMul(((x)<<16),scale_ftom)
 #define MTOF(x) (FixedMul((x),scale_mtof)>>16)
-// translates between frame-buffer and map coordinates
-#define CXMTOF(x)  (f_x + MTOF((x)-m_x))
-#define CYMTOF(y)  (f_y + (f_h - MTOF((y)-m_y)))
 
 // the following is crap
 #define LINE_NEVERSEE ML_DONTDRAW
@@ -148,14 +143,20 @@ public:
     MPoint(double x, double y) : _x(x), _y(y) {}
     void setX(fixed_t x) { _x = fixed_to_double(x); }
     void setY(fixed_t y) { _y = fixed_to_double(y); }
-    void incX(fixed_t x) { _x += fixed_to_double(x); }
-    void incY(fixed_t y) { _y += fixed_to_double(y); }
+    void setXX(double x) { _x = x; }
+    void setYY(double y) { _y = y; }
+    void incX(double x) { _x += x; }
+    void incY(double y) { _y += y; }
     fixed_t getX() const { return double_to_fixed(_x); }
     fixed_t getY() const { return double_to_fixed(_y); }
-    void rotate(angle_t a) {
-	double x = _x * cos(Angle(a)) - _y * sin(Angle(a));
-	_y   = _x * sin(Angle(a)) + _y * cos(Angle(a));
+    void rotate(Angle a) {
+	double x = _x * cos(a) - _y * sin(a);
+	_y   = _x * sin(a) + _y * cos(a);
 	_x = x;
+    }
+    void scale(double scale) {
+	_x *= scale;
+	_y *= scale;
     }
 private:
     friend std::ostream& operator << (std::ostream& out, const MPoint& p);
@@ -181,13 +182,6 @@ std::ostream& operator << (std::ostream& out, const MLine& l) {
     out << "[" << l._a << ", " << l._b; 
     return out;
 }
-
-    
-typedef struct
-{
-    fixed_t slp, islp;
-} islope_t;
-
 
 #define PLAYERRADIUS	16*FRACUNIT
 
@@ -231,44 +225,24 @@ MLine cheat_player_arrow[] = {
 #undef R
 #define NUMCHEATPLYRLINES (sizeof(cheat_player_arrow)/sizeof(MLine))
 
-#define R (FRACUNIT)
 MLine triangle_guy[] = {
-    { { static_cast<fixed_t>(-.867*R), static_cast<fixed_t>(-.5*R) }, { static_cast<fixed_t>(.867*R), static_cast<fixed_t>(-.5*R) } },
-    { { static_cast<fixed_t>(.867*R), static_cast<fixed_t>(-.5*R) } , { 0, R } },
-    { { 0, R }, { static_cast<fixed_t>(-.867*R), static_cast<fixed_t>(-.5*R) } }
+    { { -.867, -.5 }, { .867, -.5 } },
+    { { .867, -.5 } , { 0, 1 } },
+    { { 0, 1 }, { -.867, -.5 } }
 };
-#undef R
 #define NUMTRIANGLEGUYLINES (sizeof(triangle_guy)/sizeof(MLine))
 
-#define R (FRACUNIT)
 MLine thintriangle_guy[] = {
-    { { static_cast<fixed_t>(-.5*R), static_cast<fixed_t>(-.7*R) }, { R, 0 } },
-    { { R, 0 }, { static_cast<fixed_t>(-.5*R), static_cast<fixed_t>(.7*R) } },
-    { { static_cast<fixed_t>(-.5*R), static_cast<fixed_t>(.7*R) }, { static_cast<fixed_t>(-.5*R), static_cast<fixed_t>(-.7*R) } }
+    { { -.5, -.7 }, { 1, 0 } },
+    { { 1, 0 }, { -.5, .7 } },
+    { { -.5, .7 }, { -.5, -.7 } }
 };
-#undef R
 #define NUMTHINTRIANGLEGUYLINES (sizeof(thintriangle_guy)/sizeof(MLine))
-
-
-
 
 static int 	cheating = 0;
 static int 	grid = 0;
-
 static int 	leveljuststarted = 1; 	// kluge until AM_LevelInit() is called
-
 bool    	automapactive = false;
-static int 	finit_width = BASE_WIDTH;
-static int 	finit_height = BASE_HEIGHT;
-
-// location of window on screen
-static int 	f_x;
-static int	f_y;
-
-// size of window on screen
-static int 	f_w;
-static int	f_h;
-
 static int 	lightlev; 		// used for funky strobing effect
 
 namespace
@@ -336,6 +310,22 @@ static bool stopped = true;
 
 extern bool viewactive;
 
+// translates between frame-buffer and map coordinates
+inline
+fixed_t
+CYMTOF(fixed_t y)
+{
+    return BASE_HEIGHT - MTOF((y)-m_y);
+}
+
+
+inline
+fixed_t
+CXMTOF(fixed_t x)
+{
+    return MTOF((x)-m_x);
+}
+
 //
 //
 //
@@ -343,8 +333,8 @@ void AM_activateNewScale(void)
 {
     m_x += m_w/2;
     m_y += m_h/2;
-    m_w = FTOM(f_w);
-    m_h = FTOM(f_h);
+    m_w = FTOM(BASE_WIDTH);
+    m_h = FTOM(BASE_HEIGHT);
     m_x -= m_w/2;
     m_y -= m_h/2;
     m_x2 = m_x + m_w;
@@ -382,7 +372,7 @@ void AM_restoreScaleAndLoc(void)
     m_y2 = m_y + m_h;
 
     // Change the scaling multipliers
-    scale_mtof = FixedDiv(f_w<<FRACBITS, m_w);
+    scale_mtof = FixedDiv(BASE_WIDTH<<FRACBITS, m_w);
     scale_ftom = FixedDiv(FRACUNIT, scale_mtof);
 }
 
@@ -428,14 +418,12 @@ void AM_findMinMaxBoundaries(void)
     min_w = 2*PLAYERRADIUS; // const? never changed?
     min_h = 2*PLAYERRADIUS;
 
-    a = FixedDiv(f_w<<FRACBITS, max_w);
-    b = FixedDiv(f_h<<FRACBITS, max_h);
+    a = FixedDiv(BASE_WIDTH<<FRACBITS, max_w);
+    b = FixedDiv(BASE_HEIGHT<<FRACBITS, max_h);
   
     min_scale_mtof = a < b ? a : b;
-    max_scale_mtof = FixedDiv(f_h<<FRACBITS, 2*PLAYERRADIUS);
-
+    max_scale_mtof = FixedDiv(BASE_HEIGHT<<FRACBITS, 2*PLAYERRADIUS);
 }
-
 
 //
 //
@@ -484,8 +472,8 @@ void AM_initVariables(void)
     ftom_zoommul = FRACUNIT;
     mtof_zoommul = FRACUNIT;
 
-    m_w = FTOM(f_w);
-    m_h = FTOM(f_h);
+    m_w = FTOM(BASE_WIDTH);
+    m_h = FTOM(BASE_HEIGHT);
 
     // find player to center on initially
     if (!playeringame[pnum = consoleplayer])
@@ -506,7 +494,6 @@ void AM_initVariables(void)
 
     // inform the status bar of the change
     ST_Responder(&st_notify);
-
 }
 
 //
@@ -551,10 +538,6 @@ void AM_LevelInit(void)
 {
     leveljuststarted = 0;
 
-    f_x = f_y = 0;
-    f_w = finit_width;
-    f_h = finit_height;
-
     AM_clearMarks();
 
     AM_findMinMaxBoundaries();
@@ -563,9 +546,6 @@ void AM_LevelInit(void)
 	scale_mtof = min_scale_mtof;
     scale_ftom = FixedDiv(FRACUNIT, scale_mtof);
 }
-
-
-
 
 //
 //
@@ -870,9 +850,9 @@ AM_clipMline
 #define DOOUTCODE(oc, mx, my) \
     (oc) = 0; \
     if ((my) < 0) (oc) |= TOP; \
-    else if ((my) >= f_h) (oc) |= BOTTOM; \
+    else if ((my) >= BASE_HEIGHT) (oc) |= BOTTOM; \
     if ((mx) < 0) (oc) |= LEFT; \
-    else if ((mx) >= f_w) (oc) |= RIGHT;
+    else if ((mx) >= BASE_WIDTH) (oc) |= RIGHT;
 
     
     // do trivial rejects and outcodes
@@ -935,15 +915,15 @@ AM_clipMline
 	{
 	    dy = fl->a.y - fl->b.y;
 	    dx = fl->b.x - fl->a.x;
-	    tmp.x = fl->a.x + (dx*(fl->a.y-f_h))/dy;
-	    tmp.y = f_h-1;
+	    tmp.x = fl->a.x + (dx*(fl->a.y - BASE_HEIGHT))/dy;
+	    tmp.y = BASE_HEIGHT - 1;
 	}
 	else if (outside & RIGHT)
 	{
 	    dy = fl->b.y - fl->a.y;
 	    dx = fl->b.x - fl->a.x;
-	    tmp.y = fl->a.y + (dy*(f_w-1 - fl->a.x))/dx;
-	    tmp.x = f_w-1;
+	    tmp.y = fl->a.y + (dy*(BASE_WIDTH - 1 - fl->a.x))/dx;
+	    tmp.x = BASE_WIDTH - 1;
 	}
 	else if (outside & LEFT)
 	{
@@ -994,10 +974,10 @@ AM_drawFline
     static int fuck = 0;
 
     // For debugging only
-    if (      fl->a.x < 0 || fl->a.x >= f_w
-	   || fl->a.y < 0 || fl->a.y >= f_h
-	   || fl->b.x < 0 || fl->b.x >= f_w
-	   || fl->b.y < 0 || fl->b.y >= f_h)
+    if (      fl->a.x < 0 || fl->a.x >= BASE_WIDTH
+	   || fl->a.y < 0 || fl->a.y >= BASE_HEIGHT
+	   || fl->b.x < 0 || fl->b.x >= BASE_WIDTH
+	   || fl->b.y < 0 || fl->b.y >= BASE_HEIGHT)
     {
 	fprintf(stderr, "fuck %d \r", fuck++);
 	return;
@@ -1165,39 +1145,15 @@ void AM_drawWalls(void)
     }
 }
 
-
-//
-// Rotation in 2D.
-// Used to rotate player arrow line character.
-//
-void
-AM_rotate
-( fixed_t*	x,
-  fixed_t*	y,
-  angle_t	a )
-{
-    fixed_t tmpx;
-
-    tmpx =
-	FixedMul(*x,double_to_fixed(cos(Angle(a))))
-		 - FixedMul(*y,sin(Angle(a)));
-    
-    *y   =
-	FixedMul(*x,double_to_fixed(sin(Angle(a))))
-	+ FixedMul(*y,cos(Angle(a)));
-
-    *x = tmpx;
-}
-
 void
 AM_drawLineCharacter
 ( MLine*	lineguy,
   int		lineguylines,
-  fixed_t	scale,
-  angle_t	angle,
+  double	scale,
+  Angle	        angle,
   int		color,
-  fixed_t	x,
-  fixed_t	y )
+  double	x,
+  double	y )
 {
     MLine	l;
 
@@ -1205,25 +1161,21 @@ AM_drawLineCharacter
     {
 	l._a = lineguy[i]._a;
 
-	if (scale)
-	{
-	    l._a = MPoint(FixedMul(scale, l._a.getX()), FixedMul(scale, l._a.getY()));
-	}
+	if (scale != 0)
+	    l._a.scale(scale);
 
-	if (angle)
-	    l._a.rotate(angle);
+	if (angle != Angle())
+            l._a.rotate(angle);
 
 	l._a.incX(x);
 	l._a.incY(y);
 
 	l._b = lineguy[i]._b;
 
-	if (scale)
-	{
-	    l._b = MPoint(FixedMul(scale, l._b.getX()), FixedMul(scale, l._b.getY()));
-	}
-
-	if (angle)
+	if (scale != 0)
+	    l._b.scale(scale);;
+	
+	if (angle != Angle())
 	    l._b.rotate(angle);
 	
 	l._b.incX(x);
@@ -1246,11 +1198,11 @@ void AM_drawPlayers(void)
 	if (cheating)
 	    AM_drawLineCharacter
 		(cheat_player_arrow, NUMCHEATPLYRLINES, 0,
-		 (angle_t)plr->mo->_angle, WHITE, double_to_fixed(plr->mo->xx), double_to_fixed(plr->mo->yy));
+		 (angle_t)plr->mo->_angle, WHITE, plr->mo->xx, plr->mo->yy);
 	else
 	    AM_drawLineCharacter
-		(player_arrow, NUMPLYRLINES, 0, (angle_t)plr->mo->_angle,
-		 WHITE, double_to_fixed(plr->mo->xx), double_to_fixed(plr->mo->yy));
+		(player_arrow, NUMPLYRLINES, 0, plr->mo->_angle,
+		 WHITE, plr->mo->xx, plr->mo->yy);
 	return;
     }
 
@@ -1271,8 +1223,8 @@ void AM_drawPlayers(void)
 	    color = their_colors[their_color];
 	
 	AM_drawLineCharacter
-	    (player_arrow, NUMPLYRLINES, 0, (angle_t)p->mo->_angle,
-	     color, double_to_fixed(p->mo->xx), double_to_fixed(p->mo->yy));
+	    (player_arrow, NUMPLYRLINES, 0, p->mo->_angle,
+	     color, p->mo->xx, p->mo->yy);
     }
 
 }
@@ -1292,7 +1244,7 @@ AM_drawThings
 	{
 	    AM_drawLineCharacter
 		(thintriangle_guy, NUMTHINTRIANGLEGUYLINES,
-		 16<<FRACBITS, t->_angle, colors+lightlev, double_to_fixed(t->xx), double_to_fixed(t->yy));
+		 16, t->_angle, colors+lightlev, t->xx, t->yy);
 	    t = t->snext;
 	}
     }
@@ -1307,13 +1259,13 @@ void AM_drawMarks(void)
 	if (markpoints[i].getX() != -1)
 	{
 	    // @todo
-	    //w = SHORT(marknums[i]->width);
-	    //h = SHORT(marknums[i]->height);
-	    w = 5; // because something's wrong with the wad, i guess
-	    h = 6; // because something's wrong with the wad, i guess
+	    w = SHORT(marknums[i]->width);
+	    h = SHORT(marknums[i]->height);
+	    //w = 5; // because something's wrong with the wad, i guess
+	    //h = 6; // because something's wrong with the wad, i guess
 	    fx = CXMTOF(markpoints[i].getX());
 	    fy = CYMTOF(markpoints[i].getY());
-	    if (fx >= f_x && fx <= f_w - w && fy >= f_y && fy <= f_h - h)
+	    if (fx >= 0 && fx < BASE_WIDTH - w && fy >= 0 && fy < BASE_HEIGHT - h)
 		mapView->drawPatch(fx, fy, marknums[i]);
 	}
     }
@@ -1322,7 +1274,7 @@ void AM_drawMarks(void)
 
 void AM_drawCrosshair(int color)
 {
-    //@todo drwing a cross hair at the start point cant be hard 
+    //@todo drawing a cross hair at the start point cant be hard 
     //fb[(f_w*(f_h+1))/2] = color; // single point for now
 
 }
@@ -1335,7 +1287,7 @@ void AM_Drawer (void)
 	AM_drawGrid(GRIDCOLORS);
     AM_drawWalls();
     AM_drawPlayers();
-    if (cheating==2)
+    if (cheating == 2)
 	AM_drawThings(THINGCOLORS, THINGRANGE);
     AM_drawCrosshair(XHAIRCOLORS);
 

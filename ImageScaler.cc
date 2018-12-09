@@ -13,7 +13,6 @@ ImageScaler::ImageScaler(int width, int height) :
 {
 }
 
-
 void
 ImageScaler::drawPatch(int x, int y, const patch_t* patch)
 {
@@ -23,17 +22,16 @@ ImageScaler::drawPatch(int x, int y, const patch_t* patch)
     if (x < 0 ||
 	x + SHORT(patch->width) > _width ||
 	y < 0 ||
-	y+SHORT(patch->height) > _height) {
-      fprintf(stderr, "Patch at %d,%d exceeds LFB\n", x,y );
-      exit(1);
+	y + SHORT(patch->height) > _height) {
+	fprintf(stderr, "Patch at %d,%d exceeds LFB\n", x,y );
+	exit(1);
     }
 #endif  
     int i = x;
     int width = SHORT(patch->width); 
     for (int col = 0; col < width; i++, col++) {
-	column_t* column = (column_t *)(
-	    (byte *)patch +
-	    LONG(patch->columnofs[col])); 
+	column_t* column =
+	    (column_t *)((byte *)patch + LONG(patch->columnofs[col])); 
  	// step through the posts in a column 
 	while (column->topdelta != 0xff )  { 
 	    byte* source = (byte *)column + 3;
@@ -42,8 +40,7 @@ ImageScaler::drawPatch(int x, int y, const patch_t* patch)
 	    while (count--) { 
 		_image[i][j++] = *source++; 
 	    } 
-	    column =
-		(column_t *)((byte *)column + column->length + 4); 
+	    column = (column_t *)((byte *)column + column->length + 4); 
 	} 
     }			 
 }
