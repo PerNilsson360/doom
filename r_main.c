@@ -30,7 +30,7 @@ static const char rcsid[] = "$Id: r_main.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 
 #include <stdlib.h>
 #include <math.h>
-
+#include <iostream>
 
 #include "doomdef.h"
 #include "d_net.h"
@@ -87,7 +87,6 @@ player_t*		viewplayer;
 //
 Angle cclipangle;
 
-int			viewangletox[FINEANGLES/2];
 // The xtoviewangleangle[] table maps a screen pixel
 // to the lowest viewangle that maps back to x ranges
 // from clipangle to -clipangle.
@@ -339,52 +338,16 @@ R_ViewAngleToX(const Angle& a)
 //
 void R_InitTextureMapping (void)
 {
-    int			i;
-    int			x;
-    int			t;
-    
-    // Use tangent table to generate viewangletox:
-    //  viewangletox will give the next greatest x
-    //  after the view angle.
-    //
-    // Calc focallength
-    //  so FIELDOFVIEW angles covers SCREENWIDTH.
-    double focallength = SCREENWIDTH / (2 * tan((double)ANGLEOFVIEW/2));
-
-    for (i=0 ; i<FINEANGLES/2 ; i++)
-    {
-	if (finetangent[i] > FRACUNIT*2)
-	    t = -1;
-	else if (finetangent[i] < -FRACUNIT*2)
-	    t = SCREENWIDTH+1;
-	else
-	{
-	    t = FixedMul (finetangent[i], double_to_fixed(focallength));
-	    t = (double_to_fixed(ccenterxfrac) - t+FRACUNIT-1)>>FRACBITS;
-
-	    if (t < -1)
-		t = -1;
-	    else if (t>SCREENWIDTH+1)
-		t = SCREENWIDTH+1;
+    for (int x = 0, y = SCREENWIDTH ; x < SCREENWIDTH/2; x++, y--){
+	double a = 0;
+	while (R_ViewAngleToX(Angle(a)) > x) {
+	    a += 0.0001;
 	}
-	viewangletox[i] = t;
+	xxtoviewangle[x] = Angle(a);
+	xxtoviewangle[y] = Angle(Angle::A360 - a);
     }
-    
-    // Scan viewangletox[] to generate xtoviewangle[]:
-    //  xtoviewangle will give the smallest view angle
-    //  that maps to x.	
-    for (x=0;x<=SCREENWIDTH;x++)
-    {
-	i = 0;
-	while (viewangletox[i]>x)
-	    i++;
-	xxtoviewangle[x] = Angle((static_cast<angle_t>(i)<<ANGLETOFINESHIFT)-ANG90);
-    }
-    	
     cclipangle = xxtoviewangle[0];
 }
-
-
 
 //
 // R_InitLightTables

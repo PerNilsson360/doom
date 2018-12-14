@@ -674,7 +674,7 @@ void I_InitGraphics(void)
     //attribs.colormap = X_cmap;
     attribs.border_pixel = 0;
 
-    printf("I_InitGraphics: screen width %d  screen width %d\n",
+    printf("I_InitGraphics: screen width %d  screen height %d\n",
 	   SCREENWIDTH,
 	   SCREENHEIGHT);
 

@@ -49,16 +49,6 @@
 #include "m_fixed.h"
 #include "doomdata.h"
 	
-#define FINEANGLES		8192
-#define FINEMASK		(FINEANGLES-1)
-
-
-// 0x100000000 to 0x2000
-#define ANGLETOFINESHIFT	19		
-
-// Effective size is 4096.
-extern fixed_t		finetangent[FINEANGLES/2];
-
 // Binary Angle Measument, BAM.
 #define ANG45           0x20000000
 #define ANG90		0x40000000

@@ -45,8 +45,7 @@ rcsid[] = "$Id: i_unix.c,v 1.5 1997/02/03 22:45:10 b1 Exp $";
 #include <sys/ioctl.h>
 
 // Linux voxware output.
-// @todo per
-//#include <linux/soundcard.h>
+#include <linux/soundcard.h>
 
 // Timer stuff. Experimental.
 #include <time.h>
@@ -167,8 +166,6 @@ myioctl
   int*	arg )
 {   
     int		rc;
-    //@todo need to delete these
-    //extern int	errno;
     
     rc = ioctl(fd, command, arg);  
     if (rc < 0)
@@ -781,19 +778,21 @@ I_InitSound()
     fprintf(stderr, "Could not open /dev/dsp\n");
   
                      
-  i = 11 | (2<<16);                                           
+  i = 11 | (2<<16);
+  printf("%d\n", i);
   myioctl(audio_fd, SNDCTL_DSP_SETFRAGMENT, &i);
+  printf("1\n");
   myioctl(audio_fd, SNDCTL_DSP_RESET, 0);
-  
+  printf("2\n");
   i=SAMPLERATE;
   
   myioctl(audio_fd, SNDCTL_DSP_SPEED, &i);
-  
+    printf("3\n");
   i=1;
   myioctl(audio_fd, SNDCTL_DSP_STEREO, &i);
-  
+    printf("4\n");
   myioctl(audio_fd, SNDCTL_DSP_GETFMTS, &i);
-  
+  printf("5\n");
   if (i&=AFMT_S16_LE)    
     myioctl(audio_fd, SNDCTL_DSP_SETFMT, &i);
   else
