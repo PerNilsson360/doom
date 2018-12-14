@@ -716,7 +716,7 @@ A_FireCGun
 
 
 //
-// ?
+// Methods used for bumping up the light i.e. gun flashes etc. 
 //
 void A_Light0 (player_t *player, pspdef_t *psp)
 {

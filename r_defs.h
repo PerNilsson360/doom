@@ -101,7 +101,7 @@ typedef struct
 typedef	struct
 {
     double	ffloorheight;
-    double  cceilingheight;
+    double      cceilingheight;
     short	floorpic;
     short	ceilingpic;
     short	lightlevel;

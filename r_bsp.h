@@ -48,18 +48,12 @@ extern bool		skymap;
 extern drawseg_t	drawsegs[MAXDRAWSEGS];
 extern drawseg_t*	ds_p;
 
-extern lighttable_t**	hscalelight;
-extern lighttable_t**	vscalelight;
-extern lighttable_t**	dscalelight;
-
-
 typedef void (*drawfunc_t) (int start, int stop);
 
 
 // BSP?
 void R_ClearClipSegs (void);
 void R_ClearDrawSegs (void);
-
 
 void R_RenderBSPNode (int bspnum);
 

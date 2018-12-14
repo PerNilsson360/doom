@@ -431,16 +431,12 @@ void WI_drawLF(void)
 {
     int y = WI_TITLEY;
     // draw <LevelName> 
-    //V_DrawPatch((SCREENWIDTH - SHORT(lnames[wbs->last]->width))/2,
-    //  		y, FB, lnames[wbs->last]);
     wiScaler->drawPatch(
 	(wiScaler->getWidth() - SHORT(lnames[wbs->last]->width))/2,
 	y,
 	lnames[wbs->last]);
     // draw "Finished!"
     y += (5*SHORT(lnames[wbs->last]->height))/4;
-    //V_DrawPatch((SCREENWIDTH - SHORT(finished->width))/2,
-    //		y, FB, finished);
     wiScaler->drawPatch(
 	(wiScaler->getWidth() - SHORT(finished->width))/2,
 	y,
@@ -455,16 +451,12 @@ void WI_drawEL(void)
     int y = WI_TITLEY;
 
     // draw "Entering"
-    //V_DrawPatch((SCREENWIDTH - SHORT(entering->width))/2,
-    //		y, FB, entering);
     wiScaler->drawPatch(
 	(wiScaler->getWidth() - SHORT(entering->width))/2,
 	y,
 	entering);
     // draw level
     y += (5*SHORT(lnames[wbs->next]->height))/4;
-    //V_DrawPatch((SCREENWIDTH - SHORT(lnames[wbs->next]->width))/2,
-    //		y, FB, lnames[wbs->next]);
     wiScaler->drawPatch(
 	(wiScaler->getWidth() - SHORT(lnames[wbs->next]->width))/2,
 	y,
@@ -507,8 +499,6 @@ WI_drawOnLnode
 
     if (fits && i<2)
     {
-	//V_DrawPatch(lnodes[wbs->epsd][n].x, lnodes[wbs->epsd][n].y,
-	//	    FB, c[i]);
 	wiScaler->drawPatch(lnodes[wbs->epsd][n].x,
 			    lnodes[wbs->epsd][n].y,
 			    c[i]);
@@ -618,7 +608,6 @@ void WI_drawAnimatedBack(void)
 	a = &anims[wbs->epsd][i];
 
 	if (a->ctr >= 0) {
-	    //V_DrawPatch(a->loc.x, a->loc.y, FB, a->p[a->ctr]);
 	    wiScaler->drawPatch(a->loc.x,
 				a->loc.y,
 				a->p[a->ctr]);
@@ -679,14 +668,12 @@ WI_drawNum
     while (digits--)
     {
 	x -= fontwidth;
-	//V_DrawPatch(x, y, FB, num[ n % 10 ]);
 	wiScaler->drawPatch(x, y, num[n % 10]);
 	n /= 10;
     }
 
     // draw a minus sign if necessary
     if (neg) {
-	//V_DrawPatch(x-=8, y, FB, wiminus);
 	wiScaler->drawPatch(x-=8, y, wiminus);
     }
 
@@ -703,7 +690,6 @@ WI_drawPercent
     if (p < 0)
 	return;
 
-    //V_DrawPatch(x, y, FB, percent);
     wiScaler->drawPatch(x, y,percent);
     WI_drawNum(x, y, p, -1);
 }
@@ -739,7 +725,6 @@ WI_drawTime
 
 	    // draw
 	    if (div==60 || t / div) {
-		//V_DrawPatch(x, y, FB, colon);
 		wiScaler->drawPatch(x, y, colon);
 	    }
 	    
@@ -748,7 +733,6 @@ WI_drawTime
     else
     {
 	// "sucks"
-	//V_DrawPatch(x - SHORT(sucks->width), y, FB, sucks);
 	wiScaler->drawPatch(x - SHORT(sucks->width), y, sucks);
     }
 }
@@ -1027,16 +1011,10 @@ void WI_drawDeathmatchStats(void)
     WI_drawLF();
 
     // draw stat titles (top line)
-    //V_DrawPatch(DM_TOTALSX-SHORT(total->width)/2,
-    //		DM_MATRIXY-WI_SPACINGY+10,
-    //		FB,
-    //		total);
     wiScaler->drawPatch(DM_TOTALSX-SHORT(total->width)/2,
 			DM_MATRIXY-WI_SPACINGY+10,
 			total);
     
-    //V_DrawPatch(DM_KILLERSX, DM_KILLERSY, FB, killers);
-    //V_DrawPatch(DM_VICTIMSX, DM_VICTIMSY, FB, victims);
     wiScaler->drawPatch(DM_KILLERSX, DM_KILLERSY, killers);
     wiScaler->drawPatch(DM_VICTIMSX, DM_VICTIMSY, victims);
 	
@@ -1048,17 +1026,9 @@ void WI_drawDeathmatchStats(void)
     {
 	if (playeringame[i])
 	{
-	    //V_DrawPatch(x-SHORT(p[i]->width)/2,
-	    //        DM_MATRIXY - WI_SPACINGY,
-	    //		FB,
-	    //		p[i]);
 	    wiScaler->drawPatch(x-SHORT(p[i]->width)/2,
 				DM_MATRIXY - WI_SPACINGY,
 				p[i]);
-	    //V_DrawPatch(DM_MATRIXX-SHORT(p[i]->width)/2,
-	    //		y,
-	    //		FB,
-	    //		p[i]);
 	    wiScaler->drawPatch(
 		DM_MATRIXX-SHORT(p[i]->width)/2,
 		y,
@@ -1066,18 +1036,10 @@ void WI_drawDeathmatchStats(void)
 
 	    if (i == me)
 	    {
-		// V_DrawPatch(x-SHORT(p[i]->width)/2,
-		// 	    DM_MATRIXY - WI_SPACINGY,
-		// 	    FB,
-		// 	    bstar);
 		wiScaler->drawPatch(
 		    x-SHORT(p[i]->width)/2,
 		    DM_MATRIXY - WI_SPACINGY,
 		    bstar);
-		// V_DrawPatch(DM_MATRIXX-SHORT(p[i]->width)/2,
-		// 	    y,
-		// 	    FB,
-		// 	    star);
 		wiScaler->drawPatch(
 		    DM_MATRIXX-SHORT(p[i]->width)/2,
 		    y,
@@ -1086,6 +1048,7 @@ void WI_drawDeathmatchStats(void)
 	}
 	else
 	{
+	    assert(false && "@todo");
 	    // V_DrawPatch(x-SHORT(bp[i]->width)/2,
 	    //   DM_MATRIXY - WI_SPACINGY, FB, bp[i]);
 	    // V_DrawPatch(DM_MATRIXX-SHORT(bp[i]->width)/2,
@@ -1320,27 +1283,19 @@ void WI_drawNetgameStats(void)
     WI_drawLF();
 
     // draw stat titles (top line)
-    // V_DrawPatch(NG_STATSX+NG_SPACINGX-SHORT(kills->width),
-    // 		NG_STATSY, FB, kills);
     wiScaler->drawPatch(
 	NG_STATSX+NG_SPACINGX-SHORT(kills->width),
 	NG_STATSY,
 	kills);
-    // V_DrawPatch(NG_STATSX+2*NG_SPACINGX-SHORT(items->width),
-    // 		NG_STATSY, FB, items);
     wiScaler->drawPatch(
 	NG_STATSX+2*NG_SPACINGX-SHORT(items->width),
 	NG_STATSY,
 	items);
-    // V_DrawPatch(NG_STATSX+3*NG_SPACINGX-SHORT(secret->width),
-    // 		NG_STATSY, FB, secret);
     wiScaler->drawPatch(
 	NG_STATSX+3*NG_SPACINGX-SHORT(secret->width),
 	NG_STATSY,
 	secret);
     if (dofrags) {
-	// V_DrawPatch(NG_STATSX+4*NG_SPACINGX-SHORT(frags->width),
-	// 	    NG_STATSY, FB, frags);
 	wiScaler->drawPatch(
 	    NG_STATSX+4*NG_SPACINGX-SHORT(frags->width),
 	    NG_STATSY,
@@ -1507,25 +1462,20 @@ void WI_drawStats(void)
     
     WI_drawLF();
 
-    //V_DrawPatch(SP_STATSX, SP_STATSY, FB, kills);
     wiScaler->drawPatch(SP_STATSX, SP_STATSY, kills);
     WI_drawPercent(wiScaler->getWidth() - SP_STATSX, SP_STATSY, cnt_kills[0]);
 
-    //V_DrawPatch(SP_STATSX, SP_STATSY+lh, FB, items);
     wiScaler->drawPatch(SP_STATSX, SP_STATSY+lh, items);
     WI_drawPercent(wiScaler->getWidth() - SP_STATSX, SP_STATSY+lh, cnt_items[0]);
 
-    //V_DrawPatch(SP_STATSX, SP_STATSY+2*lh, FB, sp_secret);
     wiScaler->drawPatch(SP_STATSX, SP_STATSY+2*lh,sp_secret);
     WI_drawPercent(wiScaler->getWidth() - SP_STATSX, SP_STATSY+2*lh, cnt_secret[0]);
 
-    //V_DrawPatch(SP_TIMEX, SP_TIMEY, FB, time);
     wiScaler->drawPatch(SP_TIMEX, SP_TIMEY, tim);
     WI_drawTime(wiScaler->getWidth()/2 - SP_TIMEX, SP_TIMEY, cnt_time);
 
     if (wbs->epsd < 3)
     {
-	//V_DrawPatch(SCREENWIDTH/2 + SP_TIMEX, SP_TIMEY, FB, par);
 	wiScaler->drawPatch(wiScaler->getWidth()/2 + SP_TIMEX,
 			    SP_TIMEY,
 			    par);
