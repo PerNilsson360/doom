@@ -174,7 +174,7 @@ R_RenderMaskedSegRange
 		dc_colormap = walllights[index];
 	    }
 			
-	    sprtopscreen = ccenteryfrac - (dc_texturemid * spryscale);
+	    sprtopscreen = centery - (dc_texturemid * spryscale);
 	    dc_iscale = 1 / spryscale;
 	    // draw the texture
 	    col = (column_t *)( 
@@ -671,10 +671,10 @@ R_StoreWallRange
     worldbottom /= 16;
     
     topstep = -(rw_scalestep * worldtop);
-    topfrac = (ccenteryfrac / 16) - (worldtop * rw_scale);
+    topfrac = (centery / 16.0) - (worldtop * rw_scale);
     
     bottomstep = -(rw_scalestep * worldbottom);
-    bottomfrac = (ccenteryfrac / 16) - (worldbottom *  rw_scale);
+    bottomfrac = (centery / 16.0) - (worldbottom *  rw_scale);
 	
     if (backsector)
     {	
@@ -683,13 +683,13 @@ R_StoreWallRange
 
 	if (worldhigh < worldtop)
 	{
-	    pixhigh = (ccenteryfrac / 16) - (worldhigh * rw_scale);
+	    pixhigh = (centery / 16.0) - (worldhigh * rw_scale);
 	    pixhighstep = -(rw_scalestep * worldhigh);
 	}
 	
 	if (worldlow > worldbottom)
 	{
-	    pixlow = (ccenteryfrac / 16) - (worldlow * rw_scale);
+	    pixlow = (centery / 16.0) - (worldlow * rw_scale);
 	    pixlowstep = -(rw_scalestep * worldlow);
 	}
     }

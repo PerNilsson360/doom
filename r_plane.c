@@ -202,8 +202,8 @@ void R_ClearPlanes (void)
     Angle angle(vviewangle - Angle(Angle::A90));
 	
     // scale will be unit scale at SCREENWIDTH/2 distance
-    basexscale = cos(angle) / ccenterxfrac;
-    baseyscale = -(sin(angle) / ccenterxfrac);
+    basexscale = cos(angle) / centerx;
+    baseyscale = -(sin(angle) / centerx);
 }
 
 

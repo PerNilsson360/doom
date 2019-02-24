@@ -424,7 +424,7 @@ R_DrawVisSprite
     dc_texturemid = vis->ttexturemid;
     double frac = vis->sstartfrac;
     spryscale = vis->sscale;
-    sprtopscreen = ccenteryfrac - (dc_texturemid * spryscale);
+    sprtopscreen = centery - (dc_texturemid * spryscale);
     for (dc_x=vis->x1 ; dc_x<=vis->x2 ; dc_x++, frac += vis->xxiscale)
     {
 	texturecolumn = frac;
@@ -517,14 +517,14 @@ void R_ProjectSprite (Mob* thing)
     
     // calculate edges of the shape
     tx -= sspriteoffset[lump];	
-    int x1 = ccenterxfrac + (tx * xscale);
+    int x1 = centerx + (tx * xscale);
 
     // off the right side?
     if (x1 > SCREENWIDTH)
 	return;
     
     tx +=  sspritewidth[lump];
-    int x2 = int(ccenterxfrac + (tx * xscale)) - 1;
+    int x2 = int(centerx + (tx * xscale)) - 1;
 
     // off the left side
     if (x2 < 0)

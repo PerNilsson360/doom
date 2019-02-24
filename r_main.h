@@ -38,14 +38,8 @@
 extern double vviewcos;
 extern double  vviewsin;
 
-//extern int		viewwidth;
-//extern int		viewheight;
-
 extern int		centerx;
 extern int		centery;
-
-extern double		ccenterxfrac;
-extern double		ccenteryfrac;
 extern double		pprojection;
 
 extern int		validcount;

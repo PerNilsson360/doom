@@ -43,9 +43,6 @@ static const char rcsid[] = "$Id: r_main.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 #include "Angle.hh"
 
 
-
-// Fineangles in the SCREENWIDTH wide window.
-#define FIELDOFVIEW		2048 //2048	
 namespace {
     const Angle ANGLEOFVIEW(Angle::A90);
 }
@@ -59,9 +56,6 @@ extern lighttable_t**	walllights;
 
 int			centerx;
 int			centery;
-
-double			ccenterxfrac;
-double			ccenteryfrac;
 double			pprojection;
 
 // just for profiling purposes
@@ -398,9 +392,7 @@ void R_ExecuteSetViewSize (void)
 
     centery = SCREENHEIGHT/2;
     centerx = SCREENWIDTH/2;
-    ccenterxfrac = centerx;
-    ccenteryfrac = centery;
-    pprojection = ccenterxfrac;
+    pprojection = centerx;
     
     colfunc = basecolfunc = R_DrawColumn;
     fuzzcolfunc = R_DrawFuzzColumn;
