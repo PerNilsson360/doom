@@ -392,6 +392,7 @@ void AM_findMinMaxBoundaries(void)
     double b = BASE_HEIGHT / mmax_h;
   
     mmin_scale_mtof = a < b ? a : b;
+
     mmax_scale_mtof = BASE_HEIGHT / 2*PLAYERRADIUS;
 }
 
@@ -726,6 +727,7 @@ void AM_doFollowPlayer(void)
 
     if (f_oldloc.getXX() != plr->mo->xx || f_oldloc.getYY() != plr->mo->yy)
     {
+
 	mm_x = FFTOM(MMTOF(plr->mo->xx)) - mm_w/2;
 	mm_y = FFTOM(MMTOF(plr->mo->yy)) - mm_h/2;
 	mm_x2 = mm_x + mm_w;
