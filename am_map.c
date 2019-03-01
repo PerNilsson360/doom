@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <limits.h>
+#include <limits>
 #include <iostream>
 #include <memory>
 
@@ -105,7 +106,7 @@
 #define AM_NUMMARKPOINTS 10
 
 // scale on entry
-#define INITSCALEMTOF (.2*FRACUNIT)
+#define INITSCALEMTOF 0.2
 // how much the automap moves window per tic in frame-buffer coordinates
 // moves 140 pixels in 1 second
 #define F_PANINC	4
@@ -117,8 +118,8 @@
 #define M_ZOOMOUT       ((int) (FRACUNIT/1.02))
 
 // translates between frame-buffer and map distances
-#define FTOM(x) FixedMul(((x)<<16),scale_ftom)
-#define MTOF(x) (FixedMul((x),scale_mtof)>>16)
+#define FTOM(x) FixedMul(((x)<<16),double_to_fixed(sscale_ftom))
+#define MTOF(x) (FixedMul((x),double_to_fixed(sscale_mtof))>>16)
 
 // the following is crap
 #define LINE_NEVERSEE ML_DONTDRAW
@@ -263,16 +264,16 @@ static fixed_t 	m_x2, m_y2; // UR x,y where the window is on the map (map coords
 //
 // width/height of window on map (map coords)
 //
-static fixed_t 	m_w;
-static fixed_t	m_h;
+static double mm_w;
+static double mm_h;
 
 // based on level size
-static fixed_t 	min_x;
-static fixed_t	min_y; 
-static fixed_t 	max_x;
-static fixed_t  max_y;
+static double mmin_x;
+static double mmin_y; 
+static double mmax_x;
+static double mmax_y;
 
-static fixed_t 	max_w; // max_x-min_x,
+static fixed_t	max_w; // max_x-min_x,
 static fixed_t  max_h; // max_y-min_y
 
 // based on player size
@@ -280,8 +281,8 @@ static fixed_t 	min_w;
 static fixed_t  min_h;
 
 
-static fixed_t 	min_scale_mtof; // used to tell when to stop zooming out
-static fixed_t 	max_scale_mtof; // used to tell when to stop zooming in
+static double mmin_scale_mtof; // used to tell when to stop zooming out
+static double mmax_scale_mtof; // used to tell when to stop zooming in
 
 // old stuff for recovery later
 static fixed_t old_m_w, old_m_h;
@@ -291,9 +292,9 @@ static fixed_t old_m_x, old_m_y;
 static MPoint f_oldloc;
 
 // used by MTOF to scale from map-to-frame-buffer coords
-static fixed_t scale_mtof = INITSCALEMTOF;
+static double sscale_mtof = INITSCALEMTOF;
 // used by FTOM to scale from frame-buffer-to-map coords (=1/scale_mtof)
-static fixed_t scale_ftom;
+static double sscale_ftom;
 
 static player_t *plr; // the player represented by an arrow
 
@@ -331,14 +332,14 @@ CXMTOF(fixed_t x)
 //
 void AM_activateNewScale(void)
 {
-    m_x += m_w/2;
-    m_y += m_h/2;
-    m_w = FTOM(BASE_WIDTH);
-    m_h = FTOM(BASE_HEIGHT);
-    m_x -= m_w/2;
-    m_y -= m_h/2;
-    m_x2 = m_x + m_w;
-    m_y2 = m_y + m_h;
+    m_x += double_to_fixed(mm_w/2);
+    m_y += double_to_fixed(mm_h/2);
+    mm_w = fixed_to_double(FTOM(BASE_WIDTH));
+    mm_h = fixed_to_double(FTOM(BASE_HEIGHT));
+    m_x -= double_to_fixed(mm_w/2);
+    m_y -= double_to_fixed(mm_h/2);
+    m_x2 = m_x + double_to_fixed(mm_w);
+    m_y2 = m_y + double_to_fixed(mm_h);
 }
 
 //
@@ -348,8 +349,8 @@ void AM_saveScaleAndLoc(void)
 {
     old_m_x = m_x;
     old_m_y = m_y;
-    old_m_w = m_w;
-    old_m_h = m_h;
+    old_m_w = double_to_fixed(mm_w);
+    old_m_h = double_to_fixed(mm_h);
 }
 
 //
@@ -358,22 +359,22 @@ void AM_saveScaleAndLoc(void)
 void AM_restoreScaleAndLoc(void)
 {
 
-    m_w = old_m_w;
-    m_h = old_m_h;
+    mm_w = fixed_to_double(old_m_w);
+    mm_h = fixed_to_double(old_m_h);
     if (!followplayer)
     {
 	m_x = old_m_x;
 	m_y = old_m_y;
     } else {
-	m_x = double_to_fixed(plr->mo->xx) - m_w/2;
-	m_y = double_to_fixed(plr->mo->yy) - m_h/2;
+	m_x = double_to_fixed(plr->mo->xx - mm_w/2);
+	m_y = double_to_fixed(plr->mo->yy - mm_h/2);
     }
-    m_x2 = m_x + m_w;
-    m_y2 = m_y + m_h;
+    m_x2 = m_x + double_to_fixed(mm_w);
+    m_y2 = m_y + double_to_fixed(mm_h);
 
     // Change the scaling multipliers
-    scale_mtof = FixedDiv(BASE_WIDTH<<FRACBITS, m_w);
-    scale_ftom = FixedDiv(FRACUNIT, scale_mtof);
+    sscale_mtof = BASE_WIDTH / mm_w;
+    sscale_ftom = 1  / sscale_mtof;
 }
 
 //
@@ -381,7 +382,7 @@ void AM_restoreScaleAndLoc(void)
 //
 void AM_addMark(void)
 {
-    markpoints[markpointnum] = MPoint(m_x + m_w/2, m_y + m_h/2);
+    markpoints[markpointnum] = MPoint(m_x + double_to_fixed(mm_w/2), m_y + double_to_fixed(mm_h/2));
     markpointnum = (markpointnum + 1) % AM_NUMMARKPOINTS;
     
 }
@@ -396,24 +397,24 @@ void AM_findMinMaxBoundaries(void)
     fixed_t a;
     fixed_t b;
 
-    min_x = min_y =  INT_MAX;
-    max_x = max_y = -INT_MAX;
+    mmin_x = mmin_y =  std::numeric_limits<double>::max();
+    mmax_x = mmax_y = -std::numeric_limits<double>::max();
   
-    for (i=0;i<numvertexes;i++)
+    for (i=0; i<numvertexes; i++)
     {
-	if (double_to_fixed(vertexes[i].xx) < min_x)
-	    min_x = double_to_fixed(vertexes[i].xx);
-	else if (double_to_fixed(vertexes[i].xx) > max_x)
-	    max_x = double_to_fixed(vertexes[i].xx);
+	if (vertexes[i].xx < mmin_x)
+	    mmin_x = vertexes[i].xx;
+	else if (vertexes[i].xx > mmax_x)
+	    mmax_x = vertexes[i].xx;
     
-	if (double_to_fixed(vertexes[i].yy) < min_y)
-	    min_y = double_to_fixed(vertexes[i].yy);
-	else if (double_to_fixed(vertexes[i].yy) > max_y)
-	    max_y = double_to_fixed(vertexes[i].yy);
+	if (vertexes[i].yy < mmin_y)
+	    mmin_y = vertexes[i].yy;
+	else if (vertexes[i].yy > mmax_y)
+	    mmax_y = vertexes[i].yy;
     }
   
-    max_w = max_x - min_x;
-    max_h = max_y - min_y;
+    max_w = double_to_fixed(mmax_x - mmin_x);
+    max_h = double_to_fixed(mmax_y - mmin_y);
 
     min_w = 2*PLAYERRADIUS; // const? never changed?
     min_h = 2*PLAYERRADIUS;
@@ -421,8 +422,8 @@ void AM_findMinMaxBoundaries(void)
     a = FixedDiv(BASE_WIDTH<<FRACBITS, max_w);
     b = FixedDiv(BASE_HEIGHT<<FRACBITS, max_h);
   
-    min_scale_mtof = a < b ? a : b;
-    max_scale_mtof = FixedDiv(BASE_HEIGHT<<FRACBITS, 2*PLAYERRADIUS);
+    mmin_scale_mtof = fixed_to_double(a < b ? a : b);
+    mmax_scale_mtof = fixed_to_double(FixedDiv(BASE_HEIGHT<<FRACBITS, 2*PLAYERRADIUS));
 }
 
 //
@@ -439,18 +440,18 @@ void AM_changeWindowLoc(void)
     m_x += m_paninc.getX();
     m_y += m_paninc.getY();
 
-    if (m_x + m_w/2 > max_x)
-	m_x = max_x - m_w/2;
-    else if (m_x + m_w/2 < min_x)
-	m_x = min_x - m_w/2;
+    if (m_x + double_to_fixed(mm_w/2) > double_to_fixed(mmax_x))
+	m_x = double_to_fixed(mmax_x - mm_w/2);
+    else if (m_x + double_to_fixed(mm_w/2) < double_to_fixed(mmin_x))
+	m_x = double_to_fixed(mmin_x - mm_w/2);
   
-    if (m_y + m_h/2 > max_y)
-	m_y = max_y - m_h/2;
-    else if (m_y + m_h/2 < min_y)
-	m_y = min_y - m_h/2;
+    if (m_y + double_to_fixed(mm_h/2) > double_to_fixed(mmax_y))
+	m_y = double_to_fixed(mmax_y - mm_h/2);
+    else if (m_y + double_to_fixed(mm_h/2) < double_to_fixed(mmin_y))
+	m_y = double_to_fixed(mmin_y - mm_h/2);
 
-    m_x2 = m_x + m_w;
-    m_y2 = m_y + m_h;
+    m_x2 = m_x + double_to_fixed(mm_w);
+    m_y2 = m_y + double_to_fixed(mm_h);
 }
 
 
@@ -472,8 +473,8 @@ void AM_initVariables(void)
     ftom_zoommul = FRACUNIT;
     mtof_zoommul = FRACUNIT;
 
-    m_w = FTOM(BASE_WIDTH);
-    m_h = FTOM(BASE_HEIGHT);
+    mm_w = fixed_to_double(FTOM(BASE_WIDTH));
+    mm_h = fixed_to_double(FTOM(BASE_HEIGHT));
 
     // find player to center on initially
     if (!playeringame[pnum = consoleplayer])
@@ -482,15 +483,15 @@ void AM_initVariables(void)
 		break;
   
     plr = &players[pnum];
-    m_x = double_to_fixed(plr->mo->xx) - m_w/2;
-    m_y = double_to_fixed(plr->mo->yy) - m_h/2;
+    m_x = double_to_fixed(plr->mo->xx - mm_w/2);
+    m_y = double_to_fixed(plr->mo->yy  - mm_h/2);
     AM_changeWindowLoc();
 
     // for saving & restoring
     old_m_x = m_x;
     old_m_y = m_y;
-    old_m_w = m_w;
-    old_m_h = m_h;
+    old_m_w = double_to_fixed(mm_w);
+    old_m_h = double_to_fixed(mm_h);
 
     // inform the status bar of the change
     ST_Responder(&st_notify);
@@ -541,10 +542,10 @@ void AM_LevelInit(void)
     AM_clearMarks();
 
     AM_findMinMaxBoundaries();
-    scale_mtof = FixedDiv(min_scale_mtof, (int) (0.7*FRACUNIT));
-    if (scale_mtof > max_scale_mtof)
-	scale_mtof = min_scale_mtof;
-    scale_ftom = FixedDiv(FRACUNIT, scale_mtof);
+    sscale_mtof = mmin_scale_mtof / 0.7;
+    if (sscale_mtof > mmax_scale_mtof)
+	sscale_mtof = mmin_scale_mtof;
+    sscale_ftom = 1 / sscale_mtof;
 }
 
 //
@@ -587,8 +588,8 @@ void AM_Start (void)
 //
 void AM_minOutWindowScale(void)
 {
-    scale_mtof = min_scale_mtof;
-    scale_ftom = FixedDiv(FRACUNIT, scale_mtof);
+    sscale_mtof = mmin_scale_mtof;
+    sscale_ftom = 1 / sscale_mtof;
     AM_activateNewScale();
 }
 
@@ -597,8 +598,8 @@ void AM_minOutWindowScale(void)
 //
 void AM_maxOutWindowScale(void)
 {
-    scale_mtof = max_scale_mtof;
-    scale_ftom = FixedDiv(FRACUNIT, scale_mtof);
+    sscale_mtof = mmax_scale_mtof;
+    sscale_ftom = 1 / sscale_mtof;
     AM_activateNewScale();
 }
 
@@ -736,12 +737,12 @@ void AM_changeWindowScale(void)
 {
 
     // Change the scaling multipliers
-    scale_mtof = FixedMul(scale_mtof, mtof_zoommul);
-    scale_ftom = FixedDiv(FRACUNIT, scale_mtof);
+    sscale_mtof = sscale_mtof * fixed_to_double(mtof_zoommul);
+    sscale_ftom = 1 / sscale_mtof;
 
-    if (scale_mtof < min_scale_mtof)
+    if (sscale_mtof < mmin_scale_mtof)
 	AM_minOutWindowScale();
-    else if (scale_mtof > max_scale_mtof)
+    else if (sscale_mtof > mmax_scale_mtof)
 	AM_maxOutWindowScale();
     else
 	AM_activateNewScale();
@@ -756,10 +757,10 @@ void AM_doFollowPlayer(void)
 
     if (f_oldloc.getX() != double_to_fixed(plr->mo->xx) || f_oldloc.getY() != double_to_fixed(plr->mo->yy))
     {
-	m_x = FTOM(MTOF(double_to_fixed(plr->mo->xx))) - m_w/2;
-	m_y = FTOM(MTOF(double_to_fixed(plr->mo->yy))) - m_h/2;
-	m_x2 = m_x + m_w;
-	m_y2 = m_y + m_h;
+	m_x = FTOM(MTOF(double_to_fixed(plr->mo->xx))) - double_to_fixed(mm_w/2);
+	m_y = FTOM(MTOF(double_to_fixed(plr->mo->yy))) - double_to_fixed(mm_h/2);
+	m_x2 = m_x + double_to_fixed(mm_w);
+	m_y2 = m_y + double_to_fixed(mm_h);
 	f_oldloc = MPoint(plr->mo->xx, plr->mo->yy);
 
 	//  m_x = FTOM(MTOF(plr->mo->x - m_w/2));
@@ -1061,11 +1062,11 @@ void AM_drawGrid(int color)
     if ((start-double_to_fixed(blockMap.oorgx))%(MAPBLOCKUNITS<<FRACBITS))
 	start += (MAPBLOCKUNITS<<FRACBITS)
 	    - ((start-double_to_fixed(blockMap.oorgx))%(MAPBLOCKUNITS<<FRACBITS));
-    end = m_x + m_w;
+    end = m_x + double_to_fixed(mm_w);
 
     // draw vertical gridlines
     ml._a.setY(m_y);
-    ml._b.setY(m_y+m_h);
+    ml._b.setY(m_y+double_to_fixed(mm_h));
     for (x=start; x<end; x+=(MAPBLOCKUNITS<<FRACBITS))
     {
 	ml._a.setX(x);
@@ -1078,11 +1079,11 @@ void AM_drawGrid(int color)
     if ((start-double_to_fixed(blockMap.oorgy))%(MAPBLOCKUNITS<<FRACBITS))
 	start += (MAPBLOCKUNITS<<FRACBITS)
 	    - ((start-double_to_fixed(blockMap.oorgy))%(MAPBLOCKUNITS<<FRACBITS));
-    end = m_y + m_h;
+    end = m_y + double_to_fixed(mm_h);
 
     // draw horizontal gridlines
     ml._a.setX(m_x);
-    ml._b.setX(m_x + m_w);
+    ml._b.setX(m_x + double_to_fixed(mm_w));
     for (y=start; y<end; y+=(MAPBLOCKUNITS<<FRACBITS))
     {
 	ml._a.setY(y);
