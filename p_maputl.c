@@ -152,20 +152,6 @@ PP_BoxOnLineSide(
 }
 
 //
-// P_MakeDivline
-//
-void
-P_MakeDivline
-( line_t*	li,
-  DivLine*	dl )
-{
-    dl->x = li->v1->xx;
-    dl->y = li->v1->yy;
-    dl->dx = li->ddx;
-    dl->dy = li->ddy;
-}
-
-//
 // P_LineOpening
 // Sets opentop and openbottom to the window
 // through a two sided line.
@@ -466,7 +452,7 @@ PIT_AddLineIntercepts (line_t* ld)
 	return true;	// line isn't crossed
     
     // hit the line
-    P_MakeDivline (ld, &dl);
+    dl = DivLine(*ld);
     frac = trace.interceptVector(dl);
 
     if (frac < 0)

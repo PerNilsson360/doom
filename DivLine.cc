@@ -1,7 +1,20 @@
-#include "stdio.h"
+#include <cstdio>
 
+#include "r_defs.h"
 #include "DivLine.hh"
 
+DivLine::DivLine() : x(0), y(0), dx(0), dy(0)
+{
+}
+
+
+DivLine::DivLine(const line_t& li) :
+    x(li.v1->xx),
+    y(li.v1->yy),
+    dx(li.ddx),
+    dy(li.ddy)
+{
+}
 
 //
 // P_PointOnDivlineSide

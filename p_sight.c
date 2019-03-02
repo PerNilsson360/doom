@@ -46,85 +46,6 @@ double tt2y;
 
 int		sightcounts[2];
 
-
-//
-// P_DivlineSide
-// Returns side 0 (front), 1 (back), or 2 (on).
-//
-int
-P_DivlineSide
-( double x,
-  double y,
-  DivLine*	node )
-{
-    double dx;
-    double dy;
-    double left;
-    double right;
-
-    if (!node->dx)
-    {
-        if (x==node->x)
-            return 2;
-        
-        if (x <= node->x)
-            return node->dy > 0;
-
-        return node->dy < 0;
-    }
-    
-    if (!node->dy)
-    {
-        if (x==node->y)
-            return 2;
-        
-        if (y <= node->y)
-            return node->dx < 0;
-        
-        return node->dx > 0;
-    }
-	
-    dx = (x - node->x);
-    dy = (y - node->y);
-
-    left =  node->dy * dx;
-    right = dy * node->dx;
-	
-    if (right < left)
-        return 0;	// front side
-    
-    if (left == right)
-        return 2;
-    return 1;		// back side
-}
-
-
-//
-// P_InterceptVector2
-// Returns the fractional intercept point
-// along the first divline.
-// This is only called by the addthings and addlines traversers.
-//
-double 
-PP_InterceptVector2(DivLine* v2,
-                    DivLine* v1)
-{
-    double frac;
-    double num;
-    double den;
-	
-    den = (v1->dy * v2->dx) - (v1->dx * v2->dy);
-
-    if (den == 0)
-        return 0;
-    //	I_Error ("P_InterceptVector: parallel");
-    
-    num = ((v1->x - v2->x) * v1->dy) + ((v2->y - v1->y) * v1->dx);
-    frac = num  / den;
-
-    return frac;
-}
-
 //
 // P_CrossSubsector
 // Returns true
@@ -171,8 +92,8 @@ bool P_CrossSubsector (int num)
 		
 	v1 = line->v1;
 	v2 = line->v2;
-	s1 = P_DivlineSide(v1->xx, v1->yy, &strace);
-	s2 = P_DivlineSide(v2->xx, v2->yy, &strace);
+	s1 = strace.pointOnSide(v1->xx, v1->yy);
+	s2 = strace.pointOnSide(v2->xx, v2->yy);
 
 	// line isn't crossed?
 	if (s1 == s2)
@@ -182,8 +103,8 @@ bool P_CrossSubsector (int num)
 	divl.y = v1->yy;
 	divl.dx = v2->xx - v1->xx;
 	divl.dy = v2->yy - v1->yy;
-	s1 = P_DivlineSide (strace.x, strace.y, &divl);
-	s2 = P_DivlineSide (tt2x, tt2y, &divl);
+	s1 = divl.pointOnSide(strace.x, strace.y);
+	s2 = divl.pointOnSide(tt2x, tt2y);
 
 	// line isn't crossed?
 	if (s1 == s2)
@@ -220,7 +141,7 @@ bool P_CrossSubsector (int num)
 	if (openbottom >= opentop)	
 	    return false;		// stop
 	
-	double frac = PP_InterceptVector2(&strace, &divl);
+	double frac = strace.interceptVector(divl);
 		
 	if (front->ffloorheight != back->ffloorheight)
 	{
@@ -266,7 +187,7 @@ bool P_CrossBSPNode (int bspnum)
     bsp = &nodes[bspnum];
     
     // decide which side the start point is on
-    side = P_DivlineSide (strace.x, strace.y, bsp);
+    side = bsp->pointOnSide (strace.x, strace.y);
     if (side == 2)
         side = 0;	// an "on" should cross both sides
     
@@ -275,7 +196,7 @@ bool P_CrossBSPNode (int bspnum)
         return false;
 	
     // the partition plane is crossed here
-    if (side == P_DivlineSide (tt2x, tt2y, bsp))
+    if (side == bsp->pointOnSide (tt2x, tt2y))
     {
         // the line doesn't touch the other side
         return true;
