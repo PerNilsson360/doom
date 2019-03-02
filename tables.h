@@ -46,7 +46,6 @@
 
 #include <stdint.h>
 
-#include "m_fixed.h"
 #include "doomdata.h"
 	
 // Binary Angle Measument, BAM.

@@ -29,9 +29,6 @@ static const char
 rcsid[] = "$Id: m_bbox.c,v 1.1 1997/02/03 22:45:10 b1 Exp $";
 
 
-// Needed for FRACUNIT.
-#include "m_fixed.h"
-
 // Needed for Flat retrieval.
 #include "r_data.h"
 

@@ -172,9 +172,9 @@ int             joybspeed;
  
 #define TURBOTHRESHOLD	0x32
 
-fixed_t		forwardmove[2] = {0x19, 0x32}; 
-fixed_t		sidemove[2] = {0x18, 0x28}; 
-fixed_t		angleturn[3] = {640, 1280, 320};	// + slow turn 
+int8_t		forwardmove[2] = {0x19, 0x32}; 
+int8_t		sidemove[2] = {0x18, 0x28}; 
+int16_t		angleturn[3] = {640, 1280, 320};	// + slow turn 
 
 #define SLOWTURNTICS	6 
  
@@ -1406,20 +1406,22 @@ G_InitNew
 	respawnmonsters = false;
 		
     if (fastparm || (skill == sk_nightmare && gameskill != sk_nightmare) )
-    { 
+    {
+	printf("########### check speed\n");
 	for (i=S_SARG_RUN1 ; i<=S_SARG_PAIN2 ; i++) 
 	    states[i].tics >>= 1; 
-	mobjinfo[MT_BRUISERSHOT].speed = 20*FRACUNIT; 
-	mobjinfo[MT_HEADSHOT].speed = 20*FRACUNIT; 
-	mobjinfo[MT_TROOPSHOT].speed = 20*FRACUNIT; 
+	mobjinfo[MT_BRUISERSHOT].speed = 20; 
+	mobjinfo[MT_HEADSHOT].speed = 20; 
+	mobjinfo[MT_TROOPSHOT].speed = 20; 
     } 
     else if (skill != sk_nightmare && gameskill == sk_nightmare) 
-    { 
+    {
+	printf("########### check speed\n");
 	for (i=S_SARG_RUN1 ; i<=S_SARG_PAIN2 ; i++) 
 	    states[i].tics <<= 1; 
-	mobjinfo[MT_BRUISERSHOT].speed = 15*FRACUNIT; 
-	mobjinfo[MT_HEADSHOT].speed = 10*FRACUNIT; 
-	mobjinfo[MT_TROOPSHOT].speed = 10*FRACUNIT; 
+	mobjinfo[MT_BRUISERSHOT].speed = 15; 
+	mobjinfo[MT_HEADSHOT].speed = 10; 
+	mobjinfo[MT_TROOPSHOT].speed = 10; 
     } 
 	 
 			 

@@ -1226,11 +1226,8 @@ void AM_drawMarks(void)
     {
 	if (markpoints[i].getXX() != -1)
 	{
-	    // @todo
 	    w = SHORT(marknums[i]->width);
 	    h = SHORT(marknums[i]->height);
-	    //w = 5; // because something's wrong with the wad, i guess
-	    //h = 6; // because something's wrong with the wad, i guess
 	    fx = CCXMTOF(markpoints[i].getXX());
 	    fy = CCYMTOF(markpoints[i].getYY());
 	    if (fx >= 0 && fx < BASE_WIDTH - w && fy >= 0 && fy < BASE_HEIGHT - h)

@@ -1512,7 +1512,7 @@ bool M_Responder (event_t* ev)
 	return true;
     }
 	
-    if (devparm && ch == KEY_F1)
+    if (ch == KEY_F12)
     {
 	G_ScreenShot ();
 	return true;
