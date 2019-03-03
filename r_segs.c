@@ -166,8 +166,9 @@ R_RenderMaskedSegRange
 	{
 	    if (!fixedcolormap)
 	    {
-		index = double_to_fixed(spryscale)>>LIGHTSCALESHIFT;
+		index = spryscale * DOUBLE_LIGHT_SCALE_MUL;
 
+		printf(", %d\n", index);
 		if (index >=  MAXLIGHTSCALE )
 		    index = MAXLIGHTSCALE-1;
 
@@ -263,7 +264,7 @@ void R_RenderSegLoop (void)
 	    // @todo figure out why you need to deduct 90 degrees below
 	    texturecolumn = rw_offset - tan((double)angle - Angle::A90) * rw_distance;
 	    // calculate lighting
-	    index = double_to_fixed(rw_scale)>>LIGHTSCALESHIFT;
+	    index =  rw_scale * DOUBLE_LIGHT_SCALE_MUL;
 	    
 	    if (index >=  MAXLIGHTSCALE )
 	      index = MAXLIGHTSCALE-1;

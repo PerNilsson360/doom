@@ -1773,19 +1773,13 @@ void A_BrainPain (Mob*	mo)
 
 void A_BrainScream (Mob*	mo)
 {
-    int		x;
-    int		y;
-    int		z;
     Mob*	th;
-    printf("A_BrainScream broken\n");
-	// @todo this must be broken
-    for (x=double_to_fixed(mo->xx) - 196*FRACUNIT ; 
-         x< double_to_fixed(mo->xx) + 320*FRACUNIT ; 
-         x+= FRACUNIT*8)
+    printf("A_BrainScream broken?? \n");
+    for (double x = mo->xx  - 196; x < mo->xx + 320; x+= 8)
     {
-        y = double_to_fixed(mo->yy) - 320*FRACUNIT;
-	z = 128 + P_Random()*2*FRACUNIT; // @todo the z is most likely fishy
-	th = PP_SpawnMobj (x,y,z, MT_ROCKET);
+        double y = mo->yy - 320;
+	double z = 128 + P_Random() * 2; // @todo the z is most likely fishy
+	th = PP_SpawnMobj(x,y,z, MT_ROCKET);
     // @todo how to change this so it works for double instead of fixed *512*
 	th->mmomz = P_Random()*512;
 
@@ -1807,13 +1801,15 @@ void A_BrainExplode (Mob* mo)
     int		y;
     int		z;
     Mob*	th;
-	printf("A_BrainExplode\n");
-    x = double_to_fixed(mo->xx) + (P_Random () - P_Random ())*2048;
-    y = double_to_fixed(mo->yy);
-    z = 128 + P_Random()*2*FRACUNIT; // @todo the z is most likely fishy
-    th = PP_SpawnMobj (x,y,z, MT_ROCKET);
+    printf("A_BrainExplode\n");
+    //x = double_to_fixed(mo->xx) + (P_Random () - P_Random ())*2048;
+    x = mo->xx + (P_Random () - P_Random ()) / 32;
+    y = mo->yy;
+    z = 128 + P_Random()*2;
+    th = PP_SpawnMobj(x,y,z, MT_ROCKET);
     // @todo how to fix this for double instead of fixed *512*
-    th->mmomz = P_Random()*512;
+    //th->mmomz = P_Random() * 512;
+    th->mmomz = P_Random() / 128;
 
     th->setState(S_BRAINEXPLODE1);
 
@@ -1846,9 +1842,8 @@ void A_BrainSpit (Mob*	mo)
     // spawn brain missile
     newmobj = P_SpawnMissile (mo, targ, MT_SPAWNSHOT);
     newmobj->target = targ;
-// @todo think this could be broken
-    newmobj->reactiontime =
-        double_to_fixed(((targ->yy - mo->yy)/newmobj->mmomy) / newmobj->state->tics);
+    // @todo think this could be broken
+    newmobj->reactiontime = ((targ->yy - mo->yy)/newmobj->mmomy) / newmobj->state->tics;
 
     S_StartSound(NULL, sfx_bospit);
 }

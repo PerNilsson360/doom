@@ -239,8 +239,8 @@ void P_UnsetThingPosition (Mob* thing)
 	    thing->bprev->bnext = thing->bnext;
 	else
 	{
-	    blockx = double_to_fixed(thing->xx - blockMap.oorgx)>>MAPBLOCKSHIFT;
-	    blocky = double_to_fixed(thing->yy - blockMap.oorgy)>>MAPBLOCKSHIFT;
+	    blockx = (thing->xx - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV;
+	    blocky = (thing->yy - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV;
 
 	    if (blockx>=0 && blockx < blockMap.width
 		&& blocky>=0 && blocky <blockMap.height)
@@ -290,9 +290,9 @@ P_SetThingPosition (Mob* thing)
     // link into blockmap
     if ( ! (thing->flags & MF_NOBLOCKMAP) )
     {
-        // inert things don't need to be in blockmap		
-        blockx = double_to_fixed(thing->xx - blockMap.oorgx)>>MAPBLOCKSHIFT;
-        blocky = double_to_fixed(thing->yy - blockMap.oorgy)>>MAPBLOCKSHIFT;
+        // insert things don't need to be in blockmap		
+        blockx = (thing->xx - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV;
+        blocky = (thing->yy - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV;
 
 	if (blockx>=0
 	    && blockx < blockMap.width
