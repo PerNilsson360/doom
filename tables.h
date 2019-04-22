@@ -54,22 +54,10 @@
 #define ANG180		0x80000000
 #define ANG270		0xc0000000
 
-#define SLOPERANGE		2048
-#define SLOPEBITS		11
-#define DBITS			(FRACBITS-SLOPEBITS)
-
 typedef uint32_t angle_t;
 
 // @todo mapthing should be class
 double getMapThingAngle(mapthing_t* m);
-
-// Utility function,
-//  called by R_PointToAngle.
-int
-SlopeDiv
-( unsigned	num,
-  unsigned	den);
-
 
 #endif
 //-----------------------------------------------------------------------------

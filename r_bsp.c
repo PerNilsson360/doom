@@ -540,7 +540,7 @@ void R_RenderBSPNode (int bspnum)
     bsp = &nodes[bspnum];
     
     // Decide which side the view point is on.
-    side = R_PointOnSide (vviewx, vviewy, bsp);
+    side = bsp->pointOnSide(vviewx, vviewy);
     
     // Recursively divide front space.
     R_RenderBSPNode (bsp->children[side]); 

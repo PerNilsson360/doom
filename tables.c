@@ -44,18 +44,3 @@ getMapThingAngle(mapthing_t* m)
 {
     return (m->angle * M_PI) / 180;
 }
-
-int
-SlopeDiv
-( unsigned	num,
-  unsigned	den)
-{
-    unsigned 	ans;
-    
-    if (den < 512)
-	return SLOPERANGE;
-
-    ans = (num<<3)/(den>>8);
-
-    return ans <= SLOPERANGE ? ans : SLOPERANGE;
-}

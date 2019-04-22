@@ -100,62 +100,6 @@ void (*basecolfunc) (void);
 void (*fuzzcolfunc) (void);
 void (*transcolfunc) (void);
 
-//
-// R_PointOnSide
-// Traverse BSP (sub) tree,
-//  check point against partition plane.
-// Returns side 0 (front) or 1 (back).
-//
-int
-R_PointOnSide( 
-    double x,
-    double y,
-    BspNode* node)
-{
-    double dx;
-    double dy;
-    double left;
-    double right;
-	
-    //@todo how does this one work really
-
-    if (!node->dx)
-    {
-        if (x <= node->x)
-            return node->dy > 0;
-	
-        return node->dy < 0;
-    }
-
-    if (!node->dy)
-    {
-        if (y <= node->y)
-            return node->dx < 0;
-        
-        return node->dx > 0;
-    }
-	
-    //Assuming the points are (Ax,Ay) (Bx,By) and (Cx,Cy), you need to compute:
-    // (Bx - Ax) * (Cy - Ay) - (By - Ay) * (Cx - Ax)
-
-
-    dx = (x - node->x);
-    dy = (y - node->y);
-	
-    left = node->dy * dx;
-    right = dy * node->dx;
-
-    int result = 1;
-
-    if (right < left)
-    {
-        //front side
-        result = 0;
-    }
-    // back side
-    return result;			
-}
-
 
 int
 RR_PointOnSegSide(double x,
@@ -356,7 +300,6 @@ void R_InitLightTables (void)
     int		j;
     int		level;
     int		startmap; 	
-    int		scale;
     
     // Calculate the light levels to use
     //  for each level / distance combination.
@@ -365,8 +308,14 @@ void R_InitLightTables (void)
 	startmap = ((LIGHTLEVELS-1-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
 	for (j=0 ; j<MAXLIGHTZ ; j++)
 	{
-	    scale = FixedDiv ((SCREENWIDTH/2*FRACUNIT), (j+1)<<LIGHTZSHIFT);
+	    double sscale = (SCREENWIDTH/2) / double(((j+1) * DOUBLE_LIGHT_SCALE_MUL));
+	    fixed_t scale = FixedDiv ((SCREENWIDTH/2*FRACUNIT), (j+1)<<LIGHTZSHIFT);
+	    //printf("%f %f\n", sscale, fixed_to_double(scale));
+	    sscale = sscale / DOUBLE_LIGHT_SCALE_MUL;
 	    scale >>= LIGHTSCALESHIFT;
+
+	    //printf("%f %f\n", sscale, fixed_to_double(scale));
+	    
 	    level = startmap - scale/DISTMAP;
 	    
 	    if (level < 0)
@@ -407,7 +356,8 @@ void R_ExecuteSetViewSize (void)
     // planes
     for (i=0 ; i<SCREENHEIGHT ; i++)
     {
-        double dy = i - (SCREENHEIGHT / 2) + (1 / 2);
+	// todo fishy 1 / 2 (integer division always 0??)
+        double dy = i - (SCREENHEIGHT / 2) + (1.0 / 2);
         dy = fabs(dy);
         yslope[i] = (SCREENWIDTH / 2) / dy;
     }
@@ -482,7 +432,7 @@ RR_PointInSubsector(double x, double y)
     while (! (nodenum & NF_SUBSECTOR) )
     {
         node = &nodes[nodenum];
-        side = R_PointOnSide (x, y, node);
+        side = node->pointOnSide(x, y);
         nodenum = node->children[side];
     }
 	

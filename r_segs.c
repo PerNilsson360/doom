@@ -168,7 +168,6 @@ R_RenderMaskedSegRange
 	    {
 		index = spryscale * DOUBLE_LIGHT_SCALE_MUL;
 
-		printf(", %d\n", index);
 		if (index >=  MAXLIGHTSCALE )
 		    index = MAXLIGHTSCALE-1;
 
@@ -422,21 +421,6 @@ R_StoreWallRange
     }
     else
     {
-	// UNUSED: try to fix the stretched line bug
-#if 0
-	if (rw_distance < 0.5)
-	{
-	    double		trx,try;
-	    double		gxt,gyt;
-
-	    trx = curline->v1->x - viewx;
-	    try = curline->v1->y - viewy;
-			
-	    gxt = FixedMul(trx,viewcos); 
-	    gyt = -FixedMul(try,viewsin); 
-	    ds_p->scale1 = FixedDiv(projection, gxt-gyt);
-	}
-#endif
 	ds_p->sscale2 = ds_p->sscale1;
     }
     
