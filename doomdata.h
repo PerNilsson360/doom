@@ -195,24 +195,6 @@ typedef struct
 
 } mapnode_t;
 
-
-
-
-// Thing definition, position, orientation and type,
-// plus skill/visibility flags and attributes.
-typedef struct
-{
-    short		x;
-    short		y;
-    short		angle;
-    short		type;
-    short		options;
-} mapthing_t;
-
-
-
-
-
 #endif			// __DOOMDATA__
 //-----------------------------------------------------------------------------
 //

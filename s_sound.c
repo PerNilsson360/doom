@@ -71,7 +71,7 @@ const char snd_prefixen[]
 #define NORM_SEP		128
 
 #define S_PITCH_PERTURB		1
-#define S_STEREO_SWING		(96*0x10000)
+#define S_STEREO_SWING		-1 // @todo is this really -1 in fixed (96*0x10000)
 
 // percent attenuation from front to back
 #define S_IFRACVOL		30
@@ -787,7 +787,7 @@ S_AdjustSoundParams
 
 
     // stereo separation
-    *sep = 128 - (FixedMul(S_STEREO_SWING,double_to_fixed(sin(Angle(angle)))));
+    *sep = 128 - S_STEREO_SWING *sin(Angle(angle));
 
     // volume calculation
     if (approx_dist < S_CLOSE_DIST)

@@ -199,8 +199,7 @@ R_RenderMaskedSegRange
 //  textures.
 // CALLED: CORE LOOPING ROUTINE.
 //
-#define HEIGHTBITS		12
-#define HEIGHTUNIT		(1<<HEIGHTBITS)
+#define HEIGHTMUL 16 //@todo why do this
 
 void R_RenderSegLoop (void)
 {
@@ -215,7 +214,7 @@ void R_RenderSegLoop (void)
     for ( ; rw_x < rw_stopx ; rw_x++)
     {
 	// mark floor / ceiling areas
-	yl = (double_to_fixed(topfrac)+HEIGHTUNIT-1)>>HEIGHTBITS;
+	yl = topfrac * HEIGHTMUL;
 
 	// no space above wall?
 	if (yl < ceilingclip[rw_x]+1)
@@ -236,7 +235,7 @@ void R_RenderSegLoop (void)
 	    }
 	}
 		
-	yh = double_to_fixed(bottomfrac)>>HEIGHTBITS;
+	yh = bottomfrac * HEIGHTMUL;
 
 	if (yh >= floorclip[rw_x])
 	    yh = floorclip[rw_x]-1;
@@ -291,7 +290,7 @@ void R_RenderSegLoop (void)
 	    if (toptexture)
 	    {
 		// top wall
-		mid = double_to_fixed(pixhigh)>>HEIGHTBITS;
+		mid = pixhigh * HEIGHTMUL;
 		pixhigh += pixhighstep;
 
 		if (mid >= floorclip[rw_x])
@@ -319,7 +318,7 @@ void R_RenderSegLoop (void)
 	    if (bottomtexture)
 	    {
 		// bottom wall
-		mid = (double_to_fixed(pixlow)+HEIGHTUNIT-1)>>HEIGHTBITS;
+		mid = pixlow * HEIGHTMUL;
 		pixlow += pixlowstep;
 
 		// no space above wall?
@@ -512,7 +511,7 @@ R_StoreWallRange
 	}
 	
 			
-	if (double_to_fixed(worldlow) != worldbottom 
+	if (worldlow != worldbottom 
 	    || backsector->floorpic != frontsector->floorpic
 	    || backsector->lightlevel != frontsector->lightlevel)
 	{

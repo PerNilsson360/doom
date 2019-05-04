@@ -1,7 +1,6 @@
 #ifndef _BLOCK_MAP_HH_
 #define _BLOCK_MAP_HH_
 
-#include "m_fixed.h"
 #include "Mob.hh"
 
 class BlockMap 

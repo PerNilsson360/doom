@@ -1,8 +1,6 @@
 #ifndef _BSP_NODE_HH_
 #define _BSP_NODE_HH_
 
-#include "m_fixed.h"
-
 #include "DivLine.hh"
 
 class BspNode : public DivLine

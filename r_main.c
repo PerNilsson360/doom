@@ -309,14 +309,9 @@ void R_InitLightTables (void)
 	for (j=0 ; j<MAXLIGHTZ ; j++)
 	{
 	    double sscale = (SCREENWIDTH/2) / double(((j+1) * DOUBLE_LIGHT_SCALE_MUL));
-	    fixed_t scale = FixedDiv ((SCREENWIDTH/2*FRACUNIT), (j+1)<<LIGHTZSHIFT);
-	    //printf("%f %f\n", sscale, fixed_to_double(scale));
-	    sscale = sscale / DOUBLE_LIGHT_SCALE_MUL;
-	    scale >>= LIGHTSCALESHIFT;
-
-	    //printf("%f %f\n", sscale, fixed_to_double(scale));
+	    sscale = sscale * DOUBLE_LIGHT_SCALE_MUL;
 	    
-	    level = startmap - scale/DISTMAP;
+	    level = startmap - sscale/DISTMAP;
 	    
 	    if (level < 0)
 		level = 0;

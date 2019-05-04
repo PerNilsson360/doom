@@ -4,7 +4,6 @@
 
 // Basics.
 #include "tables.h"
-#include "m_fixed.h"
 #include "Angle.hh"
 #include "MapThing.hh"
 
