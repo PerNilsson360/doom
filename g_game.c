@@ -836,12 +836,12 @@ void G_PlayerReborn (int player)
 // at the given mapthing_t spot  
 // because something is occupying it 
 //
-void P_SpawnPlayer (mapthing_t* mthing); 
+void P_SpawnPlayer (MapThing* mthing); 
  
 bool
 G_CheckSpot
 ( int		playernum,
-  mapthing_t*	mthing ) 
+  MapThing*	mthing ) 
 { 
     double x;
     double y; 

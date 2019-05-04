@@ -81,6 +81,8 @@ OBJS=				\
 		$(O)/Mob.o \
 		$(O)/Angle.o \
 		$(O)/ImageScaler.o \
+		$(O)/MapThing.o \
+
 
 all:	 $(O)/linuxxdoom
 
@@ -110,6 +112,9 @@ $(O)/Angle.o: Angle.cc Angle.hh
 
 $(O)/ImageScaler.o: ImageScaler.cc ImageScaler.hh
 	$(CC) $(CFLAGS) $(LDFLAGS) -c ImageScaler.cc -o $(O)/ImageScaler.o
+
+$(O)/MapThing.o: MapThing.cc MapThing.hh
+	$(CC) $(CFLAGS) $(LDFLAGS) -c MapThing.cc -o $(O)/MapThing.o
 
 $(O)/%.o:	%.c
 	$(CC) $(CFLAGS) -c $< -o $@

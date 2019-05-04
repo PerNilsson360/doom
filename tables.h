@@ -56,9 +56,6 @@
 
 typedef uint32_t angle_t;
 
-// @todo mapthing should be class
-double getMapThingAngle(mapthing_t* m);
-
 #endif
 //-----------------------------------------------------------------------------
 //

@@ -36,6 +36,7 @@
 // We need the playr data structure as well.
 #include "d_player.h"
 
+#include "MapThing.hh"
 
 #ifdef __GNUG__
 #pragma interface
@@ -205,11 +206,11 @@ extern  bool		playeringame[MAXPLAYERS];
 
 // Player spawn spots for deathmatch.
 #define MAX_DM_STARTS   10
-extern  mapthing_t      deathmatchstarts[MAX_DM_STARTS];
-extern  mapthing_t*	deathmatch_p;
+extern  MapThing      deathmatchstarts[MAX_DM_STARTS];
+extern  MapThing*	deathmatch_p;
 
 // Player spawn spots.
-extern  mapthing_t      playerstarts[MAXPLAYERS];
+extern  MapThing      playerstarts[MAXPLAYERS];
 
 // Intermission stats.
 // Parameters for world map / intermission.

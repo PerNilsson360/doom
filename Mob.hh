@@ -6,6 +6,7 @@
 #include "tables.h"
 #include "m_fixed.h"
 #include "Angle.hh"
+#include "MapThing.hh"
 
 // We need the thinker_t stuff.
 #include "d_think.h"
@@ -273,7 +274,7 @@ public:
     int			lastlook;	
 
     // For nightmare respawn.
-    mapthing_t		spawnpoint;	
+    MapThing		spawnpoint;	
 
     // Thing being chased/attacked for tracers.
     Mob*	tracer;	

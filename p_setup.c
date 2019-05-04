@@ -48,7 +48,7 @@ rcsid[] = "$Id: p_setup.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 #include "doomstat.h"
 
 
-void	P_SpawnMapThing (mapthing_t*	mthing);
+void	P_SpawnMapThing (MapThing*	mthing);
 
 
 //
@@ -99,9 +99,9 @@ byte*		rejectmatrix;
 // Maintain single and multi player starting spots.
 #define MAX_DEATHMATCH_STARTS	10
 
-mapthing_t	deathmatchstarts[MAX_DEATHMATCH_STARTS];
-mapthing_t*	deathmatch_p;
-mapthing_t	playerstarts[MAXPLAYERS];
+MapThing	deathmatchstarts[MAX_DEATHMATCH_STARTS];
+MapThing*	deathmatch_p;
+MapThing	playerstarts[MAXPLAYERS];
 
 
 
@@ -293,20 +293,20 @@ void P_LoadThings (int lump)
 {
     byte*		data;
     int			i;
-    mapthing_t*		mt;
+    MapThing*		mt;
     int			numthings;
     bool		spawn;
 	
     data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
-    numthings = W_LumpLength (lump) / sizeof(mapthing_t);
+    numthings = W_LumpLength (lump) / sizeof(MapThing);
 	
-    mt = (mapthing_t *)data;
+    mt = (MapThing *)data;
     for (i=0 ; i<numthings ; i++, mt++)
     {
 	spawn = true;
 
 	// Do not spawn cool, new monsters if !commercial
-	if ( gamemode != commercial)
+	//if ( gamemode != commercial) @todo
 	{
 	    switch(mt->type)
 	    {

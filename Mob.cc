@@ -1,4 +1,5 @@
 #include "Mob.hh"
+#include "MapThing.hh"
 
 #include "i_system.h"
 #include "z_zone.h"
@@ -18,7 +19,7 @@
 #include "d_player.h"
 
 void G_PlayerReborn (int player);
-void P_SpawnMapThing (mapthing_t*	mthing);
+void P_SpawnMapThing (MapThing*	mthing);
 
 //
 // P_SetMobjState
@@ -323,7 +324,7 @@ P_NightmareRespawn (Mob* mobj)
 {
     subsector_t*	ss; 
     Mob*		mo;
-    mapthing_t*		mthing;
+    MapThing*		mthing;
 	
     double x = mobj->spawnpoint.x; 
     double y = mobj->spawnpoint.y; 
@@ -363,7 +364,7 @@ P_NightmareRespawn (Mob* mobj)
     // inherit attributes from deceased one
     mo = PP_SpawnMobj (x,y,z, mobj->type);
     mo->spawnpoint = mobj->spawnpoint;	
-    mo->_angle = getMapThingAngle(mthing);
+    mo->_angle = mthing->getAngle();
 
     if (mthing->options & MTF_AMBUSH)
 	mo->flags |= MF_AMBUSH;
@@ -504,7 +505,7 @@ PP_SpawnMobj(
 //
 // P_RemoveMobj
 //
-mapthing_t	itemrespawnque[ITEMQUESIZE];
+MapThing	itemrespawnque[ITEMQUESIZE];
 int		itemrespawntime[ITEMQUESIZE];
 int		iquehead;
 int		iquetail;
@@ -546,7 +547,7 @@ void P_RespawnSpecials (void)
 {
     subsector_t*	ss; 
     Mob*		mo;
-    mapthing_t*		mthing;
+    MapThing*		mthing;
     
     int			i;
 
@@ -590,7 +591,7 @@ void P_RespawnSpecials (void)
 
     mo = PP_SpawnMobj(x,y,z, (mobjtype_t)i);
     mo->spawnpoint = *mthing;	
-    mo->_angle = getMapThingAngle(mthing);
+    mo->_angle = mthing->getAngle();
     
     // pull it from the que
     iquetail = (iquetail+1)&(ITEMQUESIZE-1);
@@ -605,7 +606,7 @@ void P_RespawnSpecials (void)
 // Most of the player structure stays unchanged
 //  between levels.
 //
-void P_SpawnPlayer (mapthing_t* mthing)
+void P_SpawnPlayer (MapThing* mthing)
 {
     player_t*		p;
     Mob*		mobj;
@@ -629,7 +630,7 @@ void P_SpawnPlayer (mapthing_t* mthing)
     if (mthing->type > 1)		
         mobj->flags |= (mthing->type-1)<<MF_TRANSSHIFT;
     
-    mobj->_angle = getMapThingAngle(mthing);
+    mobj->_angle = mthing->getAngle();
     mobj->player = p;
     mobj->health = p->health;
 
@@ -666,7 +667,7 @@ void P_SpawnPlayer (mapthing_t* mthing)
 // The fields of the mapthing should
 // already be in host byte order.
 //
-void P_SpawnMapThing (mapthing_t* mthing)
+void P_SpawnMapThing (MapThing* mthing)
 {
     int			i;
     int			bit;
@@ -751,7 +752,7 @@ void P_SpawnMapThing (mapthing_t* mthing)
     if (mobj->flags & MF_COUNTITEM)
         totalitems++;
     
-    mobj->_angle = getMapThingAngle(mthing);
+    mobj->_angle = mthing->getAngle();
     if (mthing->options & MTF_AMBUSH)
         mobj->flags |= MF_AMBUSH;
 }
