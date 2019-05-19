@@ -3,7 +3,6 @@
 
 
 // Basics.
-#include "tables.h"
 #include "Angle.hh"
 #include "MapThing.hh"
 

@@ -23,11 +23,6 @@
 #ifndef __P_PSPR__
 #define __P_PSPR__
 
-// Basic data types.
-// Needs fixed point, and BAM angles.
-#include "tables.h"
-
-
 //
 // Needs to include the precompiled
 //  sprite animation tables.

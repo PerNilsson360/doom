@@ -593,14 +593,18 @@ void P_HitSlideLine (line_t* ld)
 	
     Angle lineangle(0, 0, ld->ddx, ld->ddy);
 
-    if (side == 1)
-	lineangle += ANG180;
+    if (side == 1) {
+	printf("P_HitSlideLine side 1");
+	lineangle += Angle::A180;
+    }
 
     Angle moveangle(0, 0, ttmxmove, ttmymove);
     double deltaangle = moveangle - lineangle;
 
-    if (deltaangle > ANG180)
-	deltaangle += ANG180;
+    if (deltaangle > Angle::A180) {
+	printf("P_HitSlideLine deltangle");
+	deltaangle += Angle::A180;
+    }
     //	I_Error ("SlideLine: ang>ANG180");
 
     double movelen = PP_AproxDistance (ttmxmove, ttmymove);

@@ -6,7 +6,6 @@
 #include <cassert>
 #include <ostream>
 
-#include "tables.h"
 #include "doomdef.h"
 
 class Angle
@@ -14,9 +13,6 @@ class Angle
 public:
     Angle(double angle = 0.0) {
         truncate(angle);
-    }
-    Angle(angle_t angle) {
-        truncate((angle * M_PI) / ANG180);
     }
     Angle(double x1, double y1, double x2, double y2);
     Angle(dirtype_t);
@@ -50,10 +46,14 @@ public:
     operator double() const {
         return _angle;
     }
-    operator angle_t() const {
-         return (_angle * ANG180) / M_PI;
+    operator dirtype_t() const {
+	Angle tmp(_angle + (Angle::A45 / 2));
+	return (dirtype_t)((double)tmp / Angle::A45);
     }
-    // @todo these should Angle's not double i guess
+    void roundToDir() {
+	*this = Angle((dirtype_t) *this);
+    }
+    // @todo these should Angle's not double I guess
     static const double A0;
     static const double A5;
     static const double A45;

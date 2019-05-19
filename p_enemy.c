@@ -660,10 +660,7 @@ void A_Chase (Mob*	actor)
     // turn towards movement direction if not there yet
     if (actor->movedir < 8)
     {
-        angle_t angle = actor->_angle;
-	// @todo this seems strange
-	angle &= (7<<29);
-        actor->_angle = angle;
+        actor->_angle.roundToDir();
 	Angle moveAngle(actor->movedir);
         double delta = (double)actor->_angle - (double)moveAngle;
 	

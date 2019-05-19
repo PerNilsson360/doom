@@ -23,9 +23,6 @@
 #ifndef __R_LOCAL__
 #define __R_LOCAL__
 
-// Binary Angles, sine/cosine/atan lookups.
-#include "tables.h"
-
 // Screen size related parameters.
 #include "doomdef.h"
 
