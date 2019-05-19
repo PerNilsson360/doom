@@ -26,10 +26,8 @@ static const char
 rcsid[] = "$Id: r_segs.c,v 1.3 1997/01/29 20:10:19 b1 Exp $";
 
 
-
-
-
 #include <stdlib.h>
+#include <iostream>
 
 #include "i_system.h"
 
@@ -393,7 +391,11 @@ R_StoreWallRange
     
     // calculate rw_distance for scale calculation
     rrw_normalangle = (double)curline->aangle + Angle::A90;
-    Angle offsetangle = (angle_t)abs((angle_t)rrw_normalangle-(angle_t)rrw_angle1);
+    Angle offsetangle((double)rrw_normalangle - (double)rrw_angle1);
+
+    if (offsetangle > Angle(Angle::A180)) {
+	offsetangle = Angle(Angle::A360 - (double)offsetangle);
+    }
     
     if (offsetangle > Angle(Angle::A90))
 	offsetangle = Angle::A90;
@@ -604,7 +606,7 @@ R_StoreWallRange
 	sineval = sin(offsetangle);
 	rw_offset = hyp * sineval;
 
-	if ((angle_t)rrw_normalangle-(angle_t)rrw_angle1 < ANG180)
+	if (Angle(rrw_normalangle - rrw_angle1) < Angle(Angle::A180))
 	    rw_offset = -rw_offset;
 
 	rw_offset += sidedef->ttextureoffset + curline->ooffset;

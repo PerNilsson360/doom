@@ -69,6 +69,19 @@ typedef enum
 
 } Language_t;
 
+typedef enum
+{
+    DI_EAST,
+    DI_NORTHEAST,
+    DI_NORTH,
+    DI_NORTHWEST,
+    DI_WEST,
+    DI_SOUTHWEST,
+    DI_SOUTH,
+    DI_SOUTHEAST,
+    DI_NODIR,
+    NUMDIRS  
+} dirtype_t;
 
 // If rangecheck is undefined,
 // most parameter validation debugging code will not be compiled

@@ -862,7 +862,7 @@ P_SpawnMissile
     th->target = source;	// where it came from
     Angle an = Angle(source->xx, source->yy, dest->xx, dest->yy);	
     if (dest->flags & MF_SHADOW)
-        an += (angle_t)(P_Random()-P_Random())<<20;	
+        an += (P_Random()-P_Random()) * Angle::A360 / 4096;	
     th->_angle = an;
     th->mmomx = th->info->speed * cos(an);
     th->mmomy= th->info->speed * sin(an);
@@ -893,12 +893,12 @@ P_SpawnPlayerMissile
     
     if (!linetarget)
     {
-        an += (angle_t)1<<26;
+        an += Angle::A360 / 64;
         slope = PP_AimLineAttack(source, an, 16*64);
         
         if (!linetarget)
         {
-            an -= (angle_t)2<<26;
+            an -= 2 * Angle::A360 / 64;
             slope = PP_AimLineAttack(source, an, 16*64);
         }
         

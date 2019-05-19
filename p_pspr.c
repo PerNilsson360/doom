@@ -22,8 +22,7 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: p_pspr.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
+#include <iostream>
 
 #include "doomdef.h"
 #include "d_event.h"
@@ -469,10 +468,11 @@ A_Saw
   pspdef_t*	psp ) 
 {
     int damage = 2*(P_Random ()%10+1);
+
     Angle angle = player->mo->_angle;
-    angle += (angle_t)(P_Random()-P_Random()) <<18;
+    angle += (P_Random()-P_Random()) * Angle::A360 / 16384;
     
-    // use meleerange + 1 se the puff doesn't skip the flash
+    // use meleerange + 1 so the puff doesn't skip the flash
     double slope = PP_AimLineAttack(player->mo, angle, MMELEERANGE+1);
     PP_LineAttack (player->mo, angle, MMELEERANGE+1, slope, damage);
 
@@ -570,11 +570,11 @@ void P_BulletSlope (Mob* mo)
 
     if (!linetarget)
     {
-	an += (angle_t)1<<26;
+	an += Angle::A360 / 64;
 	bbulletslope = PP_AimLineAttack(mo, an, 16*64);
 	if (!linetarget)
 	{
-	    an -= (angle_t)2<<26;
+	    an -= (2 * Angle::A360 / 64);
 	    bbulletslope = PP_AimLineAttack(mo, an, 16*64);
 	}
     }
@@ -593,8 +593,7 @@ P_GunShot
     Angle angle = mo->_angle;
 
     if (!accurate) {
-        // @todo should be 4 "<<18 -> * 2^2"
-        angle += (angle_t)((P_Random()-P_Random()) << 18);
+        angle += ((P_Random()-P_Random()) * Angle::A360 / 16384);
     }
     PP_LineAttack(mo, angle, MMISSILERANGE, bbulletslope, damage);
 }
@@ -675,7 +674,7 @@ A_FireShotgun2
     {
 	damage = 5*(P_Random ()%3+1);
 	Angle angle = player->mo->_angle;
-	angle += (angle_t)((P_Random()-P_Random()) << 19);
+	angle += ((P_Random()-P_Random())) * Angle::A360 / 8192;
 	PP_LineAttack(player->mo,
                       angle,
 		      MMISSILERANGE,

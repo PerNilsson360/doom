@@ -760,7 +760,6 @@ S_AdjustSoundParams
     double	approx_dist;
     double	adx;
     double	ady;
-    angle_t	angle;
 
     // calculate the distance to sound origin
     //  and clip it if necessary
@@ -777,13 +776,13 @@ S_AdjustSoundParams
     }
     
     // angle of source to listener
-    angle = Angle(listener->xx,listener->yy,
-                  source->xx, source->yy);
+    Angle angle(listener->xx,listener->yy,
+		source->xx, source->yy);
 
-    if (angle > (angle_t)listener->_angle)
-    angle = angle - (angle_t)listener->_angle;
+    if (angle > listener->_angle)
+	angle = angle - listener->_angle;
     else
-      angle = angle + (0xffffffff - (angle_t)listener->_angle);
+	angle = (double)angle + 2 * M_PI - (double)listener->_angle;
 
 
     // stereo separation

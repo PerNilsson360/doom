@@ -407,9 +407,9 @@ void R_DrawPlanes (void)
 		if (dc_yl <= dc_yh)
 		{
                     Angle a = vviewangle + xxtoviewangle[x];
-		    angle_t angle = ((angle_t)a)>>ANGLETOSKYSHIFT;
+		    int column = (double)a / (Angle::A360 / 1024);
 		    dc_x = x;
-		    dc_source = R_GetColumn(skytexture, angle);
+		    dc_source = R_GetColumn(skytexture, column);
 		    colfunc ();
 		}
 	    }

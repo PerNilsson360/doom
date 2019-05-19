@@ -14,27 +14,14 @@
 // from the THINGS lump.
 #include "doomdata.h"
 
+#include "doomdef.h"
+
 // States are tied to finite states are
 //  tied to animation frames.
 // Needs precompiled tables/data structures.
 #include "info.h"
 
 #include "d_player.h"
-
-typedef enum
-{
-    DI_EAST,
-    DI_NORTHEAST,
-    DI_NORTH,
-    DI_NORTHWEST,
-    DI_WEST,
-    DI_SOUTHWEST,
-    DI_SOUTH,
-    DI_SOUTHEAST,
-    DI_NODIR,
-    NUMDIRS
-    
-} dirtype_t;
 
 //
 // NOTES: mobj_t

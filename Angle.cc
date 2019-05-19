@@ -43,5 +43,17 @@ Angle::Angle(double x1, double y1, double x2, double y2)
             }
         }
     }
+    if (_angle == A360) {
+	_angle = 0;
+    }
     assert(not(_angle < 0));
+}
+
+Angle::Angle(dirtype_t direction)
+{
+    if (direction >= DI_NODIR) {
+	assert(false && "Angle(dirtype_t) angle is DI_NODIR");
+    }
+    // Direction is from 0 - 7 and 0 is east (polar cordinates)
+    _angle = (M_PI/4) * direction;
 }

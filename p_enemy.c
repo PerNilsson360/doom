@@ -26,6 +26,7 @@
 static const char
 rcsid[] = "$Id: p_enemy.c,v 1.5 1997/02/03 22:45:11 b1 Exp $";
 
+#include <iostream>
 #include <stdlib.h>
 
 #include "m_random.h"
@@ -59,10 +60,6 @@ dirtype_t diags[] =
 {
     DI_NORTHWEST, DI_NORTHEAST, DI_SOUTHWEST, DI_SOUTHEAST
 };
-
-
-
-
 
 void A_Fall (Mob *actor);
 
@@ -667,7 +664,7 @@ void A_Chase (Mob*	actor)
 	// @todo this seems strange
 	angle &= (7<<29);
         actor->_angle = angle;
-	Angle moveAngle((angle_t)(actor->movedir << 29));
+	Angle moveAngle(actor->movedir);
         double delta = (double)actor->_angle - (double)moveAngle;
 	
         if (delta > Angle::A0)
@@ -764,7 +761,7 @@ void A_FaceTarget (Mob* actor)
                           actor->target->xx,
                           actor->target->yy);
     if (actor->target->flags & MF_SHADOW)
-        actor->_angle += (angle_t)((P_Random()-P_Random()) << 21) * ANG45;
+        actor->_angle += ((P_Random()-P_Random()) * Angle::A360 / 2048) * Angle::A45;
 }
 
 
@@ -781,7 +778,7 @@ void A_PosAttack (Mob* actor)
     double slope = PP_AimLineAttack(actor, angle, MMISSILERANGE);
 
     S_StartSound (actor, sfx_pistol);
-    angle += (angle_t)(P_Random()-P_Random())<<20;
+    angle += (P_Random()-P_Random()) * Angle::A360 / 4096;
     int damage = ((P_Random()%5)+1)*3;
     PP_LineAttack(actor, angle, MMISSILERANGE, slope, damage);
 }
@@ -798,7 +795,7 @@ void A_SPosAttack (Mob* actor)
 
     for (int i=0 ; i<3 ; i++)
     {
-	Angle angle = bangle + Angle((angle_t)(P_Random()-P_Random())<<20);
+	Angle angle = bangle + Angle((P_Random()-P_Random()) * Angle::A360 / 4096);
 	int damage = ((P_Random()%5)+1)*3;
 	PP_LineAttack (actor, angle, MMISSILERANGE, slope, damage);
     }
@@ -815,7 +812,7 @@ void A_CPosAttack (Mob* actor)
     Angle bangle = actor->_angle;
     double slope = PP_AimLineAttack (actor, bangle, MMISSILERANGE);
 
-    Angle angle = bangle + Angle((angle_t)((P_Random()-P_Random())<<20));
+    Angle angle = bangle + Angle(((P_Random()-P_Random()) * Angle::A360 / 16384));
     int damage = ((P_Random()%5)+1)*3;
     PP_LineAttack(actor, angle, MMISSILERANGE, slope, damage);
 }

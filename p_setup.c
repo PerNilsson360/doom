@@ -169,7 +169,7 @@ void P_LoadSegs (int lump)
 	li->v1 = &vertexes[SHORT(ml->v1)];
 	li->v2 = &vertexes[SHORT(ml->v2)];
 					
-	li->aangle = Angle((angle_t)(SHORT(ml->angle))<<16);
+	li->aangle = Angle(SHORT(ml->angle) * Angle::A360 / 65536);
 	li->ooffset = (SHORT(ml->offset));
 	linedef = SHORT(ml->linedef);
 	ldef = &lines[linedef];
@@ -306,7 +306,7 @@ void P_LoadThings (int lump)
 	spawn = true;
 
 	// Do not spawn cool, new monsters if !commercial
-	//if ( gamemode != commercial) @todo
+	if ( gamemode != commercial)
 	{
 	    switch(mt->type)
 	    {

@@ -135,7 +135,7 @@ void P_MovePlayer (player_t* player)
 	
     cmd = &player->cmd;
     
-    player->mo->_angle += Angle((angle_t)(cmd->angleturn<<16));
+    player->mo->_angle += Angle(cmd->angleturn * Angle::A360 / 65536);
     
     double a = player->mo->_angle;
 

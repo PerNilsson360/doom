@@ -455,7 +455,6 @@ void R_ProjectSprite (Mob* thing)
     spriteframe_t*	sprframe;
     int			lump;
     
-    unsigned		rot;
     bool		flip;
     
     int			index;
@@ -501,12 +500,20 @@ void R_ProjectSprite (Mob* thing)
 
     if (sprframe->rotate)
     {
-	// choose a different rotation based on player view
         Angle ang(vviewx, vviewy, thing->xx, thing->yy);
-	Angle magic((Angle::A45/2)*9); // @todo fix, understand the magic here
-	rot = ((angle_t)ang - (angle_t)thing->_angle + (angle_t)magic)>>29;
-	lump = sprframe->lump[rot];
-	flip = (bool)sprframe->flip[rot];
+	double magic((Angle::A45/2)*9);
+	unsigned rot = ((angle_t)Angle((double)ang - (double)thing->_angle + (double)magic))>>29;
+	int direction = (((double)Angle(ang - thing->_angle + magic)) / Angle::A45);
+	
+	if (rot != direction) {
+	    std::cout << Angle((angle_t) 1<<29) << " : " << Angle(Angle::A45) << std::endl;
+	    printf("%d %d\n", rot, direction);
+	    std::cout <<  ang << " : " << thing->_angle << " : " << Angle((angle_t)Angle((double)ang - (double)thing->_angle + (double)magic))
+		      <<  " : " << Angle((double)ang - (double)thing->_angle + (double)magic) << std::endl;
+	}
+	
+	lump = sprframe->lump[direction];
+	flip = (bool)sprframe->flip[direction];
     }
     else
     {

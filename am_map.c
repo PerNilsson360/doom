@@ -1166,7 +1166,7 @@ void AM_drawPlayers(void)
 	if (cheating)
 	    AM_drawLineCharacter
 		(cheat_player_arrow, NUMCHEATPLYRLINES, 0,
-		 (angle_t)plr->mo->_angle, WHITE, plr->mo->xx, plr->mo->yy);
+		 plr->mo->_angle, WHITE, plr->mo->xx, plr->mo->yy);
 	else
 	    AM_drawLineCharacter
 		(player_arrow, NUMPLYRLINES, 0, plr->mo->_angle,

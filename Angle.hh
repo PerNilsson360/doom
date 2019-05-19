@@ -7,6 +7,7 @@
 #include <ostream>
 
 #include "tables.h"
+#include "doomdef.h"
 
 class Angle
 {
@@ -18,6 +19,7 @@ public:
         truncate((angle * M_PI) / ANG180);
     }
     Angle(double x1, double y1, double x2, double y2);
+    Angle(dirtype_t);
     Angle& operator += (Angle a) {
         truncate(_angle + a._angle);
         return *this;
@@ -61,7 +63,7 @@ public:
     static const double A360;
 private:
     void truncate(double angle) {
-        if (angle > A360) {
+        if (angle >= A360) {
             _angle = fmod(angle, A360);
         } else if (angle < 0) {
             _angle = angle;
@@ -70,7 +72,10 @@ private:
         }else {
             _angle = angle;
         }
-        assert(_angle >= 0 && _angle <= A360); 
+	if (_angle == A360) {
+	    _angle = 0;
+	}
+        assert(_angle >= 0 && _angle < A360); 
     }        
     double _angle;
 };
@@ -106,4 +111,9 @@ inline std::ostream& operator << (std::ostream& os, const Angle& angle) {
     os << (double)angle;
     return os;
 }
+
+inline double diff (const Angle& left, const Angle& right) {
+    return fabs(left -right);
+}
+
 #endif
