@@ -49,24 +49,6 @@ rcsid[] = "$Id: r_things.c,v 1.5 1997/02/03 16:47:56 b1 Exp $";
 #define BASEYCENTER			SCREENHEIGHT/2
 #define BASEXCENTER			SCREENWIDTH/2
 
-//void R_DrawColumn (void);
-//void R_DrawFuzzColumn (void);
-
-
-
-typedef struct
-{
-    int		x1;
-    int		x2;
-	
-    int		column;
-    int		topclip;
-    int		bottomclip;
-
-} maskdraw_t;
-
-
-
 //
 // Sprite rotation 0 is facing the viewer,
 //  rotation 1 is one angle turn CLOCKWISE around the axis.
@@ -93,7 +75,7 @@ int		numsprites;
 
 spriteframe_t	sprtemp[29];
 int		maxframe;
-char*		spritename;
+const char*		spritename;
 
 
 
@@ -486,7 +468,7 @@ void R_ProjectSprite (Mob* thing)
     
     // decide which patch to use for sprite relative to player
 #ifdef RANGECHECK
-    if ((unsigned)thing->sprite >= numsprites)
+    if (thing->sprite >= numsprites)
 	I_Error ("R_ProjectSprite: invalid sprite number %i ",
 		 thing->sprite);
 #endif
@@ -502,16 +484,7 @@ void R_ProjectSprite (Mob* thing)
     {
         Angle ang(vviewx, vviewy, thing->xx, thing->yy);
 	double magic((Angle::A45/2)*9);
-	//unsigned rot = ((angle_t)Angle((double)ang - (double)thing->_angle + (double)magic))>>29;
 	int direction = (((double)Angle(ang - thing->_angle + magic)) / Angle::A45);
-	/*
-	if (rot != direction) {
-	    std::cout << Angle((angle_t) 1<<29) << " : " << Angle(Angle::A45) << std::endl;
-	    printf("%d %d\n", rot, direction);
-	    std::cout <<  ang << " : " << thing->_angle << " : " << Angle((angle_t)Angle((double)ang - (double)thing->_angle + (double)magic))
-		      <<  " : " << Angle((double)ang - (double)thing->_angle + (double)magic) << std::endl;
-	}
-	*/
 	lump = sprframe->lump[direction];
 	flip = (bool)sprframe->flip[direction];
     }
@@ -635,18 +608,15 @@ void R_AddSprites (sector_t* sec)
 //
 void R_DrawPSprite (pspdef_t* psp)
 {
-    int			x1;
-    int			x2;
     spritedef_t*	sprdef;
     spriteframe_t*	sprframe;
     int			lump;
-    bool		flip;
     vissprite_t*	vis;
     vissprite_t		avis;
     
     // decide which patch to use
 #ifdef RANGECHECK
-    if ( (unsigned)psp->state->sprite >= numsprites)
+    if (psp->state->sprite >= numsprites)
 	I_Error ("R_ProjectSprite: invalid sprite number %i ",
 		 psp->state->sprite);
 #endif
@@ -848,8 +818,8 @@ void R_DrawSprite (vissprite_t* spr)
 	}
 
 	if (scale < spr->sscale ||
-	    (lowscale < spr->sscale) &&
-	    !RR_PointOnSegSide(spr->ggx, spr->ggy, ds->curline))
+	    ((lowscale < spr->sscale) &&
+	     !RR_PointOnSegSide(spr->ggx, spr->ggy, ds->curline)))
 	{
 	    // masked mid texture?
 	    if (ds->maskedtexturecol)	
