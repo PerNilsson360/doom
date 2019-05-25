@@ -6,7 +6,7 @@
 #
 CC=  g++  # gcc or g++
 
-CFLAGS=-g -Wall -DNORMALUNIX -DLINUX -fpermissive -std=gnu++14
+CFLAGS=-O1 -Wall -DNORMALUNIX -DLINUX -fpermissive -std=gnu++14
 LDFLAGS=-L/usr/X11R6/lib
 LIBS=-lXext -lX11  -lm #-lnsl
 
@@ -80,6 +80,7 @@ OBJS=				\
 		$(O)/Angle.o \
 		$(O)/ImageScaler.o \
 		$(O)/MapThing.o \
+		$(O)/DataInput.o \
 
 
 all:	 $(O)/linuxxdoom
@@ -113,6 +114,9 @@ $(O)/ImageScaler.o: ImageScaler.cc ImageScaler.hh
 
 $(O)/MapThing.o: MapThing.cc MapThing.hh
 	$(CC) $(CFLAGS) $(LDFLAGS) -c MapThing.cc -o $(O)/MapThing.o
+
+$(O)/DataInput.o: DataInput.cc DataInput.hh
+	$(CC) $(CFLAGS) $(LDFLAGS) -c DataInput.cc -o $(O)/DataInput.o
 
 $(O)/%.o:	%.c
 	$(CC) $(CFLAGS) -c $< -o $@

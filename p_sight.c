@@ -99,11 +99,9 @@ bool P_CrossSubsector (int num)
 	if (s1 == s2)
 	    continue;
 	
-	divl.x = v1->xx;
-	divl.y = v1->yy;
-	divl.dx = v2->xx - v1->xx;
-	divl.dy = v2->yy - v1->yy;
-	s1 = divl.pointOnSide(strace.x, strace.y);
+	divl = DivLine(v1->xx, v2->xx, v1->yy, v2->yy);
+
+	s1 = divl.pointOnSide(strace.moveX(0), strace.moveY(0));
 	s2 = divl.pointOnSide(tt2x, tt2y);
 
 	// line isn't crossed?
@@ -187,7 +185,7 @@ bool P_CrossBSPNode (int bspnum)
     bsp = &nodes[bspnum];
     
     // decide which side the start point is on
-    side = bsp->pointOnSide (strace.x, strace.y);
+    side = bsp->pointOnSide (strace.moveX(0), strace.moveY(0));
     if (side == 2)
         side = 0;	// an "on" should cross both sides
     
@@ -252,12 +250,9 @@ P_CheckSight
     ttopslope = t2->zz + t2->hheight - ssightzstart;
     bbottomslope = t2->zz - ssightzstart;
 	
-    strace.x = t1->xx;
-    strace.y = t1->yy;
+    strace = DivLine(t1->xx, t2->xx, t1->yy, t2->yy);
     tt2x = t2->xx;
     tt2y = t2->yy;
-    strace.dx = t2->xx - t1->xx;
-    strace.dy = t2->yy - t1->yy;
 
     // the head node is the last node output
     return P_CrossBSPNode (numnodes-1);	

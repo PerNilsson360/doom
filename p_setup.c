@@ -27,8 +27,11 @@ rcsid[] = "$Id: p_setup.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 
 
 #include <math.h>
+#include <iostream>
+#include <vector>
 
 #include "BlockMap.hh"
+#include "DataInput.hh"
 
 #include "z_zone.h"
 
@@ -68,7 +71,7 @@ int		numsubsectors;
 subsector_t*	subsectors;
 
 int		numnodes;
-BspNode* nodes;
+std::vector<BspNode> nodes;
 
 int		numlines;
 line_t*		lines;
@@ -254,34 +257,14 @@ void P_LoadSectors (int lump)
 //
 void P_LoadNodes (int lump)
 {
-    byte*	data;
-    int		i;
-    int		j;
-    int		k;
-    mapnode_t*	mn;
-    BspNode* no;
-	
-    numnodes = W_LumpLength (lump) / sizeof(mapnode_t);
-    nodes = (BspNode*)Z_Malloc (numnodes*sizeof(BspNode),PU_LEVEL,0);	
-    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
-	
-    mn = (mapnode_t *)data;
-    no = nodes;
-    
-    for (i=0 ; i<numnodes ; i++, no++, mn++)
-    {
-        no->x = mn->x;
-        no->y = mn->y;
-        no->dx = mn->dx;
-        no->dy = mn->dy;
-        for (j=0 ; j<2 ; j++)
-        {
-            no->children[j] = SHORT(mn->children[j]);
-            for (k=0 ; k<4 ; k++)
-                no->bbbox[j][k] = SHORT(mn->bbbox[j][k]);
-        }
+    nodes.clear();
+    int dataLength = W_LumpLength(lump);
+    numnodes = dataLength / BspNode::getBinarySize();
+    byte* data = (byte*)W_CacheLumpNum(lump, PU_STATIC);
+    DataInput dataInput(data, dataLength);
+    for (int i = 0; i < numnodes; i++) {
+	nodes.push_back(BspNode(dataInput));
     }
-	
     Z_Free (data);
 }
 
@@ -580,7 +563,7 @@ P_SetupLevel
 	Z_FreeTags (PU_LEVEL, PU_PURGELEVEL-1);
 
 
-    // UNUSED W_Profile ();
+    // unused W_Profile ();
     P_InitThinkers ();
 
     // if working with a devlopment map, reload it

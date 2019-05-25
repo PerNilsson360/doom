@@ -24,6 +24,8 @@
 #define __R_STATE__
 
 // Need data structure definitions.
+#include <vector>
+
 #include "BspNode.hh"
 #include "d_player.h"
 #include "r_data.h"
@@ -88,7 +90,7 @@ extern int		numsubsectors;
 extern subsector_t*	subsectors;
 
 extern int		numnodes;
-extern BspNode*		nodes;
+extern std::vector<BspNode>		nodes;
 
 extern int		numlines;
 extern line_t*		lines;

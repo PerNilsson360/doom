@@ -434,18 +434,16 @@ PIT_AddLineIntercepts (line_t* ld)
     DivLine		dl;
 	
     // avoid precision problems with two routines
-    if (trace.dx > 16 ||        // @todo  these 16 are strange
-        trace.dy > 16 || 
-        trace.dx < -16 || 
-        trace.dy < -16)
+    // @todo  these 16 are strange
+    if (trace.isChangeBiggerThan(16))
     {
         s1 = trace.pointOnSide(ld->v1->xx, ld->v1->yy);
         s2 = trace.pointOnSide(ld->v2->xx, ld->v2->yy);
     }
     else
     {
-        s1 = P_PointOnLineSide(trace.x, trace.y, ld);
-        s2 = P_PointOnLineSide(trace.x+trace.dx, trace.y+trace.dy, ld);
+        s1 = P_PointOnLineSide(trace.moveX(0), trace.moveY(0), ld);
+        s2 = P_PointOnLineSide(trace.moveX(1), trace.moveY(1), ld);
     }
     
     if (s1 == s2)
@@ -487,10 +485,8 @@ bool PIT_AddThingIntercepts (Mob* thing)
     double x2;
     double y2;
     
-    bool tracepositive = (trace.dx * trace.dy) > 0;
-	
     // check a corner to corner crossection for hit
-    if (tracepositive)
+    if (trace.isPositive())
     {
         x1 = thing->xx - thing->rradius;
         y1 = thing->yy + thing->rradius;
@@ -513,13 +509,7 @@ bool PIT_AddThingIntercepts (Mob* thing)
     if (s1 == s2)
         return true;		// line isn't crossed
 
-    DivLine		dl;
-    dl.x = x1;
-    dl.y = y1;
-    dl.dx = x2-x1;
-    dl.dy = y2-y1;
-
-    
+    DivLine dl(x1, x2, y1, y2);
     double frac = trace.interceptVector(dl);
     
     if (frac < 0)
@@ -604,10 +594,7 @@ P_PathTraverse(double x1,
 	y1 += 1;
     }
 
-    trace.x = x1;
-    trace.y = y1;
-    trace.dx = x2 - x1;
-    trace.dy = y2 - y1;
+    trace = DivLine(x1, x2, y1, y2);
 
     x1 -= blockMap.oorgx;
     y1 -= blockMap.oorgy;

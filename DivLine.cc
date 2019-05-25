@@ -1,12 +1,17 @@
 #include <cstdio>
 
 #include "r_defs.h"
+#include "DataInput.hh"
 #include "DivLine.hh"
 
 DivLine::DivLine() : x(0), y(0), dx(0), dy(0)
 {
 }
 
+DivLine::DivLine(double x1, double x2, double y1, double y2) :
+    x(x1), y(y1), dx(x2 - x1), dy(y2 - y1)
+{
+}
 
 DivLine::DivLine(const line_t& li) :
     x(li.v1->xx),
@@ -14,6 +19,46 @@ DivLine::DivLine(const line_t& li) :
     dx(li.ddx),
     dy(li.ddy)
 {
+}
+
+DivLine::DivLine(const DataInput& dataInput)
+{
+    x = dataInput.readShort();
+    y = dataInput.readShort();
+    dx = dataInput.readShort();
+    dy = dataInput.readShort();
+}
+
+DivLine::DivLine(const mapnode_t& mapNode) :
+    x(mapNode.x),
+    y(mapNode.y),
+    dx(mapNode.dx),
+    dy(mapNode.dy)
+{
+}
+
+int
+DivLine::moveX(double fraction)
+{
+    return x + (dx *  fraction);
+}
+
+int
+DivLine::moveY(double fraction)
+{
+    return y + (dy *  fraction);
+}
+
+bool
+DivLine::isChangeBiggerThan(double d)
+{
+    return dx > d || dy > d || dx < -d || dy < -d;
+}
+
+bool
+DivLine::isPositive() const
+{
+    return dx * dy > 0;
 }
 
 //

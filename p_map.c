@@ -940,8 +940,8 @@ bool PTR_ShootTraverse (intercept_t* in)
     hitline:
         // position a bit closer
         frac = in->fraction - (4 / aattackrange);
-        x = trace.x + (trace.dx * frac);
-        y = trace.y + (trace.dy * frac);
+        x = trace.moveX(frac);
+        y = trace.moveY(frac);
         z = shootzz + (aaimslope * frac * aattackrange);
         
         if (li->frontsector->ceilingpic == skyflatnum)
@@ -994,8 +994,8 @@ bool PTR_ShootTraverse (intercept_t* in)
     // position a bit closer
     frac = in->fraction - (10 / aattackrange);
     
-    x = trace.x + (trace.dx * frac);
-    y = trace.y + (trace.dy * frac);
+    x = trace.moveX(frac);
+    y = trace.moveY(frac);
     z = shootzz + (aaimslope * frac * aattackrange);
 
     // Spawn bullet puffs or blod spots,
