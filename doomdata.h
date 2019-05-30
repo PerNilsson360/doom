@@ -55,15 +55,6 @@ enum
   ML_BLOCKMAP		// LUT, motion clipping, walls/grid element
 };
 
-
-// A single Vertex.
-typedef struct
-{
-  short		x;
-  short		y;
-} mapvertex_t;
-
-
 // A SideDef, defining the visual appearance of a wall,
 // by setting textures and offsets.
 typedef struct
@@ -171,29 +162,6 @@ typedef struct
 } mapseg_t;
 
 
-
-// BSP node structure.
-
-// Indicate a leaf.
-#define	NF_SUBSECTOR	0x8000
-
-typedef struct
-{
-  // Partition line from (x,y) to x+dx,y+dy)
-  short		x;
-  short		y;
-  short		dx;
-  short		dy;
-
-  // Bounding box for each child,
-  // clip against view frustum.
-  short		bbbox[2][4];
-
-  // If NF_SUBSECTOR its a subsector,
-  // else it's a node of another subtree.
-  unsigned short	children[2];
-
-} mapnode_t;
 
 #endif			// __DOOMDATA__
 //-----------------------------------------------------------------------------

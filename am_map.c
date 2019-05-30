@@ -368,21 +368,20 @@ void AM_addMark(void)
 //
 void AM_findMinMaxBoundaries(void)
 {
-    int i;
     mmin_x = mmin_y =  std::numeric_limits<double>::max();
     mmax_x = mmax_y = -std::numeric_limits<double>::max();
   
-    for (i=0; i<numvertexes; i++)
+    for (size_t i = 0; i < vertexes.size(); i++)
     {
-	if (vertexes[i].xx < mmin_x)
-	    mmin_x = vertexes[i].xx;
-	else if (vertexes[i].xx > mmax_x)
-	    mmax_x = vertexes[i].xx;
+	if (vertexes[i].getX() < mmin_x)
+	    mmin_x = vertexes[i].getX();
+	else if (vertexes[i].getX() > mmax_x)
+	    mmax_x = vertexes[i].getX();
     
-	if (vertexes[i].yy < mmin_y)
-	    mmin_y = vertexes[i].yy;
-	else if (vertexes[i].yy > mmax_y)
-	    mmax_y = vertexes[i].yy;
+	if (vertexes[i].getY() < mmin_y)
+	    mmin_y = vertexes[i].getY();
+	else if (vertexes[i].getY() > mmax_y)
+	    mmax_y = vertexes[i].getY();
     }
   
     double mmax_w = mmax_x - mmin_x;
@@ -1070,10 +1069,10 @@ void AM_drawWalls(void)
 
     for (i=0;i<numlines;i++)
     {
-	l._a.setXX(lines[i].v1->xx);
-	l._a.setYY(lines[i].v1->yy);
-	l._b.setXX(lines[i].v2->xx);
-	l._b.setYY(lines[i].v2->yy);
+	l._a.setXX(lines[i].v1->getX());
+	l._a.setYY(lines[i].v1->getY());
+	l._b.setXX(lines[i].v2->getX());
+	l._b.setYY(lines[i].v2->getY());
 	if (cheating || (lines[i].flags & ML_MAPPED))
 	{
 	    if ((lines[i].flags & LINE_NEVERSEE) && !cheating)

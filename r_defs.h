@@ -32,6 +32,7 @@
 #include "d_think.h"
 // SECTORS do store MObjs anyway.
 #include "Mob.hh"
+#include "Vertex.hh"
 
 #include <stdint.h>
 
@@ -58,19 +59,6 @@
 // INTERNAL MAP TYPES
 //  used by play and refresh
 //
-
-//
-// Your plain vanilla vertex.
-// Note: transformed values not buffered locally,
-//  like some DOOM-alikes ("wt", "WebView") did.
-//
-typedef struct
-{
-    double xx;
-    double yy;
-    
-} vertex_t;
-
 
 // Forward of LineDefs, for Sectors.
 struct line_s;
@@ -175,8 +163,8 @@ typedef enum
 typedef struct line_s
 {
     // Vertices, from v1 to v2.
-    vertex_t*	v1;
-    vertex_t*	v2;
+    Vertex*	v1;
+    Vertex*	v2;
 
     // Precalculated v2 - v1 for side checking.
     double ddx;
@@ -235,8 +223,8 @@ typedef struct subsector_s
 //
 typedef struct
 {
-    vertex_t*	v1;
-    vertex_t*	v2;
+    Vertex*	v1;
+    Vertex*	v2;
     
     double	ooffset;
 

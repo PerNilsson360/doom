@@ -81,9 +81,10 @@ OBJS=				\
 		$(O)/ImageScaler.o \
 		$(O)/MapThing.o \
 		$(O)/DataInput.o \
+		$(O)/Vertex.o \
 
 
-all:	 $(O)/linuxxdoom
+all:	$(O)/linuxxdoom
 
 clean:
 	rm -f *.o *~ *.flc
@@ -117,6 +118,9 @@ $(O)/MapThing.o: MapThing.cc MapThing.hh
 
 $(O)/DataInput.o: DataInput.cc DataInput.hh
 	$(CC) $(CFLAGS) $(LDFLAGS) -c DataInput.cc -o $(O)/DataInput.o
+
+$(O)/Vertex.o: Vertex.cc Vertex.hh
+	$(CC) $(CFLAGS) $(LDFLAGS) -c Vertex.cc -o $(O)/Vertex.o
 
 $(O)/%.o:	%.c
 	$(CC) $(CFLAGS) -c $< -o $@

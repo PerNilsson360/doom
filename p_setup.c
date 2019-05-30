@@ -58,8 +58,7 @@ void	P_SpawnMapThing (MapThing*	mthing);
 // MAP related Lookup tables.
 // Store VERTEXES, LINEDEFS, SIDEDEFS, etc.
 //
-int		numvertexes;
-vertex_t*	vertexes;
+std::vector<Vertex> vertexes;
 
 int		numsegs;
 seg_t*		segs;
@@ -70,7 +69,6 @@ sector_t*	sectors;
 int		numsubsectors;
 subsector_t*	subsectors;
 
-int		numnodes;
 std::vector<BspNode> nodes;
 
 int		numlines;
@@ -115,33 +113,13 @@ MapThing	playerstarts[MAXPLAYERS];
 //
 void P_LoadVertexes (int lump)
 {
-    byte*		data;
-    int			i;
-    mapvertex_t*	ml;
-    vertex_t*		li;
-
-    // Determine number of lumps:
-    //  total lump length / vertex record length.
-    numvertexes = W_LumpLength (lump) / sizeof(mapvertex_t);
-
-    // Allocate zone memory for buffer.
-    vertexes = (vertex_t*)Z_Malloc (numvertexes*sizeof(vertex_t),PU_LEVEL,0);	
-
-    // Load data into cache.
-    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
-	
-    ml = (mapvertex_t *)data;
-    li = vertexes;
-
-    // Copy and convert vertex coordinates,
-    // internal representation as fixed.
-    for (i=0 ; i<numvertexes ; i++, li++, ml++)
-    {
-        li->xx = SHORT(ml->x);
-        li->yy = SHORT(ml->y);
+    int dataLength = W_LumpLength(lump);
+    int numverticies = dataLength / Vertex::getBinarySize();
+    byte* data = (byte*)W_CacheLumpNum(lump, PU_STATIC);
+    DataInput dataInput(data, dataLength);
+    for (int i = 0 ;i < numverticies; i++) {
+	vertexes.push_back(Vertex(dataInput));
     }
-
-    // Free buffer memory.
     Z_Free (data);
 }
 
@@ -259,7 +237,7 @@ void P_LoadNodes (int lump)
 {
     nodes.clear();
     int dataLength = W_LumpLength(lump);
-    numnodes = dataLength / BspNode::getBinarySize();
+    int numnodes = dataLength / BspNode::getBinarySize();
     byte* data = (byte*)W_CacheLumpNum(lump, PU_STATIC);
     DataInput dataInput(data, dataLength);
     for (int i = 0; i < numnodes; i++) {
@@ -284,33 +262,7 @@ void P_LoadThings (int lump)
     numthings = W_LumpLength (lump) / sizeof(MapThing);
 	
     mt = (MapThing *)data;
-    for (i=0 ; i<numthings ; i++, mt++)
-    {
-	spawn = true;
-
-	// Do not spawn cool, new monsters if !commercial
-	if ( gamemode != commercial)
-	{
-	    switch(mt->type)
-	    {
-	      case 68:	// Arachnotron
-	      case 64:	// Archvile
-	      case 88:	// Boss Brain
-	      case 89:	// Boss Shooter
-	      case 69:	// Hell Knight
-	      case 67:	// Mancubus
-	      case 71:	// Pain Elemental
-	      case 65:	// Former Human Commando
-	      case 66:	// Revenant
-	      case 84:	// Wolf SS
-		spawn = false;
-		break;
-	    }
-	}
-	if (spawn == false)
-	    break;
-
-	// Do spawn all other stuff. 
+    for (i=0 ; i<numthings ; i++, mt++) {
 	mt->x = SHORT(mt->x);
 	mt->y = SHORT(mt->y);
 	mt->angle = SHORT(mt->angle);
@@ -334,8 +286,8 @@ void P_LoadLineDefs (int lump)
     int			i;
     maplinedef_t*	mld;
     line_t*		ld;
-    vertex_t*		v1;
-    vertex_t*		v2;
+    Vertex*		v1;
+    Vertex*		v2;
 	
     numlines = W_LumpLength (lump) / sizeof(maplinedef_t);
     lines = (line_t*)Z_Malloc (numlines*sizeof(line_t),PU_LEVEL,0);	
@@ -351,8 +303,9 @@ void P_LoadLineDefs (int lump)
 	ld->tag = SHORT(mld->tag);
 	v1 = ld->v1 = &vertexes[SHORT(mld->v1)];
 	v2 = ld->v2 = &vertexes[SHORT(mld->v2)];
-	ld->ddx = v2->xx - v1->xx;
-	ld->ddy = v2->yy - v1->yy;
+	ld->ddx
+	    = v2->getX() - v1->getX();
+	ld->ddy = v2->getY() - v1->getY();
 	
 	if (ld->ddx == 0)
 	    ld->slopetype = ST_VERTICAL;
@@ -366,26 +319,26 @@ void P_LoadLineDefs (int lump)
             ld->slopetype = ST_NEGATIVE;
 	}
 		
-	if (v1->xx < v2->xx)
+	if (v1->getX() < v2->getX())
 	{
-	    ld->bbbox[BOXLEFT] = v1->xx;
-	    ld->bbbox[BOXRIGHT] = v2->xx;
+	    ld->bbbox[BOXLEFT] = v1->getX();
+	    ld->bbbox[BOXRIGHT] = v2->getX();
 	}
 	else
 	{
-	    ld->bbbox[BOXLEFT] = v2->xx;
-	    ld->bbbox[BOXRIGHT] = v1->xx;
+	    ld->bbbox[BOXLEFT] = v2->getX();
+	    ld->bbbox[BOXRIGHT] = v1->getX();
 	}
 
-	if (v1->yy < v2->yy)
+	if (v1->getY() < v2->getY())
 	{
-	    ld->bbbox[BOXBOTTOM] = v1->yy;
-	    ld->bbbox[BOXTOP] = v2->yy;
+	    ld->bbbox[BOXBOTTOM] = v1->getY();
+	    ld->bbbox[BOXTOP] = v2->getY();
 	}
 	else
 	{
-	    ld->bbbox[BOXBOTTOM] = v2->yy;
-	    ld->bbbox[BOXTOP] = v1->yy;
+	    ld->bbbox[BOXBOTTOM] = v2->getY();
+	    ld->bbbox[BOXTOP] = v1->getY();
 	}
 
 	ld->sidenum[0] = SHORT(mld->sidenum[0]);
@@ -490,8 +443,8 @@ void P_GroupLines (void)
 	    if (li->frontsector == sector || li->backsector == sector)
 	    {
 		*linebuffer++ = li;
-		MM_AddToBox (bbbox, li->v1->xx, li->v1->yy);
-		MM_AddToBox (bbbox, li->v2->xx, li->v2->yy);
+		MM_AddToBox (bbbox, li->v1->getX(), li->v1->getY());
+		MM_AddToBox (bbbox, li->v2->getX(), li->v2->getY());
 	    }
 	}
 	if (linebuffer - sector->lines != sector->linecount)

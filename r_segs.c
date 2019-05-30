@@ -119,9 +119,9 @@ R_RenderMaskedSegRange
 	
     lightnum = (frontsector->lightlevel >> LIGHTSEGSHIFT)+extralight;
 
-    if (curline->v1->yy == curline->v2->yy)
+    if (curline->v1->getY() == curline->v2->getY())
 	lightnum--;
-    else if (curline->v1->xx == curline->v2->xx)
+    else if (curline->v1->getX() == curline->v2->getX())
 	lightnum++;
 
     if (lightnum < 0)		
@@ -401,7 +401,7 @@ R_StoreWallRange
 	offsetangle = Angle::A90;
 
     Angle distangle = Angle(Angle::A90) - offsetangle;
-    double hyp = RR_PointToDist(curline->v1->xx, curline->v1->yy);
+    double hyp = RR_PointToDist(curline->v1->getX(), curline->v1->getY());
     double sineval = sin(distangle);
     rw_distance = hyp * sineval;
 		
@@ -619,9 +619,9 @@ R_StoreWallRange
 	{
 	    lightnum = (frontsector->lightlevel >> LIGHTSEGSHIFT)+extralight;
 
-	    if (curline->v1->yy == curline->v2->yy)
+	    if (curline->v1->getY() == curline->v2->getY())
 		lightnum--;
-	    else if (curline->v1->xx == curline->v2->xx)
+	    else if (curline->v1->getX() == curline->v2->getX())
 		lightnum++;
 
 	    if (lightnum < 0)		

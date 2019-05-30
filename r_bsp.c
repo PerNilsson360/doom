@@ -265,9 +265,9 @@ void R_AddLine (seg_t*	line)
 
     // OPTIMIZE: quickly reject orthogonal back sides.
     Angle angle1(vviewx, vviewy,
-                 line->v1->xx, line->v1->yy);
+                 line->v1->getX(), line->v1->getY());
     Angle angle2(vviewx, vviewy,
-                 line->v2->xx, line->v2->yy);
+                 line->v2->getX(), line->v2->getY());
     // OPTIMIZE: make constant out of 2*clipangle (FIELDOFVIEW).
     Angle span = angle1 - angle2;
     
@@ -369,7 +369,8 @@ int	checkcoord[12][4] =
 };
 
 
-bool RR_CheckBBox (double* bspcoord)
+bool
+RR_CheckBBox(const double* bspcoord)
 {
     int			boxx;
     int			boxy;
@@ -524,30 +525,26 @@ void R_Subsector (int num)
 // Just call with BSP root.
 void R_RenderBSPNode (int bspnum)
 {
-    BspNode* bsp;
-    int		side;
-    
     // Found a subsector?
-    if (bspnum & NF_SUBSECTOR)
-    {
+    if (bspnum & NF_SUBSECTOR) {
         if (bspnum == -1)			
             R_Subsector (0);
         else
-            R_Subsector (bspnum&(~NF_SUBSECTOR));
+            R_Subsector(bspnum&(~NF_SUBSECTOR));
         return;
     }
 	
-    bsp = &nodes[bspnum];
+    const BspNode& bsp = nodes[bspnum];
     
     // Decide which side the view point is on.
-    side = bsp->pointOnSide(vviewx, vviewy);
+    int side = bsp.pointOnSide(vviewx, vviewy);
     
     // Recursively divide front space.
-    R_RenderBSPNode (bsp->children[side]); 
+    R_RenderBSPNode(bsp.getChild(side)); 
     
     // Possibly divide back space.
-    if (RR_CheckBBox (bsp->bbbox[side^1]))	
-        R_RenderBSPNode (bsp->children[side^1]);
+    if (RR_CheckBBox(bsp.getBBox(side^1)))	
+        R_RenderBSPNode(bsp.getChild(side^1));
 }
 
 

@@ -106,11 +106,11 @@ RR_PointOnSegSide(double x,
                   double y,
                   seg_t* line)
 {
-    double lx = line->v1->xx;
-    double ly = line->v1->yy;
+    double lx = line->v1->getX();
+    double ly = line->v1->getY();
 	
-    double ldx = line->v2->xx - lx;
-    double ldy = line->v2->yy - ly;
+    double ldx = line->v2->getX() - lx;
+    double ldy = line->v2->getY() - ly;
 	
     if (ldx == 0.0)
     {
@@ -239,14 +239,6 @@ RR_ScaleFromGlobalAngle(Angle visangle)
     }
     
     return scale;
-}
-
-
-//
-// R_InitTables
-//
-void R_InitTables (void)
-{
 }
 
 int
@@ -394,8 +386,6 @@ void R_Init (void)
     printf ("\nR_InitData");
     R_InitPointToAngle ();
     printf ("\nR_InitPointToAngle");
-    R_InitTables ();
-    printf ("\nR_InitTables");
     R_InitPlanes ();
     printf ("\nR_InitPlanes");
     R_InitLightTables ();
@@ -414,21 +404,17 @@ void R_Init (void)
 subsector_t*
 RR_PointInSubsector(double x, double y)
 {
-    BspNode* node;
-    int		side;
-    int		nodenum;
-
     // single subsector is a special case
+    int numnodes = nodes.size();
     if (!numnodes)				
         return subsectors;
     
-    nodenum = numnodes-1;
+    int nodenum = numnodes-1;
     
-    while (! (nodenum & NF_SUBSECTOR) )
-    {
-        node = &nodes[nodenum];
-        side = node->pointOnSide(x, y);
-        nodenum = node->children[side];
+    while (!(nodenum & NF_SUBSECTOR)) {
+        const BspNode& node = nodes[nodenum];
+        int side = node.pointOnSide(x, y);
+        nodenum = node.getChild(side);
     }
 	
     return &subsectors[nodenum & ~NF_SUBSECTOR];
@@ -492,7 +478,7 @@ void R_RenderPlayerView (player_t* player)
     NetUpdate ();
 
     // The head node is the last node output.
-    R_RenderBSPNode (numnodes-1);
+    R_RenderBSPNode(nodes.size() - 1);
     
     // Check for new console commands.
     NetUpdate ();

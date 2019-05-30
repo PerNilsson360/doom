@@ -64,8 +64,8 @@ bool P_CrossSubsector (int num)
     double opentop;
     double openbottom;
     DivLine		divl;
-    vertex_t*		v1;
-    vertex_t*		v2;
+    Vertex*		v1;
+    Vertex*		v2;
 	
 #ifdef RANGECHECK
     if (num>=numsubsectors)
@@ -92,14 +92,14 @@ bool P_CrossSubsector (int num)
 		
 	v1 = line->v1;
 	v2 = line->v2;
-	s1 = strace.pointOnSide(v1->xx, v1->yy);
-	s2 = strace.pointOnSide(v2->xx, v2->yy);
+	s1 = strace.pointOnSide(*v1);
+	s2 = strace.pointOnSide(*v2);
 
 	// line isn't crossed?
 	if (s1 == s2)
 	    continue;
 	
-	divl = DivLine(v1->xx, v2->xx, v1->yy, v2->yy);
+	divl = DivLine(*v1, *v2);
 
 	s1 = divl.pointOnSide(strace.moveX(0), strace.moveY(0));
 	s2 = divl.pointOnSide(tt2x, tt2y);
@@ -171,37 +171,32 @@ bool P_CrossSubsector (int num)
 //
 bool P_CrossBSPNode (int bspnum)
 {
-    BspNode* bsp;
-    int		side;
-    
-    if (bspnum & NF_SUBSECTOR)
-    {
+    if (bspnum & NF_SUBSECTOR) {
         if (bspnum == -1)
             return P_CrossSubsector (0);
         else
             return P_CrossSubsector (bspnum&(~NF_SUBSECTOR));
     }
 	
-    bsp = &nodes[bspnum];
+    const BspNode& bsp = nodes[bspnum];
     
     // decide which side the start point is on
-    side = bsp->pointOnSide (strace.moveX(0), strace.moveY(0));
+    int side = bsp.pointOnSide (strace.moveX(0), strace.moveY(0));
     if (side == 2)
         side = 0;	// an "on" should cross both sides
     
     // cross the starting side
-    if (!P_CrossBSPNode (bsp->children[side]) )
+    if (!P_CrossBSPNode(bsp.getChild(side)))
         return false;
 	
     // the partition plane is crossed here
-    if (side == bsp->pointOnSide (tt2x, tt2y))
-    {
+    if (side == bsp.pointOnSide (tt2x, tt2y)) {
         // the line doesn't touch the other side
         return true;
     }
     
     // cross the ending side		
-    return P_CrossBSPNode (bsp->children[side^1]);
+    return P_CrossBSPNode(bsp.getChild(side^1));
 }
 
 
@@ -255,7 +250,7 @@ P_CheckSight
     tt2y = t2->yy;
 
     // the head node is the last node output
-    return P_CrossBSPNode (numnodes-1);	
+    return P_CrossBSPNode(nodes.size()-1);	
 }
 
 

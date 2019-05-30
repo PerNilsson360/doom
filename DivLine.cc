@@ -8,14 +8,19 @@ DivLine::DivLine() : x(0), y(0), dx(0), dy(0)
 {
 }
 
+DivLine::DivLine(const Vertex& v1, const Vertex& v2) :
+    DivLine(v1.getX(), v2.getX(), v1.getY(), v2.getY())
+{
+}
+
 DivLine::DivLine(double x1, double x2, double y1, double y2) :
     x(x1), y(y1), dx(x2 - x1), dy(y2 - y1)
 {
 }
 
 DivLine::DivLine(const line_t& li) :
-    x(li.v1->xx),
-    y(li.v1->yy),
+    x(li.v1->getX()),
+    y(li.v1->getY()),
     dx(li.ddx),
     dy(li.ddy)
 {
@@ -29,28 +34,20 @@ DivLine::DivLine(const DataInput& dataInput)
     dy = dataInput.readShort();
 }
 
-DivLine::DivLine(const mapnode_t& mapNode) :
-    x(mapNode.x),
-    y(mapNode.y),
-    dx(mapNode.dx),
-    dy(mapNode.dy)
-{
-}
-
 int
-DivLine::moveX(double fraction)
+DivLine::moveX(double fraction) const
 {
     return x + (dx *  fraction);
 }
 
 int
-DivLine::moveY(double fraction)
+DivLine::moveY(double fraction) const
 {
     return y + (dy *  fraction);
 }
 
 bool
-DivLine::isChangeBiggerThan(double d)
+DivLine::isChangeBiggerThan(double d) const
 {
     return dx > d || dy > d || dx < -d || dy < -d;
 }
@@ -66,9 +63,7 @@ DivLine::isPositive() const
 // Returns 0 or 1.
 //
 int
-DivLine::pointOnSide(
-    double px, 
-    double py)
+DivLine::pointOnSide(double px, double py) const
 {
     double pdx;
     double pdy;
@@ -102,6 +97,12 @@ DivLine::pointOnSide(
     return 1;			// back side
 }
 
+int
+DivLine::pointOnSide(const Vertex& vertex) const
+{
+    return pointOnSide(vertex.getX(), vertex.getY());
+}
+
 //
 // P_InterceptVector
 // Returns the fractional intercept point
@@ -110,8 +111,7 @@ DivLine::pointOnSide(
 // and addlines traversers.
 //
 double
-DivLine::interceptVector( 
-    const DivLine& divLine)
+DivLine::interceptVector(const DivLine& divLine) const
 {
     double den = divLine.dy*dx - divLine.dx*dy;
 

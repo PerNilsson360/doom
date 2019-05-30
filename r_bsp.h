@@ -43,8 +43,6 @@ extern bool		segtextured;
 extern bool		markfloor;		
 extern bool		markceiling;
 
-extern bool		skymap;
-
 extern drawseg_t	drawsegs[MAXDRAWSEGS];
 extern drawseg_t*	ds_p;
 

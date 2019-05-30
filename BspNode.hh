@@ -5,6 +5,11 @@
 
 class DataInput;
 
+// BSP node structure.
+
+// Indicate a leaf.
+#define	NF_SUBSECTOR	0x8000
+
 class BspNode : public DivLine
 {
 public:
@@ -13,7 +18,9 @@ public:
     // Returns the size in the wad file.
     // Data consists of 14 short values.
     static int getBinarySize() { return 14 * 2; }
-    //private:
+    unsigned short getChild(int side) const { return children[side]; }
+    const double* getBBox(int side) const { return bbbox[side]; }
+private:
     // Bounding box for each child.
     double bbbox[2][4];
 

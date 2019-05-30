@@ -144,7 +144,6 @@ void W_AddFile (char *filename)
 {
     wadinfo_t		header;
     lumpinfo_t*		lump_p;
-    unsigned		i;
     int			handle;
     int			length;
     int			startlump;
@@ -215,7 +214,7 @@ void W_AddFile (char *filename)
 	
     storehandle = reloadname ? -1 : handle;
 	
-    for (i=startlump ; i<numlumps ; i++,lump_p++, fileinfo++)
+    for (int i=startlump ; i<numlumps ; i++,lump_p++, fileinfo++)
     {
 	lump_p->handle = storehandle;
 	lump_p->position = LONG(fileinfo->filepos);
@@ -240,7 +239,6 @@ void W_Reload (void)
     wadinfo_t		header;
     int			lumpcount;
     lumpinfo_t*		lump_p;
-    unsigned		i;
     int			handle;
     int			length;
     filelump_t*		fileinfo;
@@ -257,12 +255,12 @@ void W_Reload (void)
     length = lumpcount*sizeof(filelump_t);
     fileinfo = (filelump_t*)alloca (length);
     lseek (handle, header.infotableofs, SEEK_SET);
-    read (handle, fileinfo, length);
+    (void)read (handle, fileinfo, length);
     
     // Fill in lumpinfo
     lump_p = &lumpinfo[reloadlump];
 	
-    for (i=reloadlump ;
+    for (int i=reloadlump ;
 	 i<reloadlump+lumpcount ;
 	 i++,lump_p++, fileinfo++)
     {

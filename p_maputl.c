@@ -73,7 +73,7 @@ P_PointOnLineSide(
 
     if (line->ddx == 0)
     {
-        if (x <= line->v1->xx)
+        if (x <= line->v1->getX())
             return line->ddy > 0;
         
         return line->ddy < 0;
@@ -81,14 +81,14 @@ P_PointOnLineSide(
 
     if (line->ddy == 0)
     {
-        if (y <= line->v1->yy)
+        if (y <= line->v1->getY())
             return line->ddx < 0;
         
         return line->ddx > 0;
     }
 	
-    dx = (x - line->v1->xx);
-    dy = (y - line->v1->yy);
+    dx = (x - line->v1->getX());
+    dy = (y - line->v1->getY());
 	
     left = line->ddy * dx;
     right = dy *  line->ddx;
@@ -116,8 +116,8 @@ PP_BoxOnLineSide(
     switch (ld->slopetype)
     {
     case ST_HORIZONTAL:
-        p1 = tmbox[BOXTOP] > ld->v1->yy;
-        p2 = tmbox[BOXBOTTOM] > ld->v1->yy;
+        p1 = tmbox[BOXTOP] > ld->v1->getY();
+        p2 = tmbox[BOXBOTTOM] > ld->v1->getY();
         if (ld->ddx < 0)
         {
             p1 ^= 1;
@@ -126,8 +126,8 @@ PP_BoxOnLineSide(
         break;
 	
     case ST_VERTICAL:
-        p1 = tmbox[BOXRIGHT] < ld->v1->xx;
-        p2 = tmbox[BOXLEFT] < ld->v1->xx;
+        p1 = tmbox[BOXRIGHT] < ld->v1->getX();
+        p2 = tmbox[BOXLEFT] < ld->v1->getX();
         if (ld->ddy < 0)
         {
             p1 ^= 1;
@@ -437,8 +437,8 @@ PIT_AddLineIntercepts (line_t* ld)
     // @todo  these 16 are strange
     if (trace.isChangeBiggerThan(16))
     {
-        s1 = trace.pointOnSide(ld->v1->xx, ld->v1->yy);
-        s2 = trace.pointOnSide(ld->v2->xx, ld->v2->yy);
+        s1 = trace.pointOnSide(*(ld->v1));
+        s2 = trace.pointOnSide(*(ld->v2));
     }
     else
     {
