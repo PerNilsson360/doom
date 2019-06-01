@@ -1,8 +1,8 @@
 #include <cmath>
 #include <cassert>
 
+#include "Vertex.hh"
 #include "Angle.hh"
-
 
 const double Angle::A0(0.0);
 const double Angle::A5(M_PI/36);
@@ -11,6 +11,11 @@ const double Angle::A90(M_PI/2);
 const double Angle::A180(M_PI);
 const double Angle::A270(M_PI + M_PI/2);
 const double Angle::A360(2 * M_PI);
+
+Angle::Angle(const Vertex& v1, const Vertex& v2) :
+    Angle(v1.getX(), v1.getY(), v2.getX(), v2.getY())
+{
+}
 
 Angle::Angle(double x1, double y1, double x2, double y2)
 {

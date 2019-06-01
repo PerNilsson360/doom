@@ -92,11 +92,10 @@ EV_Teleport
 		if (sector-sectors != i )
 		    continue;	
 
-		double oldx = thing->xx;
-		double oldy = thing->yy;
+		Vertex oldPosition = thing->position;
 		double oldz = thing->zz;
 				
-		if (!PP_TeleportMove (thing, m->xx, m->yy))
+		if (!PP_TeleportMove (thing, m->position))
 		    return 0;
 		
 		thing->zz = thing->ffloorz;  //fixme: not needed?
@@ -104,10 +103,9 @@ EV_Teleport
 		    thing->player->vviewz = thing->zz + thing->player->vviewheight;
 				
 		// spawn teleport fog at source and destination
-		fog = PP_SpawnMobj(oldx, oldy, oldz, MT_TFOG);
+		fog = PP_SpawnMobj(oldPosition, oldz, MT_TFOG);
 		S_StartSound (fog, sfx_telept);
-		fog = PP_SpawnMobj(m->xx + (20 * cos(m->_angle)), 
-				   m->yy + (20 * sin(m->_angle)),
+		fog = PP_SpawnMobj(Vertex(m->position, 20, m->_angle),
 				   thing->zz, 
 				   MT_TFOG);
 

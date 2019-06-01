@@ -113,6 +113,7 @@ MapThing	playerstarts[MAXPLAYERS];
 //
 void P_LoadVertexes (int lump)
 {
+    vertexes.clear();
     int dataLength = W_LumpLength(lump);
     int numverticies = dataLength / Vertex::getBinarySize();
     byte* data = (byte*)W_CacheLumpNum(lump, PU_STATIC);
@@ -256,7 +257,6 @@ void P_LoadThings (int lump)
     int			i;
     MapThing*		mt;
     int			numthings;
-    bool		spawn;
 	
     data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
     numthings = W_LumpLength (lump) / sizeof(MapThing);

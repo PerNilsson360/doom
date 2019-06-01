@@ -756,7 +756,7 @@ P_KillMobj
     }
 
     // @todo onfloorz double fix
-    mo = PP_SpawnMobj(target->xx,target->yy,ONFLOORZ, item);
+    mo = PP_SpawnMobj(target->position, ONFLOORZ, item);
     mo->flags |= MF_DROPPED;	// special versions of items
 }
 
@@ -810,8 +810,7 @@ P_DamageMobj
 	    || !source->player
 	    || source->player->readyweapon != wp_chainsaw))
     {
-        Angle ang(inflictor->xx, inflictor->yy,
-                  target->xx, target->yy);
+        Angle ang(inflictor->position, target->position);
 		
 	// thrust = damage*(FRACUNIT>>3)*100/target->info->mass;
         double thrust =

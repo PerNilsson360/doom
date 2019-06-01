@@ -4,6 +4,7 @@
 
 // Basics.
 #include "Angle.hh"
+#include "Vertex.hh"
 #include "MapThing.hh"
 
 // We need the thinker_t stuff.
@@ -181,7 +182,7 @@ typedef enum
 class Mob
 {
 public:
-    bool setState(statenum_t	state);
+    bool setState(statenum_t state);
     void explodeMissile();
     void xyMovement();
     void zMovement();
@@ -191,8 +192,7 @@ public:
     thinker_t		thinker;
 
     // Info for drawing: position.
-    double xx;
-    double yy;
+    Vertex position;
     double zz;
 
     // More list: links in sector (if needed)

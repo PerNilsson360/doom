@@ -182,10 +182,7 @@ void P_DeathThink (player_t* player)
 	
     if (player->attacker && player->attacker != player->mo)
     {
-        Angle angle(player->mo->xx,
-                    player->mo->yy,
-                    player->attacker->xx,
-                    player->attacker->yy);
+        Angle angle(player->mo->position, player->attacker->position);
 
         // @todo introduce a DiffAngle ?
         double delta = (double)angle - (double)player->mo->_angle;

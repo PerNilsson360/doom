@@ -401,7 +401,7 @@ R_StoreWallRange
 	offsetangle = Angle::A90;
 
     Angle distangle = Angle(Angle::A90) - offsetangle;
-    double hyp = RR_PointToDist(curline->v1->getX(), curline->v1->getY());
+    double hyp = curline->v1->distance(view);
     double sineval = sin(distangle);
     rw_distance = hyp * sineval;
 		

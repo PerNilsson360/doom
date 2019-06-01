@@ -687,7 +687,7 @@ void G_Ticker (void)
 			     cmd->consistancy, consistancy[i][buf]); 
 		} 
 		if (players[i].mo) 
-		    consistancy[i][buf] = players[i].mo->xx; 
+		    consistancy[i][buf] = players[i].mo->position.getX(); 
 		else 
 		    consistancy[i][buf] = rndindex; 
 	    } 
@@ -843,8 +843,6 @@ G_CheckSpot
 ( int		playernum,
   MapThing*	mthing ) 
 { 
-    double x;
-    double y; 
     subsector_t*	ss; 
     Mob*		mo; 
     int			i;
@@ -853,16 +851,15 @@ G_CheckSpot
     {
         // first spawn of level, before corpses
         for (i=0 ; i<playernum ; i++)
-            if (players[i].mo->xx == mthing->x && 
-                players[i].mo->yy == mthing->y)
+            if (players[i].mo->position.getX() == mthing->x && 
+                players[i].mo->position.getY() == mthing->y)
                 return false;	
         return true;
     }
 		
-    x = mthing->x; 
-    y = mthing->y; 
+    Vertex position(mthing->x, mthing->y) ;
 	 
-    if (!PP_CheckPosition (players[playernum].mo, x, y) ) 
+    if (!PP_CheckPosition(players[playernum].mo, position) ) 
 	return false; 
  
     // flush an old corpse if needed 
@@ -873,11 +870,10 @@ G_CheckSpot
     bodyqueslot++; 
 	
     // spawn a teleport fog 
-    ss = RR_PointInSubsector (x,y); 
+    ss = RR_PointInSubsector(position); 
     Angle an(Angle::A45 * (mthing->angle / 45)); 
     
-    mo = PP_SpawnMobj(x + (20* cos(an)), 
-                      y + (20 *sin(an)), 
+    mo = PP_SpawnMobj(Vertex(position, 20, an),
                       ss->sector->ffloorheight, 
                       MT_TFOG); 
     

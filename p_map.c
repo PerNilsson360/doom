@@ -85,8 +85,8 @@ bool PIT_StompThing (Mob* thing)
     
     double blockdist = thing->rradius + tmthing->rradius;
     
-    if (fabs(thing->xx - ttmx) >= blockdist || 
-        fabs(thing->yy - ttmy) >= blockdist)
+    if (fabs(thing->position.getX() - ttmx) >= blockdist || 
+        fabs(thing->position.getY() - ttmy) >= blockdist)
     {
         // didn't hit it
         return true;
@@ -112,8 +112,7 @@ bool PIT_StompThing (Mob* thing)
 bool
 PP_TeleportMove(
     Mob* thing,
-    double x,
-    double y)
+    const Vertex& v)
 {
     int			xl;
     int			xh;
@@ -127,7 +126,8 @@ PP_TeleportMove(
     // kill anything occupying the position
     tmthing = thing;
     tmflags = thing->flags;
-	
+    double y = v.getY();
+    double x = v.getX(); 
     ttmx = x;
     ttmy = y;
 	
@@ -136,7 +136,7 @@ PP_TeleportMove(
     ttmbbox[BOXRIGHT] = x + tmthing->rradius;
     ttmbbox[BOXLEFT] = x - tmthing->rradius;
 
-    newsubsec = RR_PointInSubsector(x,y);
+    newsubsec = RR_PointInSubsector(v);
     ceilingline = NULL;
     
     // The base floor/ceiling is from the subsector
@@ -166,8 +166,7 @@ PP_TeleportMove(
 
     thing->ffloorz = ttmfloorz;
     thing->cceilingz = ttmceilingz;	
-    thing->xx = x;
-    thing->yy = y;
+    thing->position = Vertex(x, y);
 
     P_SetThingPosition (thing);
 	
@@ -257,8 +256,8 @@ bool PIT_CheckThing (Mob* thing)
     
     double blockdist = thing->rradius + tmthing->rradius;
 
-    if ( fabs(thing->xx - ttmx) >= blockdist
-	 || fabs(thing->yy - ttmy) >= blockdist )
+    if ( fabs(thing->position.getX() - ttmx) >= blockdist
+	 || fabs(thing->position.getY() - ttmy) >= blockdist )
     {
 	// didn't hit it
 	return true;	
@@ -371,8 +370,7 @@ bool PIT_CheckThing (Mob* thing)
 bool
 PP_CheckPosition(
     Mob* thing,
-    double x,
-    double y)
+    const Vertex& v)
 {
     int			xl;
     int			xh;
@@ -384,7 +382,10 @@ PP_CheckPosition(
     
     tmthing = thing;
     tmflags = thing->flags;
-	
+
+    double x = v.getX();
+    double y = v.getY();
+    
     ttmx = x;
     ttmy = y;
 	
@@ -393,7 +394,7 @@ PP_CheckPosition(
     ttmbbox[BOXRIGHT] = x + tmthing->rradius;
     ttmbbox[BOXLEFT] = x - tmthing->rradius;
 
-    newsubsec = RR_PointInSubsector (x,y);
+    newsubsec = RR_PointInSubsector (v);
     ceilingline = NULL;
     
     // The base floor / ceiling is from the subsector
@@ -447,15 +448,14 @@ PP_CheckPosition(
 bool
 PP_TryMove( 
     Mob* thing,
-    double x,
-    double y)
+    const Vertex& v)
 {
     int		side;
     int		oldside;
     line_t*	ld;
     
     floatok = false;
-    if (!PP_CheckPosition (thing, x, y))
+    if (!PP_CheckPosition (thing, v))
         return false;		// solid wall or thing
     
     if ( !(thing->flags & MF_NOCLIP) )
@@ -481,12 +481,11 @@ PP_TryMove(
     // so link the thing into its new position
     P_UnsetThingPosition (thing);
     
-    double oldx = thing->xx;
-    double oldy = thing->yy;
+    double oldx = thing->position.getX();
+    double oldy = thing->position.getY();
     thing->ffloorz = ttmfloorz;
     thing->cceilingz = ttmceilingz;	
-    thing->xx = x;
-    thing->yy = y;
+    thing->position = v;
     
     P_SetThingPosition (thing);
     
@@ -497,8 +496,8 @@ PP_TryMove(
         {
             // see if the line was crossed
             ld = spechit[numspechit];
-            side = P_PointOnLineSide(thing->xx, thing->yy, ld);
-            oldside = P_PointOnLineSide(oldx, oldy, ld);
+            side = P_PointOnLineSide(thing->position, ld);
+            oldside = P_PointOnLineSide(Vertex(oldx, oldy), ld);
             if (side != oldside)
             {
                 if (ld->special)
@@ -527,7 +526,7 @@ bool P_ThingHeightClip (Mob* thing)
 	
     onfloor = (thing->zz == thing->ffloorz);
 	
-    PP_CheckPosition (thing, thing->xx, thing->yy);	
+    PP_CheckPosition(thing, thing->position);	
     // what about stranding a monster partially off an edge?
 	
     thing->ffloorz = ttmfloorz;
@@ -589,7 +588,7 @@ void P_HitSlideLine (line_t* ld)
 	return;
     }
 	
-    int side = P_PointOnLineSide (slidemo->xx, slidemo->yy, ld);
+    int side = P_PointOnLineSide (slidemo->position, ld);
 	
     Angle lineangle(0, 0, ld->ddx, ld->ddy);
 
@@ -629,7 +628,7 @@ bool PTR_SlideTraverse (intercept_t* in)
     
     if ( ! (li->flags & ML_TWOSIDED) )
     {
-        if (P_PointOnLineSide (slidemo->xx, slidemo->yy, li))
+        if (P_PointOnLineSide (slidemo->position, li))
         {
             // don't hit the back side
             return true;		
@@ -690,48 +689,50 @@ void P_SlideMove (Mob* mo)
 		
     slidemo = mo;
     hitcount = 0;
+
+    double x = mo->position.getX();
+    double y = mo->position.getY();
     
 retry:
     if (++hitcount == 3)
         goto stairstep;		// don't loop forever
-
     
     // trace along the three leading corners
     if (mo->mmomx > 0)
     {
-        leadx = mo->xx + mo->rradius;
-        trailx = mo->xx - mo->rradius;
+        leadx = x + mo->rradius;
+        trailx = x - mo->rradius;
     }
     else
     {
-        leadx = mo->xx - mo->rradius;
-        trailx = mo->xx + mo->rradius;
+        leadx = x - mo->rradius;
+        trailx = x + mo->rradius;
     }
 	
     if (mo->mmomy > 0)
     {
-        leady = mo->yy + mo->rradius;
-        traily = mo->yy - mo->rradius;
+        leady = y + mo->rradius;
+        traily = y - mo->rradius;
     }
     else
     {
-        leady = mo->yy - mo->rradius;
-        traily = mo->yy + mo->rradius;
+        leady = y - mo->rradius;
+        traily = y + mo->rradius;
     }
 		
     bbestslidefrac = 1;
 	
-    P_PathTraverse(leadx, leady, leadx +  mo->mmomx, leady + mo->mmomy, PT_ADDLINES, PTR_SlideTraverse);
-    P_PathTraverse(trailx, leady, trailx +  mo->mmomx , leady + mo->mmomy, PT_ADDLINES, PTR_SlideTraverse);
-    P_PathTraverse(leadx, traily, leadx +  mo->mmomx, traily + mo->mmomy, PT_ADDLINES, PTR_SlideTraverse);
+    P_PathTraverse(Vertex(leadx, leady), Vertex(leadx +  mo->mmomx, leady + mo->mmomy), PT_ADDLINES, PTR_SlideTraverse);
+    P_PathTraverse(Vertex(trailx, leady), Vertex(trailx +  mo->mmomx , leady + mo->mmomy), PT_ADDLINES, PTR_SlideTraverse);
+    P_PathTraverse(Vertex(leadx, traily), Vertex(leadx +  mo->mmomx, traily + mo->mmomy), PT_ADDLINES, PTR_SlideTraverse);
     
     // move up to the wall
     if (bbestslidefrac == 1)
     {
 	// the move most have hit the middle, so stairstep
       stairstep:
-        if (!PP_TryMove (mo, mo->xx, mo->yy + mo->mmomy))
-            PP_TryMove (mo, mo->xx + mo->mmomx, mo->yy);
+        if (!PP_TryMove (mo, Vertex(x, y + mo->mmomy)))
+            PP_TryMove (mo, Vertex(x + mo->mmomx, y));
 	return;
     }
 
@@ -742,7 +743,7 @@ retry:
         newx = mo->mmomx * bbestslidefrac;
         newy = mo->mmomy * bbestslidefrac;
         
-        if (!PP_TryMove(mo, mo->xx+newx, mo->yy+newy))
+        if (!PP_TryMove(mo, Vertex(x + newx, y + newy)))
             goto stairstep;
     }
         
@@ -764,7 +765,7 @@ retry:
     mo->mmomx = ttmxmove;
     mo->mmomy = ttmymove;
 		
-    if (!PP_TryMove(mo, mo->xx+ttmxmove, mo->yy+ttmymove))
+    if (!PP_TryMove(mo, Vertex(x + ttmxmove, y + ttmymove)))
     {
         goto retry;
     }
@@ -957,7 +958,7 @@ bool PTR_ShootTraverse (intercept_t* in)
         }
         
         // Spawn bullet puffs.
-        PP_SpawnPuff(x, y, z);
+        PP_SpawnPuff(Vertex(x, y), z);
         // don't go any farther
         return false;	
     }
@@ -1001,9 +1002,9 @@ bool PTR_ShootTraverse (intercept_t* in)
     // Spawn bullet puffs or blod spots,
     // depending on target type.
     if (in->d.thing->flags & MF_NOBLOOD)
-        PP_SpawnPuff(x, y, z);
+        PP_SpawnPuff(Vertex(x, y), z);
     else
-        PP_SpawnBlood(x, y, z, la_damage);
+        PP_SpawnBlood(Vertex(x, y), z, la_damage);
 
     if (la_damage)
         P_DamageMobj (th, shootthing, shootthing, la_damage);
@@ -1024,8 +1025,7 @@ PP_AimLineAttack(Mob* t1,
 {
     shootthing = t1;
     
-    double x2 = t1->xx + (distance * cos(angle));
-    double y2 = t1->yy + (distance * sin(angle));
+    Vertex v = Vertex(t1->position, distance, angle);
     shootzz = t1->zz + (t1->hheight / 2) + 8;
 
     // can't shoot outside view angles
@@ -1034,8 +1034,8 @@ PP_AimLineAttack(Mob* t1,
     aattackrange = distance;
     linetarget = NULL;
 	
-    P_PathTraverse(t1->xx, t1->yy,
-                   x2, y2,
+    P_PathTraverse(t1->position,
+                   v,
                    PT_ADDLINES|PT_ADDTHINGS,
                    PTR_AimTraverse );
 
@@ -1060,13 +1060,12 @@ PP_LineAttack(Mob* t1,
 {
     shootthing = t1;
     la_damage = damage;
-    double x2 = t1->xx + (distance * cos(angle));
-    double y2 = t1->yy + (distance * sin(angle));
+    Vertex v = Vertex(t1->position, distance, angle);
     shootzz = t1->zz + (t1->hheight / 2) + 8;
     aattackrange = distance;
     aaimslope = slope;
-    P_PathTraverse(t1->xx, t1->yy,
-                   x2, y2,
+    P_PathTraverse(t1->position,
+                   v,
                    PT_ADDLINES|PT_ADDTHINGS,
                    PTR_ShootTraverse );
 }
@@ -1097,7 +1096,7 @@ bool	PTR_UseTraverse (intercept_t* in)
     }
 	
     side = 0;
-    if (P_PointOnLineSide(usething->xx, usething->yy, in->d.line) == 1)
+    if (P_PointOnLineSide(usething->position, in->d.line) == 1)
         side = 1;
     
     //	return false;		// don't use back side
@@ -1113,21 +1112,12 @@ bool	PTR_UseTraverse (intercept_t* in)
 // P_UseLines
 // Looks for special lines in front of the player to activate.
 //
-void P_UseLines (player_t*	player) 
-{
-    double x1;
-    double y1;
-    double x2;
-    double y2;
-	
+void
+P_UseLines (player_t* player) 
+{	
     usething = player->mo;
-		
-    x1 = player->mo->xx;
-    y1 = player->mo->yy;
-    x2 = x1 + (UUSERANGE * cos(player->mo->_angle));
-    y2 = y1 + (UUSERANGE * sin(player->mo->_angle));
-	
-    P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse);
+    Vertex v = Vertex(player->mo->position, UUSERANGE, player->mo->_angle);	
+    P_PathTraverse(player->mo->position, v, PT_ADDLINES, PTR_UseTraverse);
 }
 
 
@@ -1155,8 +1145,8 @@ bool PIT_RadiusAttack (Mob* thing)
         || thing->type == MT_SPIDER)
         return true;	
     
-    double dx = fabs(thing->xx - bombspot->xx);
-    double dy = fabs(thing->yy - bombspot->yy);
+    double dx = fabs(thing->position.getX() - bombspot->position.getX());
+    double dy = fabs(thing->position.getY() - bombspot->position.getY());
     
     double dist = dx>dy ? dx : dy;
     dist = (dist - thing->rradius);
@@ -1198,10 +1188,10 @@ P_RadiusAttack
     double dist;
 	
     dist = (damage + MMAXRADIUS);
-    yh = (spot->yy + dist - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV;
-    yl = (spot->yy - dist - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV;
-    xh = (spot->xx + dist - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV;
-    xl = (spot->xx - dist - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV;
+    yh = (spot->position.getY() + dist - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV;
+    yl = (spot->position.getY() - dist - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV;
+    xh = (spot->position.getX() + dist - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV;
+    xl = (spot->position.getX() - dist - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV;
     bombspot = spot;
     bombsource = source;
     bombdamage = damage;
@@ -1279,10 +1269,9 @@ bool PIT_ChangeSector (Mob*	thing)
 	P_DamageMobj(thing,NULL,NULL,10);
 
 	// spray blood in a random direction
-	mo = PP_SpawnMobj(thing->xx,
-                     thing->yy,
-                     thing->zz + thing->hheight/2, 
-                     MT_BLOOD);
+	mo = PP_SpawnMobj(thing->position,
+			  thing->zz + thing->hheight/2, 
+			  MT_BLOOD);
 	
 	mo->mmomx = (P_Random() - P_Random ()) / 2 * 4;
 	mo->mmomy = (P_Random() - P_Random ()) / 2 * 4;

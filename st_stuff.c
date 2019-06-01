@@ -629,8 +629,8 @@ ST_Responder (event_t* ev)
 	static char	buf[ST_MSGWIDTH];
 	sprintf(buf, "ang=0x%f;x,y=(%f,%f)",
 		(double)players[consoleplayer].mo->_angle,
-		players[consoleplayer].mo->xx,
-		players[consoleplayer].mo->yy);
+		players[consoleplayer].mo->position.getX(),
+		players[consoleplayer].mo->position.getY());
 	plyr->message = buf;
       }
     }
@@ -772,10 +772,8 @@ void ST_updateFaceWidget(void)
 	    }
 	    else
 	    {
-	        Angle badguyangle(plyr->mo->xx,
-                                  plyr->mo->yy,
-                                  plyr->attacker->xx,
-                                  plyr->attacker->yy);
+	        Angle badguyangle(plyr->mo->position,
+                                  plyr->attacker->position);
 		double diffang;
 		if (badguyangle > plyr->mo->_angle)
 		{

@@ -245,9 +245,9 @@ P_CheckSight
     ttopslope = t2->zz + t2->hheight - ssightzstart;
     bbottomslope = t2->zz - ssightzstart;
 	
-    strace = DivLine(t1->xx, t2->xx, t1->yy, t2->yy);
-    tt2x = t2->xx;
-    tt2y = t2->yy;
+    strace = DivLine(t1->position, t2->position);
+    tt2x = t2->position.getX();
+    tt2y = t2->position.getY();
 
     // the head node is the last node output
     return P_CrossBSPNode(nodes.size()-1);	

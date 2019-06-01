@@ -309,10 +309,8 @@ S_StartSoundAtVolume
 			     &sep,
 			     &pitch);
 	
-    if ( origin->xx == players[consoleplayer].mo->xx
-	 && origin->yy == players[consoleplayer].mo->yy)
-    {	
-      sep 	= NORM_SEP;
+    if (origin->position == players[consoleplayer].mo->position) {
+      sep = NORM_SEP;
     }
     
     if (!rc)
@@ -757,27 +755,14 @@ S_AdjustSoundParams
   int*		sep,
   int*		pitch )
 {
-    double	approx_dist;
-    double	adx;
-    double	ady;
-
-    // calculate the distance to sound origin
-    //  and clip it if necessary
-    adx = fabs(listener->xx - source->xx);
-    ady = fabs(listener->yy - source->yy);
-
-    // From _GG1_ p.428. Appox. eucledian distance fast.
-    approx_dist = adx + ady - ((adx < ady ? adx : ady) / 2);
-
-    if (gamemap != 8
-	&& approx_dist > S_CLIPPING_DIST)
-    {
+    double distance = listener->position.distance(source->position);
+    
+    if (gamemap != 8 && distance > S_CLIPPING_DIST) {
 	return 0;
     }
     
     // angle of source to listener
-    Angle angle(listener->xx,listener->yy,
-		source->xx, source->yy);
+    Angle angle(listener->position, source->position);
 
     if (angle > listener->_angle)
 	angle = angle - listener->_angle;
@@ -789,22 +774,22 @@ S_AdjustSoundParams
     *sep = 128 - S_STEREO_SWING *sin(Angle(angle));
 
     // volume calculation
-    if (approx_dist < S_CLOSE_DIST)
+    if (distance < S_CLOSE_DIST)
     {
 	*vol = snd_SfxVolume;
     }
     else if (gamemap == 8)
     {
-	if (approx_dist > S_CLIPPING_DIST)
-	    approx_dist = S_CLIPPING_DIST;
+	if (distance > S_CLIPPING_DIST)
+	    distance = S_CLIPPING_DIST;
 
-	*vol = 15 + ((snd_SfxVolume-15) * (S_CLIPPING_DIST - approx_dist))
+	*vol = 15 + ((snd_SfxVolume-15) * (S_CLIPPING_DIST - distance))
 		     / S_ATTENUATOR;
     }
     else
     {
 	// distance effect
-	*vol = (snd_SfxVolume * (S_CLIPPING_DIST - approx_dist))
+	*vol = (snd_SfxVolume * (S_CLIPPING_DIST - distance))
 	/ S_ATTENUATOR; 
     }
     

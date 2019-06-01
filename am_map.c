@@ -341,8 +341,8 @@ void AM_restoreScaleAndLoc(void)
 	mm_x = oold_m_x;
 	mm_y = oold_m_y;
     } else {
-	mm_x = plr->mo->xx - mm_w/2;
-	mm_y = plr->mo->yy - mm_h/2;
+	mm_x = plr->mo->position.getX() - mm_w/2;
+	mm_y = plr->mo->position.getY() - mm_h/2;
     }
     mm_x2 = mm_x + mm_w;
     mm_y2 = mm_y + mm_h;
@@ -452,8 +452,8 @@ void AM_initVariables(void)
 		break;
   
     plr = &players[pnum];
-    mm_x = plr->mo->xx - mm_w/2;
-    mm_y = plr->mo->yy  - mm_h/2;
+    mm_x = plr->mo->position.getX() - mm_w/2;
+    mm_y = plr->mo->position.getY()  - mm_h/2;
     AM_changeWindowLoc();
 
     // for saving & restoring
@@ -724,14 +724,16 @@ void AM_changeWindowScale(void)
 void AM_doFollowPlayer(void)
 {
 
-    if (f_oldloc.getXX() != plr->mo->xx || f_oldloc.getYY() != plr->mo->yy)
+    if (f_oldloc.getXX() != plr->mo->position.getX() ||
+	f_oldloc.getYY() != plr->mo->position.getY())
     {
 
-	mm_x = FFTOM(MMTOF(plr->mo->xx)) - mm_w/2;
-	mm_y = FFTOM(MMTOF(plr->mo->yy)) - mm_h/2;
+	mm_x = FFTOM(MMTOF(plr->mo->position.getX())) - mm_w/2;
+	mm_y = FFTOM(MMTOF(plr->mo->position.getY())) - mm_h/2;
 	mm_x2 = mm_x + mm_w;
 	mm_y2 = mm_y + mm_h;
-	f_oldloc = MPoint(plr->mo->xx, plr->mo->yy);
+	f_oldloc = MPoint(plr->mo->position.getX(),
+			  plr->mo->position.getY());
 
 	//  m_x = FTOM(MTOF(plr->mo->x - m_w/2));
 	//  m_y = FTOM(MTOF(plr->mo->y - m_h/2));
@@ -1165,11 +1167,15 @@ void AM_drawPlayers(void)
 	if (cheating)
 	    AM_drawLineCharacter
 		(cheat_player_arrow, NUMCHEATPLYRLINES, 0,
-		 plr->mo->_angle, WHITE, plr->mo->xx, plr->mo->yy);
+		 plr->mo->_angle, WHITE,
+		 plr->mo->position.getX(),
+		 plr->mo->position.getY());
 	else
 	    AM_drawLineCharacter
 		(player_arrow, NUMPLYRLINES, 0, plr->mo->_angle,
-		 WHITE, plr->mo->xx, plr->mo->yy);
+		 WHITE,
+		 plr->mo->position.getX(),
+		 plr->mo->position.getY());
 	return;
     }
 
@@ -1191,7 +1197,9 @@ void AM_drawPlayers(void)
 	
 	AM_drawLineCharacter
 	    (player_arrow, NUMPLYRLINES, 0, p->mo->_angle,
-	     color, p->mo->xx, p->mo->yy);
+	     color,
+	     plr->mo->position.getX(),
+	     plr->mo->position.getY());
     }
 
 }
@@ -1211,7 +1219,9 @@ AM_drawThings
 	{
 	    AM_drawLineCharacter
 		(thintriangle_guy, NUMTHINTRIANGLEGUYLINES,
-		 16, t->_angle, colors+lightlev, t->xx, t->yy);
+		 16, t->_angle, colors+lightlev,
+		 t->position.getX(),
+		 t->position.getY());
 	    t = t->snext;
 	}
     }

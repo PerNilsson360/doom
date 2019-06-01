@@ -112,16 +112,16 @@ extern int		iquetail;
 
 void P_RespawnSpecials (void);
 
-Mob* PP_SpawnMobj(double x, double y, double z, mobjtype_t type);
+Mob* PP_SpawnMobj(const Vertex& v, double z, mobjtype_t type);
 
-void 	P_RemoveMobj (Mob* th);
-bool	P_SetMobjState (Mob* mobj, statenum_t state);
-void 	P_MobjThinker (Mob* mobj);
+void P_RemoveMobj (Mob* th);
+bool P_SetMobjState (Mob* mobj, statenum_t state);
+void P_MobjThinker (Mob* mobj);
 
-void PP_SpawnPuff(double x, double y, double z);
-void PP_SpawnBlood(double x, double y, double z, int damage);
+void PP_SpawnPuff(const Vertex& v, double z);
+void PP_SpawnBlood(const Vertex& v, double z, int damage);
 Mob* P_SpawnMissile (Mob* source, Mob* dest, mobjtype_t type);
-void	P_SpawnPlayerMissile (Mob* source, mobjtype_t type);
+void P_SpawnPlayerMissile (Mob* source, mobjtype_t type);
 
 
 //
@@ -151,16 +151,16 @@ extern intercept_t*	intercept_p;
 
 typedef bool (*traverser_t) (intercept_t *in);
 
-double  PP_AproxDistance(double dx, double dy);
-int 	P_PointOnLineSide (double x, double y, line_t* line);
-int 	PP_BoxOnLineSide (double* tmbox, line_t* ld);
+double PP_AproxDistance(double dx, double dy);
+int P_PointOnLineSide (const Vertex& v, line_t* line);
+int PP_BoxOnLineSide (double* tmbox, line_t* ld);
 
 extern double oopentop;
 extern double oopenbottom;
 extern double oopenrange;
 extern double llowfloor;
 
-void 	P_LineOpening (line_t* linedef);
+void P_LineOpening (line_t* linedef);
 
 bool P_BlockLinesIterator (int x, int y, bool(*func)(line_t*) );
 bool P_BlockThingsIterator (int x, int y, bool(*func)(Mob*) );
@@ -173,10 +173,8 @@ extern DivLine trace;
 
 bool
 P_PathTraverse(
-    double x1,
-    double y1,
-    double x2,
-    double y2,
+    const Vertex& v1,
+    const Vertex& v2,
     int flags,
     bool (*trav) (intercept_t *));
 
@@ -197,12 +195,12 @@ extern double		ttmceilingz;
 
 extern	line_t*		ceilingline;
 
-bool PP_CheckPosition (Mob *thing, double x, double y);
-bool PP_TryMove (Mob* thing, double x, double y);
-bool PP_TeleportMove (Mob* thing, double x, double y);
-void	P_SlideMove (Mob* mo);
+bool PP_CheckPosition (Mob *thing, const Vertex& v);
+bool PP_TryMove (Mob* thing, const Vertex& v);
+bool PP_TeleportMove (Mob* thing, const Vertex& v);
+void P_SlideMove (Mob* mo);
 bool P_CheckSight (Mob* t1, Mob* t2);
-void 	P_UseLines (player_t* player);
+void P_UseLines (player_t* player);
 
 bool P_ChangeSector (sector_t* sector, bool crunch);
 
@@ -215,7 +213,7 @@ PP_AimLineAttack(Mob* t1,
 
 void
 PP_LineAttack(Mob* t1,
-              Angle	angle,
+              Angle angle,
               double distance,
               double slope,
               int damage );
@@ -231,7 +229,7 @@ P_RadiusAttack
 //
 // P_SETUP
 //
-extern byte*		rejectmatrix;	// for fast sight rejection
+extern byte* rejectmatrix;	// for fast sight rejection
 extern BlockMap blockMap;
 
 //

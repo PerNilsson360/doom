@@ -100,8 +100,7 @@ extern side_t*		sides;
 //
 // POV data.
 //
-extern double		vviewx;
-extern double		vviewy;
+extern Vertex  view;
 extern double		vviewz;
 
 extern Angle		vviewangle;

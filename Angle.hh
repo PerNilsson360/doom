@@ -8,19 +8,22 @@
 
 #include "doomdef.h"
 
+class Vertex;
+
 class Angle
 {
 public:
     Angle(double angle = 0.0) {
         truncate(angle);
     }
+    Angle(const Vertex& v1, const Vertex& v2);
     Angle(double x1, double y1, double x2, double y2);
     Angle(dirtype_t);
-    Angle& operator += (Angle a) {
+    Angle& operator += (const Angle& a) {
         truncate(_angle + a._angle);
         return *this;
     }
-    Angle& operator -= (Angle a) {
+    Angle& operator -= (const Angle& a) {
         truncate(_angle - a._angle);
         return *this;
     }
@@ -105,7 +108,6 @@ inline Angle operator * (int s, const Angle& a) {
     // @todo remove cast when angle_t is completly removed 
     return Angle((double)a * s);
 }
-
 
 inline std::ostream& operator << (std::ostream& os, const Angle& angle) {
     os << (double)angle;

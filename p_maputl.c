@@ -62,12 +62,11 @@ PP_AproxDistance(
 //
 int
 P_PointOnLineSide(
-    double x,
-    double y,
+    const Vertex& v,
     line_t* line)
 {
-    double dx;
-    double dy;
+    double x = v.getX();
+    double y = v.getY();
     double left;
     double right;
 
@@ -87,8 +86,8 @@ P_PointOnLineSide(
         return line->ddx > 0;
     }
 	
-    dx = (x - line->v1->getX());
-    dy = (y - line->v1->getY());
+    double dx = (x - line->v1->getX());
+    double dy = (y - line->v1->getY());
 	
     left = line->ddy * dx;
     right = dy *  line->ddx;
@@ -136,13 +135,13 @@ PP_BoxOnLineSide(
         break;
         
     case ST_POSITIVE:
-        p1 = P_PointOnLineSide(tmbox[BOXLEFT], tmbox[BOXTOP], ld);
-        p2 = P_PointOnLineSide(tmbox[BOXRIGHT], tmbox[BOXBOTTOM], ld);
+        p1 = P_PointOnLineSide(Vertex(tmbox[BOXLEFT], tmbox[BOXTOP]), ld);
+        p2 = P_PointOnLineSide(Vertex(tmbox[BOXRIGHT], tmbox[BOXBOTTOM]), ld);
 	break;
 	
     case ST_NEGATIVE:
-        p1 = P_PointOnLineSide(tmbox[BOXRIGHT], tmbox[BOXTOP], ld);
-        p2 = P_PointOnLineSide(tmbox[BOXLEFT], tmbox[BOXBOTTOM], ld);
+        p1 = P_PointOnLineSide(Vertex(tmbox[BOXRIGHT], tmbox[BOXTOP]), ld);
+        p2 = P_PointOnLineSide(Vertex(tmbox[BOXLEFT], tmbox[BOXBOTTOM]), ld);
         break;
     }
     
@@ -239,8 +238,8 @@ void P_UnsetThingPosition (Mob* thing)
 	    thing->bprev->bnext = thing->bnext;
 	else
 	{
-	    blockx = (thing->xx - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV;
-	    blocky = (thing->yy - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV;
+	    blockx = (thing->position.getX() - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV;
+	    blocky = (thing->position.getY() - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV;
 
 	    if (blockx>=0 && blockx < blockMap.width
 		&& blocky>=0 && blocky <blockMap.height)
@@ -269,7 +268,7 @@ P_SetThingPosition (Mob* thing)
     
     
     // link into subsector
-    ss = RR_PointInSubsector(thing->xx, thing->yy);
+    ss = RR_PointInSubsector(thing->position);
     thing->subsector = ss;
     
     if ( ! (thing->flags & MF_NOSECTOR) )
@@ -291,8 +290,8 @@ P_SetThingPosition (Mob* thing)
     if ( ! (thing->flags & MF_NOBLOCKMAP) )
     {
         // insert things don't need to be in blockmap		
-        blockx = (thing->xx - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV;
-        blocky = (thing->yy - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV;
+        blockx = (thing->position.getX() - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV;
+        blocky = (thing->position.getY() - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV;
 
 	if (blockx>=0
 	    && blockx < blockMap.width
@@ -442,8 +441,8 @@ PIT_AddLineIntercepts (line_t* ld)
     }
     else
     {
-        s1 = P_PointOnLineSide(trace.moveX(0), trace.moveY(0), ld);
-        s2 = P_PointOnLineSide(trace.moveX(1), trace.moveY(1), ld);
+        s1 = P_PointOnLineSide(trace.getVertex(0), ld);
+        s2 = P_PointOnLineSide(trace.getVertex(1), ld);
     }
     
     if (s1 == s2)
@@ -480,6 +479,8 @@ PIT_AddLineIntercepts (line_t* ld)
 //
 bool PIT_AddThingIntercepts (Mob* thing)
 {
+    double x = thing->position.getX();
+    double y = thing->position.getY();
     double x1;
     double y1;
     double x2;
@@ -488,19 +489,19 @@ bool PIT_AddThingIntercepts (Mob* thing)
     // check a corner to corner crossection for hit
     if (trace.isPositive())
     {
-        x1 = thing->xx - thing->rradius;
-        y1 = thing->yy + thing->rradius;
+        x1 = x - thing->rradius;
+        y1 = y + thing->rradius;
 		
-        x2 = thing->xx + thing->rradius;
-        y2 = thing->yy - thing->rradius;			
+        x2 = x + thing->rradius;
+        y2 = y - thing->rradius;			
     }
     else
     {
-        x1 = thing->xx - thing->rradius;
-        y1 = thing->yy - thing->rradius;
+        x1 = x - thing->rradius;
+        y1 = y - thing->rradius;
 		
-        x2 = thing->xx + thing->rradius;
-        y2 = thing->yy + thing->rradius;			
+        x2 = x + thing->rradius;
+        y2 = y + thing->rradius;			
     }
     
     int s1 = trace.pointOnSide(x1, y1);
@@ -563,13 +564,16 @@ PP_TraverseIntercepts(traverser_t func,
 // for all lines.
 //
 bool
-P_PathTraverse(double x1,
-	       double y1,
-	       double x2,
-	       double y2,
+P_PathTraverse(const Vertex& v1,
+	       const Vertex& v2,
 	       int flags,
 	       bool (*trav) (intercept_t *))
 {
+
+    double x1 = v1.getX();
+    double y1 = v1.getY();
+    double x2 = v2.getX();
+    double y2 = v2.getY();
     int		mapx;
     int		mapy;
     

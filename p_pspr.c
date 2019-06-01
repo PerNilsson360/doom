@@ -451,10 +451,8 @@ A_Punch
     if (linetarget)
     {
         S_StartSound (player->mo, sfx_punch);
-        player->mo->_angle = Angle(player->mo->xx,
-                                   player->mo->yy,
-                                   linetarget->xx,
-                                   linetarget->yy);
+        player->mo->_angle = Angle(player->mo->position,
+                                   linetarget->position);
     }
 }
 
@@ -484,10 +482,7 @@ A_Saw
     S_StartSound (player->mo, sfx_sawhit);
 	
     // turn to face target
-    angle = Angle(player->mo->xx, 
-                  player->mo->yy,
-                  linetarget->xx, 
-                  linetarget->yy);
+    angle = Angle(player->mo->position, linetarget->position);
 
     if (angle - player->mo->_angle > Angle::A180)
     {
@@ -755,8 +750,7 @@ void A_BFGSpray (Mob* mo)
 	if (!linetarget)
 	    continue;
 
-	PP_SpawnMobj(linetarget->xx,
-                 linetarget->yy,
+	PP_SpawnMobj(linetarget->position,
                  linetarget->zz + (linetarget->hheight / 4),
                  MT_EXTRABFG);
 	

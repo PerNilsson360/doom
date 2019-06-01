@@ -161,7 +161,7 @@ P_CheckMeleeRange(Mob* actor)
     
     pl = actor->target;
 
-    dist = PP_AproxDistance(pl->xx - actor->xx, pl->yy - actor->yy);
+    dist = pl->position.distance(actor->position);
     
     if (dist >= MMELEERANGE - 20 + pl->info->rradius)
         return false;
@@ -194,8 +194,7 @@ bool P_CheckMissileRange (Mob* actor)
         return false;	// do not attack yet
     
     // OPTIMIZE: get this from a global checksight
-    dist = PP_AproxDistance(actor->xx - actor->target->xx,
-                            actor->yy - actor->target->yy) - 64;
+    dist = actor->position.distance(actor->target->position) - 64;
     
     if (!actor->info->meleestate)
         dist -= 128;	// no melee attack, so fire more
@@ -266,9 +265,9 @@ bool P_Move (Mob*	actor)
     if ((unsigned)actor->movedir >= 8)
         I_Error ("Weird actor->movedir!");
 		
-    double tryx = actor->xx + (actor->info->speed*xxspeed[actor->movedir]);
-    double tryy = actor->yy + (actor->info->speed*yyspeed[actor->movedir]);
-    try_ok = PP_TryMove (actor, tryx, tryy);
+    double tryx = actor->position.getX() + (actor->info->speed*xxspeed[actor->movedir]);
+    double tryy = actor->position.getY() + (actor->info->speed*yyspeed[actor->movedir]);
+    try_ok = PP_TryMove (actor, Vertex(tryx, tryy));
     
     if (!try_ok)
     {
@@ -353,19 +352,18 @@ void P_NewChaseDir (Mob*	actor)
     olddir = actor->movedir;
     turnaround=opposite[olddir];
 
-    double deltax = actor->target->xx - actor->xx;
-    double deltay = actor->target->yy - actor->yy;
+    Vertex delta = actor->target->position - actor->position;
 
-    if (deltax>10)
+    if (delta.getX()>10)
         d[1]= DI_EAST;
-    else if (deltax<-10)
+    else if (delta.getX()<-10)
         d[1]= DI_WEST;
     else
         d[1]=DI_NODIR;
 
-    if (deltay<-10)
+    if (delta.getY()<-10)
         d[2]= DI_SOUTH;
-    else if (deltay>10)
+    else if (delta.getY()>10)
         d[2]= DI_NORTH;
     else
         d[2]=DI_NODIR;
@@ -374,14 +372,14 @@ void P_NewChaseDir (Mob*	actor)
     if (d[1] != DI_NODIR && 
         d[2] != DI_NODIR)
     {
-        actor->movedir = diags[((deltay<0)<<1)+(deltax>0)];
+        actor->movedir = diags[((delta.getY()<0)<<1)+(delta.getX()>0)];
         if (actor->movedir != turnaround && P_TryWalk(actor))
             return;
     }
 
     // try other directions
     if (P_Random() > 200
-	||  abs(deltay)>abs(deltax))
+	||  fabs(delta.getY())>fabs(delta.getX()))
     {
 	tdir=d[1];
 	d[1]=d[2];
@@ -504,15 +502,11 @@ P_LookForPlayers
         
         if (!allaround)
         {
-            double actorPlayerAngle = (double) Angle(actor->xx,
-                                                     actor->yy,
-                                                     player->mo->xx,
-                                                     player->mo->yy);
+            double actorPlayerAngle = (double) Angle(actor->position, player->mo->position);
             double an = actorPlayerAngle - (double) actor->_angle;
             if (an > Angle::A90 && an < Angle::A270)
             {
-                double dist = PP_AproxDistance(player->mo->xx - actor->xx,
-                                               player->mo->yy - actor->yy);
+                double dist = player->mo->position.distance(actor->position);
                 // if real close, react anyway
                 if (dist > MMELEERANGE)
                     continue;	// behind back
@@ -753,10 +747,8 @@ void A_FaceTarget (Mob* actor)
     if (!actor->target)
         return;
     actor->flags &= ~MF_AMBUSH;
-    actor->_angle = Angle(actor->xx,
-                          actor->yy,
-                          actor->target->xx,
-                          actor->target->yy);
+    actor->_angle = Angle(actor->position,
+                          actor->target->position);
     if (actor->target->flags & MF_SHADOW)
         actor->_angle += ((P_Random()-P_Random()) * Angle::A360 / 2048) * Angle::A45;
 }
@@ -963,8 +955,7 @@ void A_SkelMissile (Mob* actor)
     mo = P_SpawnMissile (actor, actor->target, MT_TRACER);
     actor->zz -= 16;	// back to normal
 
-    mo->xx += mo->mmomx;
-    mo->yy += mo->mmomy;
+    mo->position.increment(mo->mmomx, mo->mmomy);
     mo->tracer = actor->target;
 }
 
@@ -981,12 +972,12 @@ void A_Tracer (Mob* actor)
 	return;
     
     // spawn a puff of smoke behind the rocket		
-    PP_SpawnPuff (actor->xx, actor->yy, actor->zz);
+    PP_SpawnPuff(actor->position, actor->zz);
 	
-    th = PP_SpawnMobj(actor->xx - actor->mmomx,
-                      actor->yy - actor->mmomy,
-                      actor->zz, 
-                      MT_SMOKE);
+    th = PP_SpawnMobj(
+	actor->position - Vertex(actor->mmomx, actor->mmomy),
+	actor->zz, 
+	MT_SMOKE);
     
     th->mmomz = 1;
     th->tics -= P_Random()&3;
@@ -1000,8 +991,7 @@ void A_Tracer (Mob* actor)
 	return;
     
     // change angle	
-    Angle exact =  Angle(actor->xx, actor->yy,
-			 dest->xx, dest->yy);
+    Angle exact =  Angle(actor->position, dest->position);
 
     if (exact != actor->_angle)
     {
@@ -1023,9 +1013,7 @@ void A_Tracer (Mob* actor)
     actor->mmomy = actor->info->speed * sin(actor->_angle);
     
     // change slope
-    double dist = PP_AproxDistance(dest->xx - actor->xx,
-                                   dest->yy - actor->yy);
-    
+    double dist = dest->position.distance(actor->position);
     dist = dist / actor->info->speed;
 
     if (dist < 1)
@@ -1093,14 +1081,14 @@ bool PIT_VileCheck (Mob*	thing)
     
     maxdist = thing->info->rradius + mobjinfo[MT_VILE].rradius;
 	
-    if (fabs(thing->xx - vviletryx) > maxdist
-        || fabs(thing->yy - vviletryy) > maxdist)
+    if (fabs(thing->position.getX() - vviletryx) > maxdist
+        || fabs(thing->position.getY() - vviletryy) > maxdist)
         return true;		// not actually touching
     
     corpsehit = thing;
     corpsehit->mmomx = corpsehit->mmomy = 0;
     corpsehit->hheight *= 4;
-    check = PP_CheckPosition(corpsehit, corpsehit->xx, corpsehit->yy);
+    check = PP_CheckPosition(corpsehit, corpsehit->position);
     corpsehit->hheight *= 4;
 
     if (!check)
@@ -1134,8 +1122,8 @@ void A_VileChase (Mob* actor)
     {
         // check for corpses to raise
         // @todo check the actor speed thing below
-        vviletryx = actor->xx + actor->info->speed*xxspeed[actor->movedir];
-        vviletryy = actor->yy + actor->info->speed*yyspeed[actor->movedir];
+        vviletryx = actor->position.getX() + actor->info->speed*xxspeed[actor->movedir];
+        vviletryy = actor->position.getY() + actor->info->speed*yyspeed[actor->movedir];
         
         xl = (vviletryx - blockMap.oorgx - MMAXRADIUS*2) / DOUBLE_MAPBLOCKS_DIV;
         xh = (vviletryx - blockMap.oorgx + MMAXRADIUS*2) / DOUBLE_MAPBLOCKS_DIV;
@@ -1219,8 +1207,7 @@ void A_Fire (Mob* actor)
 	return;
 
     P_UnsetThingPosition (actor);
-    actor->xx = dest->xx + (24 * cos(dest->_angle));
-    actor->yy = dest->yy + (24 * sin(dest->_angle));
+    actor->position = Vertex(dest->position, 24, dest->_angle);
     actor->zz = dest->zz;
     P_SetThingPosition (actor);
 }
@@ -1241,8 +1228,7 @@ void A_VileTarget (Mob*	actor)
 
     A_FaceTarget (actor);
 
-    fog = PP_SpawnMobj(actor->target->xx,
-                       actor->target->xx, // @todo strange should it not be y here
+    fog = PP_SpawnMobj(actor->target->position,
                        actor->target->zz, 
                        MT_FIRE);
     
@@ -1280,8 +1266,7 @@ void A_VileAttack (Mob* actor)
 	return;
 		
     // move the fire between the vile and the player
-    fire->xx = actor->target->xx - (24 * cos(actor->_angle));
-    fire->yy = actor->target->yy - (24 * sin(actor->_angle));
+    fire->position = Vertex(actor->target->position, 24, actor->_angle);
     P_RadiusAttack (fire, actor, 70);
 }
 
@@ -1369,7 +1354,7 @@ void A_SkullAttack (Mob* actor)
     A_FaceTarget (actor);
     actor->mmomx = SSKULLSPEED * cos(actor->_angle);
     actor->mmomy = SSKULLSPEED * sin(actor->_angle);
-    double dist = PP_AproxDistance(dest->xx - actor->xx, dest->yy - actor->yy);
+    double dist = dest->position.distance(actor->position);
     dist = dist / SSKULLSPEED;
     if (dist < 1)
         dist = 1;
@@ -1410,14 +1395,13 @@ AA_PainShootSkull(Mob* actor, double angle)
     // okay, there's playe for another one
     prestep = 4 + 3*(actor->info->rradius + mobjinfo[MT_SKULL].rradius)/2;
     
-    double x = actor->xx + prestep * cos(angle);
-    double y = actor->yy + prestep * sin(angle);
+    Vertex v = Vertex(actor->position, prestep, angle);
     double z = actor->zz + 8; // @todo check this 8 fishy
 		
-    newmobj = PP_SpawnMobj(x , y, z, MT_SKULL);
+    newmobj = PP_SpawnMobj(v, z, MT_SKULL);
 
     // Check for movements.
-    if (!PP_TryMove(newmobj, newmobj->xx, newmobj->yy))
+    if (!PP_TryMove(newmobj, newmobj->position))
     {
         // kill it immediately
         P_DamageMobj (newmobj,actor,actor,10000);	
@@ -1769,11 +1753,11 @@ void A_BrainScream (Mob*	mo)
 {
     Mob*	th;
     printf("A_BrainScream broken?? \n");
-    for (double x = mo->xx  - 196; x < mo->xx + 320; x+= 8)
+    for (double x = mo->position.getX()  - 196; x < mo->position.getX() + 320; x+= 8)
     {
-        double y = mo->yy - 320;
+        double y = mo->position.getY() - 320;
 	double z = 128 + P_Random() * 2; // @todo the z is most likely fishy
-	th = PP_SpawnMobj(x,y,z, MT_ROCKET);
+	th = PP_SpawnMobj(Vertex(x, y), z, MT_ROCKET);
     // @todo how to change this so it works for double instead of fixed *512*
 	th->mmomz = P_Random()*512;
 
@@ -1797,10 +1781,10 @@ void A_BrainExplode (Mob* mo)
     Mob*	th;
     printf("A_BrainExplode\n");
     //x = double_to_fixed(mo->xx) + (P_Random () - P_Random ())*2048;
-    x = mo->xx + (P_Random () - P_Random ()) / 32;
-    y = mo->yy;
+    x = mo->position.getX() + (P_Random () - P_Random ()) / 32;
+    y = mo->position.getY();
     z = 128 + P_Random()*2;
-    th = PP_SpawnMobj(x,y,z, MT_ROCKET);
+    th = PP_SpawnMobj(Vertex(x, y), z, MT_ROCKET);
     // @todo how to fix this for double instead of fixed *512*
     //th->mmomz = P_Random() * 512;
     th->mmomz = P_Random() / 128;
@@ -1837,7 +1821,7 @@ void A_BrainSpit (Mob*	mo)
     newmobj = P_SpawnMissile (mo, targ, MT_SPAWNSHOT);
     newmobj->target = targ;
     // @todo think this could be broken
-    newmobj->reactiontime = ((targ->yy - mo->yy)/newmobj->mmomy) / newmobj->state->tics;
+    newmobj->reactiontime = ((targ->position.getX() - mo->position.getY())/newmobj->mmomy) / newmobj->state->tics;
 
     S_StartSound(NULL, sfx_bospit);
 }
@@ -1867,7 +1851,7 @@ void A_SpawnFly (Mob* mo)
     targ = mo->target;
 
     // First spawn teleport fog.
-    fog = PP_SpawnMobj(targ->xx, targ->yy, targ->zz, MT_SPAWNFIRE);
+    fog = PP_SpawnMobj(targ->position, targ->zz, MT_SPAWNFIRE);
     S_StartSound (fog, sfx_telept);
 
     // Randomly select monster to spawn.
@@ -1898,12 +1882,12 @@ void A_SpawnFly (Mob* mo)
     else
 	type = MT_BRUISER;		
 
-    newmobj	= PP_SpawnMobj(targ->xx, targ->yy, targ->zz, type);
+    newmobj	= PP_SpawnMobj(targ->position, targ->zz, type);
     if (P_LookForPlayers (newmobj, true) )
         newmobj->setState((statenum_t)newmobj->info->seestate);
 	
     // telefrag anything in this spot
-    PP_TeleportMove(newmobj, newmobj->xx, newmobj->yy);
+    PP_TeleportMove(newmobj, newmobj->position);
 
     // remove self (i.e., cube).
     P_RemoveMobj (mo);

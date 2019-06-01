@@ -100,12 +100,10 @@ RR_PointOnSegSide(
     double y,
     seg_t* line );
 
-double R_PointsToAngle(double x1, double y1, double x2, double y2);
-double RR_PointToDist(double x, double y);
-double RR_ScaleFromGlobalAngle(Angle visangle);
+double RR_ScaleFromGlobalAngle(const Angle& visangle);
 
 subsector_t*
-RR_PointInSubsector(double x, double y);
+RR_PointInSubsector(const Vertex& v);
 int R_ViewAngleToX(const Angle& a);
 
 //

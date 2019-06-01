@@ -258,16 +258,11 @@ void R_ClearClipSegs (void)
 //
 void R_AddLine (seg_t*	line)
 {
-    //int			x1;
-    //int			x2;
-    
     curline = line;
 
     // OPTIMIZE: quickly reject orthogonal back sides.
-    Angle angle1(vviewx, vviewy,
-                 line->v1->getX(), line->v1->getY());
-    Angle angle2(vviewx, vviewy,
-                 line->v2->getX(), line->v2->getY());
+    Angle angle1(view, *(line->v1));
+    Angle angle2(view, *(line->v2));
     // OPTIMIZE: make constant out of 2*clipangle (FIELDOFVIEW).
     Angle span = angle1 - angle2;
     
@@ -380,16 +375,16 @@ RR_CheckBBox(const double* bspcoord)
 
     // Find the corners of the box
     // that define the edges from current viewpoint.
-    if (vviewx <= bspcoord[BOXLEFT])
+    if (view.getX() <= bspcoord[BOXLEFT])
 	boxx = 0;
-    else if (vviewx < bspcoord[BOXRIGHT])
+    else if (view.getX() < bspcoord[BOXRIGHT])
 	boxx = 1;
     else
 	boxx = 2;
 		
-    if (vviewy >= bspcoord[BOXTOP])
+    if (view.getY() >= bspcoord[BOXTOP])
 	boxy = 0;
-    else if (vviewy > bspcoord[BOXBOTTOM])
+    else if (view.getY() > bspcoord[BOXBOTTOM])
 	boxy = 1;
     else
 	boxy = 2;
@@ -404,8 +399,8 @@ RR_CheckBBox(const double* bspcoord)
     double y2 = bspcoord[checkcoord[boxpos][3]];
     
     // check clip list for an open space
-    Angle angle1 = Angle(vviewx, vviewy, x1, y1) - vviewangle;
-    Angle angle2 = Angle(vviewx, vviewy, x2, y2) - vviewangle;
+    Angle angle1 = Angle(view.getX(), view.getY(), x1, y1) - vviewangle;
+    Angle angle2 = Angle(view.getX(), view.getY(), x2, y2) - vviewangle;
     Angle span = angle1 - angle2;
     
     // Sitting on a line?
@@ -537,7 +532,7 @@ void R_RenderBSPNode (int bspnum)
     const BspNode& bsp = nodes[bspnum];
     
     // Decide which side the view point is on.
-    int side = bsp.pointOnSide(vviewx, vviewy);
+    int side = bsp.pointOnSide(view);
     
     // Recursively divide front space.
     R_RenderBSPNode(bsp.getChild(side)); 

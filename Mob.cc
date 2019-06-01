@@ -117,23 +117,26 @@ Mob::xyMovement()
     double xmove = mmomx;
     double ymove = mmomy;
 
+    double x = position.getX();
+    double y = position.getY();
+    
     do
     {
         if (xmove > MMAXMOVE/2 || ymove > MMAXMOVE/2)
         {
-            ptryx = xx + xmove/2;
-            ptryy = yy + ymove/2;
+            ptryx = x + xmove/2;
+            ptryy = y + ymove/2;
             xmove /= 2;
             ymove /= 2;
         }
         else
         {
-            ptryx = xx + xmove;
-            ptryy = yy + ymove;
+            ptryx = x + xmove;
+            ptryy = y + ymove;
             xmove = ymove = 0;
         }
 	
-        if (!PP_TryMove (this, ptryx, ptryy))
+        if (!PP_TryMove (this, Vertex(ptryx, ptryy)))
         {
             // blocked move
             if (player)
@@ -237,7 +240,8 @@ Mob::zMovement()
         if ( !(flags & MF_SKULLFLY) && 
              !(flags & MF_INFLOAT) )
         {
-            dist = PP_AproxDistance (xx - target->xx, yy - target->yy);
+
+            dist = position.distance(target->position);
             
             delta = target->zz + (hheight / 2) - zz;
             
@@ -326,17 +330,15 @@ P_NightmareRespawn (Mob* mobj)
     Mob*		mo;
     MapThing*		mthing;
 	
-    double x = mobj->spawnpoint.x; 
-    double y = mobj->spawnpoint.y; 
+    Vertex position(mobj->spawnpoint.x, mobj->spawnpoint.y);
     
     // somthing is occupying it's position?
-    if (!PP_CheckPosition (mobj, x, y) ) 
+    if (!PP_CheckPosition(mobj, position))
         return;	// no respwan
     
     // spawn a teleport fog at old spot
     // because of removal of the body?
-    mo = PP_SpawnMobj(mobj->xx,
-		      mobj->yy,
+    mo = PP_SpawnMobj(mobj->position,
 		      mobj->subsector->sector->ffloorheight, 
 		      MT_TFOG); 
     
@@ -344,9 +346,9 @@ P_NightmareRespawn (Mob* mobj)
     S_StartSound (mo, sfx_telept);
     
     // spawn a teleport fog at the new spot
-    ss = RR_PointInSubsector(x,y); 
+    ss = RR_PointInSubsector(position); 
     
-    mo = PP_SpawnMobj(x, y, ss->sector->ffloorheight, MT_TFOG); 
+    mo = PP_SpawnMobj(position, ss->sector->ffloorheight, MT_TFOG); 
     
     S_StartSound (mo, sfx_telept);
     
@@ -362,7 +364,7 @@ P_NightmareRespawn (Mob* mobj)
         z = ONFLOORZ;
     
     // inherit attributes from deceased one
-    mo = PP_SpawnMobj (x,y,z, mobj->type);
+    mo = PP_SpawnMobj (position, z, mobj->type);
     mo->spawnpoint = mobj->spawnpoint;	
     mo->_angle = mthing->getAngle();
 
@@ -446,8 +448,7 @@ void P_MobjThinker (Mob* mobj)
 //
 Mob*
 PP_SpawnMobj( 
-    double x,
-    double y,
+    const Vertex& v,
     double z,
     mobjtype_t type)
 {
@@ -461,8 +462,7 @@ PP_SpawnMobj(
 	
     mobj->type = type;
     mobj->info = info;
-    mobj->xx = x;
-    mobj->yy = y; 
+    mobj->position = v;
     mobj->rradius = info->rradius;
     mobj->hheight = info->hheight;
     mobj->flags = info->flags;
@@ -565,13 +565,12 @@ void P_RespawnSpecials (void)
 
     mthing = &itemrespawnque[iquetail];
 	
-    double x = mthing->x; 
-    double y = mthing->y; 
+    Vertex position(mthing->x, mthing->y); 
 	  
     // spawn a teleport fog at the new spot
-    ss = RR_PointInSubsector(x,y);
+    ss = RR_PointInSubsector(position);
     // @todo fllorheight below is fixed?
-    mo = PP_SpawnMobj (x, y, ss->sector->ffloorheight , MT_IFOG); 
+    mo = PP_SpawnMobj(position, ss->sector->ffloorheight , MT_IFOG); 
     S_StartSound (mo, sfx_itmbk);
     
     // find which type to spawn
@@ -589,7 +588,7 @@ void P_RespawnSpecials (void)
     else
         z = ONFLOORZ;
 
-    mo = PP_SpawnMobj(x,y,z, (mobjtype_t)i);
+    mo = PP_SpawnMobj(position, z, (mobjtype_t)i);
     mo->spawnpoint = *mthing;	
     mo->_angle = mthing->getAngle();
     
@@ -621,10 +620,9 @@ void P_SpawnPlayer (MapThing* mthing)
     if (p->playerstate == PST_REBORN)
 	G_PlayerReborn (mthing->type-1);
 
-    double x = mthing->x;
-    double y = mthing->y;
+    Vertex position(mthing->x, mthing->y);
     double z = ONFLOORZ;
-    mobj	= PP_SpawnMobj(x,y,z, MT_PLAYER);
+    mobj = PP_SpawnMobj(position, z, MT_PLAYER);
     
     // set color translations for player sprites
     if (mthing->type > 1)		
@@ -733,16 +731,14 @@ void P_SpawnMapThing (MapThing* mthing)
     }
     
     // spawn it
-    double x = mthing->x;
-    double y = mthing->y;
-
+    Vertex position(mthing->x, mthing->y);
     double z;
     if (mobjinfo[i].flags & MF_SPAWNCEILING)
         z = ONCEILINGZ;
     else
         z = ONFLOORZ;
     
-    mobj = PP_SpawnMobj (x,y,z, (mobjtype_t)i);
+    mobj = PP_SpawnMobj(position, z, (mobjtype_t)i);
     mobj->spawnpoint = *mthing;
     
     if (mobj->tics > 0)
@@ -771,15 +767,14 @@ extern double aattackrange;
 
 void
 PP_SpawnPuff(
-    double x,
-    double y,
+    const Vertex& v,
     double z)
 {
     Mob*	th;
 	
     z += P_Random() - P_Random() / 64;
 
-    th = PP_SpawnMobj (x,y,z, MT_PUFF);
+    th = PP_SpawnMobj(v, z, MT_PUFF);
     th->mmomz = 1;
     th->tics -= P_Random()&3;
 
@@ -796,14 +791,13 @@ PP_SpawnPuff(
 // 
 void
 PP_SpawnBlood(
-    double x,
-    double y,
+    const Vertex& v,
     double z,
     int damage )
 {
     Mob*	th;
     z += P_Random() - P_Random() / 64;
-    th = PP_SpawnMobj (x,y,z, MT_BLOOD);
+    th = PP_SpawnMobj(v, z, MT_BLOOD);
     th->mmomz = 1*2;
     th->tics -= P_Random()&3;
     
@@ -831,11 +825,10 @@ void P_CheckMissileSpawn (Mob* th)
     
     // move a little forward so an angle can
     // be computed if it immediately explodes
-    th->xx += th->mmomx / 2;
-    th->yy += th->mmomy / 2;
+    th->position += Vertex(th->mmomx / 2, th->mmomy / 2);
     th->zz += th->mmomz / 2;
     
-    if (!PP_TryMove (th, th->xx, th->yy))
+    if (!PP_TryMove (th, th->position))
         th->explodeMissile();
 }
 
@@ -852,21 +845,20 @@ P_SpawnMissile
     Mob*	th;
     double dist;
 
-    th = PP_SpawnMobj(source->xx,
-                      source->yy,
+    th = PP_SpawnMobj(source->position,
                       source->zz + 4*8, 
                       type);
     
     if (th->info->seesound)
         S_StartSound (th, th->info->seesound);
     th->target = source;	// where it came from
-    Angle an = Angle(source->xx, source->yy, dest->xx, dest->yy);	
+    Angle an = Angle(source->position, dest->position);	
     if (dest->flags & MF_SHADOW)
         an += (P_Random()-P_Random()) * Angle::A360 / 4096;	
     th->_angle = an;
     th->mmomx = th->info->speed * cos(an);
     th->mmomy= th->info->speed * sin(an);
-    dist = PP_AproxDistance(dest->xx - source->xx, dest->yy - source->yy);
+    dist = source->position.distance(dest->position);
     dist = dist / th->info->speed;
     if (dist < 1)
         dist = 1;
@@ -909,11 +901,8 @@ P_SpawnPlayerMissile
         }
     }
 		
-    double x = source->xx;
-    double y = source->yy;
     double z = source->zz + 4*8;
-	
-    th = PP_SpawnMobj (x,y,z, type);
+    th = PP_SpawnMobj(source->position, z, type);
 
     if (th->info->seesound)
         S_StartSound (th, th->info->seesound);
@@ -931,7 +920,5 @@ P_SpawnPlayerMissile
 void
 Mob::print()
 {
-    if (type == MT_PUFF || type == MT_BLOOD) return;
-    fprintf(stderr, "this %p Mob<%d>: x: %f y: %f z: %f, momx: %f, momy: %f, momz %f\n", 
-            (void*) this, type, xx, yy, zz, mmomx, mmomy, mmomz);
+    assert(false && "NOT IMPLEMENTED");
 }

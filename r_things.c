@@ -444,8 +444,8 @@ void R_ProjectSprite (Mob* thing)
     vissprite_t*	vis;
     
     // transform the origin point
-    double tr_x = thing->xx - vviewx;
-    double tr_y = thing->yy - vviewy;
+    double tr_x = thing->position.getX() - view.getX();
+    double tr_y = thing->position.getY() - view.getY();
 	
     double gxt = tr_x * vviewcos; 
     double gyt = -(tr_y * vviewsin);
@@ -482,7 +482,7 @@ void R_ProjectSprite (Mob* thing)
 
     if (sprframe->rotate)
     {
-        Angle ang(vviewx, vviewy, thing->xx, thing->yy);
+        Angle ang(view, thing->position);
 	double magic((Angle::A45/2)*9);
 	int direction = (((double)Angle(ang - thing->_angle + magic)) / Angle::A45);
 	lump = sprframe->lump[direction];
@@ -514,8 +514,8 @@ void R_ProjectSprite (Mob* thing)
     vis = R_NewVisSprite ();
     vis->mobjflags = thing->flags;
     vis->sscale = xscale;
-    vis->ggx = thing->xx;
-    vis->ggy = thing->yy;
+    vis->ggx = thing->position.getX();
+    vis->ggy = thing->position.getY();
     vis->ggz = thing->zz;
     vis->ggzt = thing->zz + sspritetopoffset[lump];
     vis->ttexturemid = vis->ggzt - vviewz;

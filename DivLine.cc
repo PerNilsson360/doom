@@ -34,6 +34,12 @@ DivLine::DivLine(const DataInput& dataInput)
     dy = dataInput.readShort();
 }
 
+Vertex
+DivLine::getVertex(double fraction)
+{
+    return Vertex(moveX(fraction), moveY(fraction));
+}
+
 int
 DivLine::moveX(double fraction) const
 {

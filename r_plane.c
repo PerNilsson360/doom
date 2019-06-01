@@ -154,8 +154,8 @@ R_MapPlane
 	
     double length = distance * ddistscale[x1];
     Angle a = vviewangle + xxtoviewangle[x1];
-    ds_xfrac = vviewx + (cos(a) * length);
-    ds_yfrac = -vviewy - (sin(a) * length);
+    ds_xfrac = view.getX() + (cos(a) * length);
+    ds_yfrac = (-view.getY()) - (sin(a) * length);
     
     if (fixedcolormap)
 	ds_colormap = fixedcolormap;

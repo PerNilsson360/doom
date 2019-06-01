@@ -41,6 +41,7 @@ static const char rcsid[] = "$Id: r_main.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 #include "r_sky.h"
 #include "d_player.h"
 #include "Angle.hh"
+#include "Vertex.hh"
 
 
 namespace {
@@ -65,8 +66,7 @@ int			sscount;
 int			linecount;
 int			loopcount;
 
-double vviewx;
-double vviewy;
+Vertex view;			// x and y cordinates
 double vviewz;
 
 Angle vviewangle;
@@ -155,70 +155,8 @@ RR_PointOnSegSide(double x,
     return 1;			
 }
 
-// Returns an angle between a point and the view coordinates
 double
-RR_PointToAngle(double x, double y)
-{
-    return R_PointsToAngle(x, y,
-                           vviewx, vviewy);
-}
-
-//returns angle used in polar coordinates
-double 
-R_PointsToAngle(double x1, double y1, double x2, double y2)
-{
-    double x = x2 - x1;
-    double y = y2 - y1;
-    double result;
-    if (y >= 0) { 
-        if (x == 0) {
-            result = Angle::A90;
-        } else {
-            if (x > 0) {
-                result = atan(y/x);
-            } else {
-                x *= -1;
-                result = Angle::A180;
-                result -= atan(y/x);
-            }
-        }
-    } else {        
-        if (x == 0) {
-            result = Angle::A270;
-        } else {
-            y *= -1;
-            if (x < 0) {
-                x *= -1;
-                result = Angle::A180;
-                result += atan(y/x);
-            } else {
-                result = Angle::A360;
-                result -= atan(y/x);
-            }
-        }
-    }
-    return result;
-}
-
-double
-RR_PointToDist(double x, double y)
-{
-    double dx = x - vviewx;
-    double dy = y - vviewy;
-    return sqrt((dx * dx) + (dy * dy));
-}
-
-
-//
-// R_InitPointToAngle
-//
-void R_InitPointToAngle (void)
-{
-}
-
-
-double
-RR_ScaleFromGlobalAngle(Angle visangle)
+RR_ScaleFromGlobalAngle(const Angle& visangle)
 {
     double scale;
 
@@ -384,8 +322,6 @@ void R_Init (void)
 {
     R_InitData ();
     printf ("\nR_InitData");
-    R_InitPointToAngle ();
-    printf ("\nR_InitPointToAngle");
     R_InitPlanes ();
     printf ("\nR_InitPlanes");
     R_InitLightTables ();
@@ -402,18 +338,20 @@ void R_Init (void)
 // R_PointInSubsector
 //
 subsector_t*
-RR_PointInSubsector(double x, double y)
+RR_PointInSubsector(const Vertex& v)
 {
     // single subsector is a special case
     int numnodes = nodes.size();
-    if (!numnodes)				
-        return subsectors;
+    if (!numnodes) {
+	printf("RR_PointInSubsector: size 0 ?????");
+	return subsectors;
+    }
     
     int nodenum = numnodes-1;
     
     while (!(nodenum & NF_SUBSECTOR)) {
         const BspNode& node = nodes[nodenum];
-        int side = node.pointOnSide(x, y);
+        int side = node.pointOnSide(v);
         nodenum = node.getChild(side);
     }
 	
@@ -430,8 +368,7 @@ void R_SetupFrame (player_t* player)
     int		i;
     
     viewplayer = player;
-    vviewx = player->mo->xx;
-    vviewy = player->mo->yy;
+    view = player->mo->position;
     vviewangle = player->mo->_angle;
     extralight = player->extralight;
 
