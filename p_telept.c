@@ -38,7 +38,7 @@ rcsid[] = "$Id: p_telept.c,v 1.3 1997/01/28 22:08:29 b1 Exp $";
 
 // State.
 #include "r_state.h"
-
+#include "Sector.hh"
 
 
 //
@@ -50,12 +50,11 @@ EV_Teleport
   int		side,
   Mob*	thing )
 {
-    int		i;
     int		tag;
     Mob*	m;
     Mob*	fog;
     thinker_t*	thinker;
-    sector_t*	sector;
+    Sector*	sector;
 
     // don't teleport missiles
     if (thing->flags & MF_MISSILE)
@@ -68,7 +67,7 @@ EV_Teleport
 
     
     tag = line->tag;
-    for (i = 0; i < numsectors; i++)
+    for (size_t i = 0;i < sectors.size(); i++)
     {
 	if (sectors[ i ].tag == tag )
 	{
@@ -89,7 +88,7 @@ EV_Teleport
 
 		sector = m->subsector->sector;
 		// wrong sector
-		if (sector-sectors != i )
+		if (sector-&sectors[0] != i )
 		    continue;	
 
 		Vertex oldPosition = thing->position;

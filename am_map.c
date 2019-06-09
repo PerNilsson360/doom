@@ -49,7 +49,7 @@
 #include "am_map.h"
 
 #include "ImageScaler.hh"
-
+#include "Sector.hh"
 
 // For use if I do walls with outsides/insides
 #define REDS		(256-5*16)
@@ -1209,10 +1209,9 @@ AM_drawThings
 ( int	colors,
   int 	colorrange)
 {
-    int		i;
     Mob*	t;
 
-    for (i=0;i<numsectors;i++)
+    for (size_t i = 0; i < sectors.size(); i++)
     {
 	t = sectors[i].thinglist;
 	while (t)

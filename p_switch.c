@@ -40,7 +40,7 @@ rcsid[] = "$Id: p_switch.c,v 1.3 1997/01/28 22:08:29 b1 Exp $";
 // State.
 #include "doomstat.h"
 #include "r_state.h"
-
+#include "Sector.hh"
 
 //
 // CHANGE THE TEXTURE OF A WALL SWITCH TO ITS OPPOSITE

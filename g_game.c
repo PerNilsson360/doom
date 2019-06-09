@@ -66,7 +66,7 @@ rcsid[] = "$Id: g_game.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 #include "r_data.h"
 #include "r_sky.h"
 
-
+#include "Sector.hh"
 
 #include "g_game.h"
 

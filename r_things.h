@@ -50,7 +50,7 @@ void R_DrawMaskedColumn (column_t* column);
 
 void R_SortVisSprites (void);
 
-void R_AddSprites (sector_t* sec);
+void R_AddSprites (Sector* sec);
 void R_AddPSprites (void);
 void R_DrawSprites (void);
 void R_InitSprites (const char** namelist);

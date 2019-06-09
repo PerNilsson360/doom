@@ -35,6 +35,7 @@ rcsid[] = "$Id: p_lights.c,v 1.5 1997/02/03 22:45:11 b1 Exp $";
 
 // State.
 #include "r_state.h"
+#include "Sector.hh"
 
 //
 // FIRELIGHT FLICKER
@@ -65,7 +66,7 @@ void T_FireFlicker (fireflicker_t* flick)
 //
 // P_SpawnFireFlicker
 //
-void P_SpawnFireFlicker (sector_t*	sector)
+void P_SpawnFireFlicker (Sector*	sector)
 {
     fireflicker_t*	flick;
 	
@@ -121,7 +122,7 @@ void T_LightFlash (lightflash_t* flash)
 // After the map has been loaded, scan each sector
 // for specials that spawn thinkers
 //
-void P_SpawnLightFlash (sector_t*	sector)
+void P_SpawnLightFlash (Sector*	sector)
 {
     lightflash_t*	flash;
 
@@ -179,7 +180,7 @@ void T_StrobeFlash (strobe_t*		flash)
 //
 void
 P_SpawnStrobeFlash
-( sector_t*	sector,
+( Sector*	sector,
   int		fastOrSlow,
   int		inSync )
 {
@@ -215,7 +216,7 @@ P_SpawnStrobeFlash
 void EV_StartLightStrobing(line_t*	line)
 {
     int		secnum;
-    sector_t*	sec;
+    Sector*	sec;
 	
     secnum = -1;
     while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
@@ -236,29 +237,25 @@ void EV_StartLightStrobing(line_t*	line)
 void EV_TurnTagLightsOff(line_t* line)
 {
     int			i;
-    int			j;
     int			min;
-    sector_t*		sector;
-    sector_t*		tsec;
+    Sector*		tsec;
     line_t*		templine;
 	
-    sector = sectors;
-    
-    for (j = 0;j < numsectors; j++, sector++)
+    for (size_t j = 0;j < sectors.size(); j++)
     {
-	if (sector->tag == line->tag)
+	if (sectors[j].tag == line->tag)
 	{
-	    min = sector->lightlevel;
-	    for (i = 0;i < sector->linecount; i++)
+	    min = sectors[j].lightlevel;
+	    for (i = 0;i < sectors[j].linecount; i++)
 	    {
-		templine = sector->lines[i];
-		tsec = getNextSector(templine,sector);
+		templine = sectors[j].lines[i];
+		tsec = getNextSector(templine,&sectors[j]);
 		if (!tsec)
 		    continue;
 		if (tsec->lightlevel < min)
 		    min = tsec->lightlevel;
 	    }
-	    sector->lightlevel = min;
+	    sectors[j].lightlevel = min;
 	}
     }
 }
@@ -272,27 +269,23 @@ EV_LightTurnOn
 ( line_t*	line,
   int		bright )
 {
-    int		i;
     int		j;
-    sector_t*	sector;
-    sector_t*	temp;
     line_t*	templine;
 	
-    sector = sectors;
 	
-    for (i=0;i<numsectors;i++, sector++)
+    for (size_t i=0;i<sectors.size();i++)
     {
-	if (sector->tag == line->tag)
+	if (sectors[i].tag == line->tag)
 	{
 	    // bright = 0 means to search
 	    // for highest light level
 	    // surrounding sector
 	    if (!bright)
 	    {
-		for (j = 0;j < sector->linecount; j++)
+		for (j = 0;j < sectors[i].linecount; j++)
 		{
-		    templine = sector->lines[j];
-		    temp = getNextSector(templine,sector);
+		    templine = sectors[i].lines[j];
+		    Sector* temp = getNextSector(templine,&sectors[i]);
 
 		    if (!temp)
 			continue;
@@ -301,7 +294,7 @@ EV_LightTurnOn
 			bright = temp->lightlevel;
 		}
 	    }
-	    sector-> lightlevel = bright;
+	    sectors[i].lightlevel = bright;
 	}
     }
 }
@@ -338,7 +331,7 @@ void T_Glow(glow_t*	g)
 }
 
 
-void P_SpawnGlowingLight(sector_t*	sector)
+void P_SpawnGlowingLight(Sector* sector)
 {
     glow_t*	g;
 	

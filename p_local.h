@@ -202,7 +202,7 @@ void P_SlideMove (Mob* mo);
 bool P_CheckSight (Mob* t1, Mob* t2);
 void P_UseLines (player_t* player);
 
-bool P_ChangeSector (sector_t* sector, bool crunch);
+bool P_ChangeSector (Sector* sector, bool crunch);
 
 extern Mob*	linetarget;	// who got hit (or NULL)
 

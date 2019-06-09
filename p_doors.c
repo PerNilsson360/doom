@@ -38,6 +38,8 @@ rcsid[] = "$Id: p_doors.c,v 1.4 1997/02/03 16:47:53 b1 Exp $";
 // Data.
 #include "dstrings.h"
 #include "sounds.h"
+#include "Sector.hh"
+
 
 #if 0
 //
@@ -266,7 +268,7 @@ EV_DoDoor
   vldoor_e	type )
 {
     int		secnum,rtn;
-    sector_t*	sec;
+    Sector*	sec;
     vldoor_t*	door;
 	
     secnum = -1;
@@ -356,7 +358,7 @@ EV_VerticalDoor
   Mob*	thing )
 {
     player_t*	player;
-    sector_t*	sec;
+    Sector*	sec;
     vldoor_t*	door;
     int		side;
 	
@@ -500,7 +502,7 @@ EV_VerticalDoor
 //
 // Spawn a door that closes after 30 seconds
 //
-void P_SpawnDoorCloseIn30 (sector_t* sec)
+void P_SpawnDoorCloseIn30 (Sector* sec)
 {
     vldoor_t*	door;
 	
@@ -524,7 +526,7 @@ void P_SpawnDoorCloseIn30 (sector_t* sec)
 //
 void
 P_SpawnDoorRaiseIn5Mins
-( sector_t*	sec,
+( Sector*	sec,
   int		secnum )
 {
     vldoor_t*	door;
@@ -712,7 +714,7 @@ EV_SlidingDoor
 ( line_t*	line,
   Mob*	thing )
 {
-    sector_t*		sec;
+    Sector*		sec;
     slidedoor_t*	door;
 	
     // DOOM II ONLY...

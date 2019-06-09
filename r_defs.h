@@ -40,6 +40,7 @@
 #pragma interface
 #endif
 
+class Sector;
 
 
 // Silhouette, needed for clipping Segs (mainly)
@@ -50,8 +51,6 @@
 #define SIL_BOTH		3
 
 #define MAXDRAWSEGS		256
-
-
 
 
 
@@ -79,49 +78,6 @@ typedef struct
 } degenmobj_t;
 
 //
-// The SECTORS record, at runtime.
-// Stores things/mobjs.
-//
-typedef	struct
-{
-    double	ffloorheight;
-    double      cceilingheight;
-    short	floorpic;
-    short	ceilingpic;
-    short	lightlevel;
-    short	special;
-    short	tag;
-
-    // 0 = untraversed, 1,2 = sndlines -1
-    int		soundtraversed;
-
-    // thing that made a sound (or null)
-    Mob*	soundtarget;
-
-    // mapblock bounding box for height changes
-    int		blockbox[4];
-
-    // origin for any sounds played by the sector
-    degenmobj_t	soundorg;
-
-    // if == validcount, already checked
-    int		validcount;
-
-    // list of mobjs in sector
-    Mob*	thinglist;
-
-    // thinker_t for reversable actions
-    void*	specialdata;
-
-    int			linecount;
-    struct line_s**	lines;	// [linecount] size
-    
-} sector_t;
-
-
-
-
-//
 // The SideDef.
 //
 
@@ -140,7 +96,7 @@ typedef struct
     short	midtexture;
 
     // Sector the SideDef is facing.
-    sector_t*	sector;
+    Sector*	sector;
     
 } side_t;
 
@@ -188,8 +144,8 @@ typedef struct line_s
 
     // Front and back sector.
     // Note: redundant? Can be retrieved from SideDefs.
-    sector_t*	frontsector;
-    sector_t*	backsector;
+    Sector*	frontsector;
+    Sector*	backsector;
 
     // if == validcount, already checked
     int		validcount;
@@ -210,7 +166,7 @@ typedef struct line_s
 //
 typedef struct subsector_s
 {
-    sector_t*	sector;
+    Sector*	sector;
     short	numlines;
     short	firstline;
     
@@ -236,8 +192,8 @@ typedef struct
     // Sector references.
     // Could be retrieved from linedef, too.
     // backsector is NULL for one sided lines
-    sector_t*	frontsector;
-    sector_t*	backsector;
+    Sector*	frontsector;
+    Sector*	backsector;
     
 } seg_t;
 

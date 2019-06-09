@@ -212,7 +212,7 @@ getsfx
     // I do not do runtime patches to that
     //  variable. Instead, we will use a
     //  default sound for replacement.
-    if ( W_CheckNumForName(name) == -1 ) {
+    if ( W_CheckNumForName(std::string(name, 8)) == -1 ) {
 	printf("Failed to load  soundfile %s\n", name);
 	sfxlump = W_GetNumForName("dspistol");
     }

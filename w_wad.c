@@ -28,6 +28,7 @@ rcsid[] = "$Id: w_wad.c,v 1.5 1997/02/03 16:47:57 b1 Exp $";
 
 #ifdef NORMALUNIX
 #include <ctype.h>
+#include <string>
 #include <sys/types.h>
 #include <string.h>
 #include <unistd.h>
@@ -350,43 +351,16 @@ int W_NumLumps (void)
 // Returns -1 if name not found.
 //
 
-int W_CheckNumForName (const char* name)
+int W_CheckNumForName(const std::string& name)
 {
-    union {
-	char	s[9];
-	int	x[2];
-	
-    } name8;
-    
-    int		v1;
-    int		v2;
-    lumpinfo_t*	lump_p;
-
-    // make the name into two integers for easy compares
-    strncpy (name8.s,name,8);
-
-    // in case the name was a fill 8 chars
-    name8.s[8] = 0;
-
-    // case insensitive
-    strupr (name8.s);		
-
-    v1 = name8.x[0];
-    v2 = name8.x[1];
-
-
-    // scan backwards so patch lump files take precedence
-    lump_p = lumpinfo + numlumps;
-
+    lumpinfo_t*	lump_p = lumpinfo + numlumps;
     while (lump_p-- != lumpinfo)
     {
-	if ( *(int *)lump_p->name == v1
-	     && *(int *)&lump_p->name[4] == v2)
-	{
+	std::string lumpName(lump_p->name, 8);
+	if (strcasecmp(name.c_str(), lumpName.c_str()) == 0) {
 	    return lump_p - lumpinfo;
 	}
     }
-
     // TFB. Not found.
     return -1;
 }
@@ -402,7 +376,7 @@ int W_GetNumForName (const char* name)
 {
     int	i;
 
-    i = W_CheckNumForName (name);
+    i = W_CheckNumForName(std::string(name, 8));
     
     if (i == -1)
       I_Error ("W_GetNumForName: %s not found!", name);

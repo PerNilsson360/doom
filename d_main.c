@@ -1033,7 +1033,7 @@ void D_DoomMain (void)
 	// but w/o all the lumps of the registered version. 
 	if (gamemode == registered)
 	    for (i = 0;i < 23; i++)
-		if (W_CheckNumForName(name[i])<0)
+		if (W_CheckNumForName(std::string(name[i], 8))<0)
 		    I_Error("\nThis is not the registered version.");
     }
     

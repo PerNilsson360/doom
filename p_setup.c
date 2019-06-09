@@ -32,6 +32,7 @@ rcsid[] = "$Id: p_setup.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 
 #include "BlockMap.hh"
 #include "DataInput.hh"
+#include "Sector.hh"
 
 #include "z_zone.h"
 
@@ -63,8 +64,7 @@ std::vector<Vertex> vertexes;
 int		numsegs;
 seg_t*		segs;
 
-int		numsectors;
-sector_t*	sectors;
+std::vector<Sector> sectors;
 
 int		numsubsectors;
 subsector_t*	subsectors;
@@ -203,30 +203,14 @@ void P_LoadSubsectors (int lump)
 //
 void P_LoadSectors (int lump)
 {
-    byte*		data;
-    int			i;
-    mapsector_t*	ms;
-    sector_t*		ss;
-	
-    numsectors = W_LumpLength (lump) / sizeof(mapsector_t);
-    sectors = (sector_t*)Z_Malloc (numsectors*sizeof(sector_t),PU_LEVEL,0);	
-    memset (sectors, 0, numsectors*sizeof(sector_t));
-    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
-	
-    ms = (mapsector_t *)data;
-    ss = sectors;
-    for (i=0 ; i<numsectors ; i++, ss++, ms++)
-    {
-	ss->ffloorheight = SHORT(ms->floorheight);
-	ss->cceilingheight = SHORT(ms->ceilingheight);
-	ss->floorpic = R_FlatNumForName(ms->floorpic);
-	ss->ceilingpic = R_FlatNumForName(ms->ceilingpic);
-	ss->lightlevel = SHORT(ms->lightlevel);
-	ss->special = SHORT(ms->special);
-	ss->tag = SHORT(ms->tag);
-	ss->thinglist = NULL;
+    sectors.clear();
+    int dataLength = W_LumpLength(lump);
+    int nSectors = dataLength / Sector::getBinarySize();
+    byte* data = (byte*)W_CacheLumpNum(lump, PU_STATIC);
+    DataInput dataInput(data, dataLength);
+    for (int i = 0; i < nSectors; i++) {
+	sectors.push_back(Sector(dataInput));
     }
-	
     Z_Free (data);
 }
 
@@ -401,7 +385,6 @@ void P_GroupLines (void)
     int			j;
     int			total;
     line_t*		li;
-    sector_t*		sector;
     subsector_t*	ss;
     seg_t*		seg;
     double		bbbox[4];
@@ -432,9 +415,9 @@ void P_GroupLines (void)
 	
     // build line tables for each sector	
     linebuffer = (line_t**)Z_Malloc (total*8, PU_LEVEL, 0);
-    sector = sectors;
-    for (i=0 ; i<numsectors ; i++, sector++)
+    for (int i = 0, len = sectors.size(); i < len; i++)
     {
+	Sector* sector = &sectors[i];
 	MM_ClearBox (bbbox);
 	sector->lines = linebuffer;
 	li = lines;
@@ -447,9 +430,10 @@ void P_GroupLines (void)
 		MM_AddToBox (bbbox, li->v2->getX(), li->v2->getY());
 	    }
 	}
+	/*
 	if (linebuffer - sector->lines != sector->linecount)
 	    I_Error ("P_GroupLines: miscounted");
-			
+	*/		
 	// set the degenmobj_t to the middle of the bounding box
 	sector->soundorg.xx = (bbbox[BOXRIGHT]+bbbox[BOXLEFT])/2;
 	sector->soundorg.yy = (bbbox[BOXTOP]+bbbox[BOXBOTTOM])/2;

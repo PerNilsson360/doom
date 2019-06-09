@@ -31,6 +31,7 @@ rcsid[] = "$Id: p_tick.c,v 1.4 1997/02/03 16:47:55 b1 Exp $";
 // State.
 #include "doomstat.h"
 #include "r_state.h"
+#include "Sector.hh" 
 
 byte*		save_p;
 
@@ -113,9 +114,8 @@ void P_UnArchivePlayers (void)
 //
 void P_ArchiveWorld (void)
 {
-    int			i;
+    int                 i;
     int			j;
-    sector_t*		sec;
     line_t*		li;
     side_t*		si;
     short*		put;
@@ -123,15 +123,15 @@ void P_ArchiveWorld (void)
     put = (short *)save_p;
     
     // do sectors
-    for (i=0, sec = sectors ; i<numsectors ; i++,sec++)
+    for (size_t i=0; i < sectors.size() ; i++)
     {
-        *put++ = (short) sec->ffloorheight;
-        *put++ = (short) sec->cceilingheight;
-	*put++ = sec->floorpic;
-	*put++ = sec->ceilingpic;
-	*put++ = sec->lightlevel;
-	*put++ = sec->special;		// needed?
-	*put++ = sec->tag;		// needed?
+        *put++ = (short) sectors[i].ffloorheight;
+        *put++ = (short) sectors[i].cceilingheight;
+	*put++ = sectors[i].floorpic;
+	*put++ = sectors[i].ceilingpic;
+	*put++ = sectors[i].lightlevel;
+	*put++ = sectors[i].special;		// needed?
+	*put++ = sectors[i].tag;		// needed?
     }
 
     
@@ -166,9 +166,8 @@ void P_ArchiveWorld (void)
 //
 void P_UnArchiveWorld (void)
 {
-    int			i;
+    int                 i;
     int			j;
-    sector_t*		sec;
     line_t*		li;
     side_t*		si;
     short*		get;
@@ -176,17 +175,17 @@ void P_UnArchiveWorld (void)
     get = (short *)save_p;
     
     // do sectors
-    for (i=0, sec = sectors ; i<numsectors ; i++,sec++)
+    for (size_t i = 0; i < sectors.size(); i++)
     {
-	sec->ffloorheight = *get++;
-	sec->cceilingheight = *get++;
-	sec->floorpic = *get++;
-	sec->ceilingpic = *get++;
-	sec->lightlevel = *get++;
-	sec->special = *get++;		// needed?
-	sec->tag = *get++;		// needed?
-	sec->specialdata = 0;
-	sec->soundtarget = 0;
+	sectors[i].ffloorheight = *get++;
+	sectors[i].cceilingheight = *get++;
+	sectors[i].floorpic = *get++;
+	sectors[i].ceilingpic = *get++;
+	sectors[i].lightlevel = *get++;
+	sectors[i].special = *get++;		// needed?
+	sectors[i].tag = *get++;		// needed?
+	sectors[i].specialdata = 0;
+	sectors[i].soundtarget = 0;
     }
     
     // do lines
@@ -380,7 +379,7 @@ void P_ArchiveSpecials (void)
 		ceiling = (ceiling_t *)save_p;
 		memcpy (ceiling, th, sizeof(*ceiling));
 		save_p += sizeof(*ceiling);
-		ceiling->sector = (sector_t *)(ceiling->sector - sectors);
+		ceiling->sector = (Sector *)(ceiling->sector - &sectors[0]);
 	    }
 	    continue;
 	}
@@ -392,7 +391,7 @@ void P_ArchiveSpecials (void)
 	    ceiling = (ceiling_t *)save_p;
 	    memcpy (ceiling, th, sizeof(*ceiling));
 	    save_p += sizeof(*ceiling);
-	    ceiling->sector = (sector_t *)(ceiling->sector - sectors);
+	    ceiling->sector = (Sector *)(ceiling->sector - &sectors[0]);
 	    continue;
 	}
 			
@@ -403,7 +402,7 @@ void P_ArchiveSpecials (void)
 	    door = (vldoor_t *)save_p;
 	    memcpy (door, th, sizeof(*door));
 	    save_p += sizeof(*door);
-	    door->sector = (sector_t *)(door->sector - sectors);
+	    door->sector = (Sector *)(door->sector - &sectors[0]);
 	    continue;
 	}
 			
@@ -414,7 +413,7 @@ void P_ArchiveSpecials (void)
 	    floor = (floormove_t *)save_p;
 	    memcpy (floor, th, sizeof(*floor));
 	    save_p += sizeof(*floor);
-	    floor->sector = (sector_t *)(floor->sector - sectors);
+	    floor->sector = (Sector *)(floor->sector - &sectors[0]);
 	    continue;
 	}
 			
@@ -425,7 +424,7 @@ void P_ArchiveSpecials (void)
 	    plat = (plat_t *)save_p;
 	    memcpy (plat, th, sizeof(*plat));
 	    save_p += sizeof(*plat);
-	    plat->sector = (sector_t *)(plat->sector - sectors);
+	    plat->sector = (Sector *)(plat->sector - &sectors[0]);
 	    continue;
 	}
 			
@@ -436,7 +435,7 @@ void P_ArchiveSpecials (void)
 	    flash = (lightflash_t *)save_p;
 	    memcpy (flash, th, sizeof(*flash));
 	    save_p += sizeof(*flash);
-	    flash->sector = (sector_t *)(flash->sector - sectors);
+	    flash->sector = (Sector *)(flash->sector - &sectors[0]);
 	    continue;
 	}
 			
@@ -447,7 +446,7 @@ void P_ArchiveSpecials (void)
 	    strobe = (strobe_t *)save_p;
 	    memcpy (strobe, th, sizeof(*strobe));
 	    save_p += sizeof(*strobe);
-	    strobe->sector = (sector_t *)(strobe->sector - sectors);
+	    strobe->sector = (Sector *)(strobe->sector - &sectors[0]);
 	    continue;
 	}
 			
@@ -458,7 +457,7 @@ void P_ArchiveSpecials (void)
 	    glow = (glow_t *)save_p;
 	    memcpy (glow, th, sizeof(*glow));
 	    save_p += sizeof(*glow);
-	    glow->sector = (sector_t *)(glow->sector - sectors);
+	    glow->sector = (Sector *)(glow->sector - &sectors[0]);
 	    continue;
 	}
     }

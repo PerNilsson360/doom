@@ -41,7 +41,7 @@ rcsid[] = "$Id: p_map.c,v 1.5 1997/02/03 22:45:11 b1 Exp $";
 #include "r_state.h"
 // Data.
 #include "sounds.h"
-
+#include "Sector.hh"
 
 static double ttmbbox[4];
 static Mob*	tmthing;
@@ -1288,7 +1288,7 @@ bool PIT_ChangeSector (Mob*	thing)
 //
 bool
 P_ChangeSector
-( sector_t*	sector,
+( Sector*	sector,
   bool	crunch )
 {
     int		x;

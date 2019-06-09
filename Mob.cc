@@ -17,6 +17,7 @@
 #include "doomstat.h"
 #include "p_mobj.h"
 #include "d_player.h"
+#include "Sector.hh"
 
 void G_PlayerReborn (int player);
 void P_SpawnMapThing (MapThing*	mthing);

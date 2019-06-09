@@ -51,7 +51,7 @@ rcsid[] = "$Id: p_spec.c,v 1.6 1997/02/03 22:45:12 b1 Exp $";
 
 // Data.
 #include "sounds.h"
-
+#include "Sector.hh"
 
 //
 // Animating textures and planes
@@ -163,7 +163,7 @@ void P_InitPicAnims (void)
         }
         else
         {
-            if (W_CheckNumForName(animdefs[i].startname) == -1)
+            if (W_CheckNumForName(std::string(animdefs[i].startname, 8)) == -1)
                 continue;
             
             lastanim->picnum = R_FlatNumForName (animdefs[i].endname);
@@ -214,7 +214,7 @@ getSide
 //  given the number of the current sector,
 //  the line number and the side (0/1) that you want.
 //
-sector_t*
+Sector*
 getSector
 ( int		currentSector,
   int		line,
@@ -245,10 +245,10 @@ twoSided
 // Return sector_t * of sector next to current.
 // NULL if not two-sided line
 //
-sector_t*
+Sector*
 getNextSector
 ( line_t*	line,
-  sector_t*	sec )
+  Sector*	sec )
 {
     if (!(line->flags & ML_TWOSIDED))
 	return NULL;
@@ -267,17 +267,16 @@ getNextSector
 //
 // @todo the find routines below needs to be cleanup
 double 
-PP_FindLowestFloorSurrounding(sector_t* sec)
+PP_FindLowestFloorSurrounding(Sector* sec)
 {
     int			i;
     line_t*		check;
-    sector_t*		other;
     double		floor = sec->ffloorheight;
 	
     for (i=0 ;i < sec->linecount ; i++)
     {
         check = sec->lines[i];
-        other = getNextSector(check,sec);
+        Sector* other = getNextSector(check,sec);
         
         if (!other)
             continue;
@@ -295,17 +294,16 @@ PP_FindLowestFloorSurrounding(sector_t* sec)
 // FIND HIGHEST FLOOR HEIGHT IN SURROUNDING SECTORS
 //
 double	
-PP_FindHighestFloorSurrounding(sector_t *sec)
+PP_FindHighestFloorSurrounding(Sector *sec)
 {
     int			i;
     line_t*		check;
-    sector_t*  other;
     double floor = -500;
 	
     for (i=0 ;i < sec->linecount ; i++)
     {
         check = sec->lines[i];
-        other = getNextSector(check,sec);
+        Sector* other = getNextSector(check,sec);
         
         if (!other)
             continue;
@@ -327,13 +325,12 @@ PP_FindHighestFloorSurrounding(sector_t *sec)
 #define MAX_ADJOINING_SECTORS    	20
 
 double
-PP_FindNextHighestFloor(sector_t* sec, double currentheight)
+PP_FindNextHighestFloor(Sector* sec, double currentheight)
 {
     int			i;
     int			h;
     int			min;
     line_t*		check;
-    sector_t*		other;
     double height = currentheight;
 
     
@@ -342,7 +339,7 @@ PP_FindNextHighestFloor(sector_t* sec, double currentheight)
     for (i=0, h=0 ;i < sec->linecount ; i++)
     {
         check = sec->lines[i];
-        other = getNextSector(check,sec);
+        Sector* other = getNextSector(check,sec);
         
         if (!other)
             continue;
@@ -378,17 +375,16 @@ PP_FindNextHighestFloor(sector_t* sec, double currentheight)
 // FIND LOWEST CEILING IN THE SURROUNDING SECTORS
 //
 double
-PP_FindLowestCeilingSurrounding(sector_t* sec)
+PP_FindLowestCeilingSurrounding(Sector* sec)
 {
     int			i;
     line_t*		check;
-    sector_t*		other;
     double		height = INT_MAX;
 	
     for (i=0 ;i < sec->linecount ; i++)
     {
         check = sec->lines[i];
-        other = getNextSector(check,sec);
+        Sector* other = getNextSector(check,sec);
         
         if (!other)
             continue;
@@ -404,17 +400,16 @@ PP_FindLowestCeilingSurrounding(sector_t* sec)
 // FIND HIGHEST CEILING IN THE SURROUNDING SECTORS
 //
 double 
-PP_FindHighestCeilingSurrounding(sector_t* sec)
+PP_FindHighestCeilingSurrounding(Sector* sec)
 {
     int		i;
     line_t*	check;
-    sector_t*	other;
     double height = 0;
 	
     for (i=0 ;i < sec->linecount ; i++)
     {
         check = sec->lines[i];
-        other = getNextSector(check,sec);
+        Sector* other = getNextSector(check,sec);
         
         if (!other)
             continue;
@@ -437,7 +432,7 @@ P_FindSectorFromLineTag
 {
     int	i;
 	
-    for (i=start+1;i<numsectors;i++)
+    for (i=start+1;i<sectors.size();i++)
 	if (sectors[i].tag == line->tag)
 	    return i;
     
@@ -452,19 +447,18 @@ P_FindSectorFromLineTag
 //
 int
 P_FindMinSurroundingLight
-( sector_t*	sector,
+(Sector*	sector,
   int		max )
 {
     int		i;
     int		min;
     line_t*	line;
-    sector_t*	check;
 	
     min = max;
     for (i=0 ; i < sector->linecount ; i++)
     {
 	line = sector->lines[i];
-	check = getNextSector(line,sector);
+	Sector* check = getNextSector(line,sector);
 
 	if (!check)
 	    continue;
@@ -1008,9 +1002,7 @@ P_ShootSpecialLine
 //
 void P_PlayerInSpecialSector (player_t* player)
 {
-    sector_t*	sector;
-	
-    sector = player->mo->subsector->sector;
+    Sector* sector = player->mo->subsector->sector;
 
     // Falling, not all the way down yet?
     if (player->mo->zz != sector->ffloorheight)
@@ -1162,9 +1154,9 @@ void P_UpdateSpecials (void)
 //
 int EV_DoDonut(line_t*	line)
 {
-    sector_t*		s1;
-    sector_t*		s2;
-    sector_t*		s3;
+    Sector*		s1;
+    Sector*		s2;
+    Sector*		s3;
     int			secnum;
     int			rtn;
     int			i;
@@ -1238,7 +1230,6 @@ line_t*		linespeciallist[MAXLINEANIMS];
 // Parses command line parameters.
 void P_SpawnSpecials (void)
 {
-    sector_t*	sector;
     int		i;
     
     // See if -TIMER needs to be used.
@@ -1261,38 +1252,37 @@ void P_SpawnSpecials (void)
     }
     
     //	Init special SECTORs.
-    sector = sectors;
-    for (i=0 ; i<numsectors ; i++, sector++)
+    for (size_t i = 0; i < sectors.size(); i++)
     {
-	if (!sector->special)
+	if (!sectors[i].special)
 	    continue;
 	
-	switch (sector->special)
+	switch (sectors[i].special)
 	{
 	  case 1:
 	    // FLICKERING LIGHTS
-	    P_SpawnLightFlash (sector);
+	    P_SpawnLightFlash (&sectors[i]);
 	    break;
 
 	  case 2:
 	    // STROBE FAST
-	    P_SpawnStrobeFlash(sector,FASTDARK,0);
+	    P_SpawnStrobeFlash(&sectors[i],FASTDARK,0);
 	    break;
 	    
 	  case 3:
 	    // STROBE SLOW
-	    P_SpawnStrobeFlash(sector,SLOWDARK,0);
+	    P_SpawnStrobeFlash(&sectors[i],SLOWDARK,0);
 	    break;
 	    
 	  case 4:
 	    // STROBE FAST/DEATH SLIME
-	    P_SpawnStrobeFlash(sector,FASTDARK,0);
-	    sector->special = 4;
+	    P_SpawnStrobeFlash(&sectors[i],FASTDARK,0);
+	    sectors[i].special = 4;
 	    break;
 	    
 	  case 8:
 	    // GLOWING LIGHT
-	    P_SpawnGlowingLight(sector);
+	    P_SpawnGlowingLight(&sectors[i]);
 	    break;
 	  case 9:
 	    // SECRET SECTOR
@@ -1301,26 +1291,26 @@ void P_SpawnSpecials (void)
 	    
 	  case 10:
 	    // DOOR CLOSE IN 30 SECONDS
-	    P_SpawnDoorCloseIn30 (sector);
+	    P_SpawnDoorCloseIn30 (&sectors[i]);
 	    break;
 	    
 	  case 12:
 	    // SYNC STROBE SLOW
-	    P_SpawnStrobeFlash (sector, SLOWDARK, 1);
+	    P_SpawnStrobeFlash (&sectors[i], SLOWDARK, 1);
 	    break;
 
 	  case 13:
 	    // SYNC STROBE FAST
-	    P_SpawnStrobeFlash (sector, FASTDARK, 1);
+	    P_SpawnStrobeFlash (&sectors[i], FASTDARK, 1);
 	    break;
 
 	  case 14:
 	    // DOOR RAISE IN 5 MINUTES
-	    P_SpawnDoorRaiseIn5Mins (sector, i);
+	    P_SpawnDoorRaiseIn5Mins (&sectors[i], i);
 	    break;
 	    
 	  case 17:
-	    P_SpawnFireFlicker(sector);
+	    P_SpawnFireFlicker(&sectors[i]);
 	    break;
 	}
     }

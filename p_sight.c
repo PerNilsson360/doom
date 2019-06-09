@@ -32,6 +32,7 @@ rcsid[] = "$Id: p_sight.c,v 1.3 1997/01/28 22:08:28 b1 Exp $";
 
 // State.
 #include "r_state.h"
+#include "Sector.hh"
 
 //
 // P_CheckSight
@@ -59,8 +60,8 @@ bool P_CrossSubsector (int num)
     int			s2;
     int			count;
     subsector_t*	sub;
-    sector_t*		front;
-    sector_t*		back;
+    Sector*		front;
+    Sector*		back;
     double opentop;
     double openbottom;
     DivLine		divl;
@@ -220,9 +221,9 @@ P_CheckSight
     // First check for trivial rejection.
 
     // Determine subsector entries in REJECT table.
-    s1 = (t1->subsector->sector - sectors);
-    s2 = (t2->subsector->sector - sectors);
-    pnum = s1*numsectors + s2;
+    s1 = (t1->subsector->sector - &sectors[0]);
+    s2 = (t2->subsector->sector - &sectors[0]);
+    pnum = s1*sectors.size() + s2;
     bytenum = pnum>>3;
     bitnum = 1 << (pnum&7);
 

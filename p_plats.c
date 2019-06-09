@@ -40,6 +40,7 @@ rcsid[] = "$Id: p_plats.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 
 // Data.
 #include "sounds.h"
+#include "Sector.hh"
 
 
 plat_t*		activeplats[MAXPLATS];
@@ -151,7 +152,6 @@ EV_DoPlat
     plat_t*	plat;
     int		secnum;
     int		rtn;
-    sector_t*	sec;
 	
     secnum = -1;
     rtn = 0;
@@ -170,7 +170,7 @@ EV_DoPlat
 	
     while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
     {
-	sec = &sectors[secnum];
+	Sector* sec = &sectors[secnum];
 
 	if (sec->specialdata)
 	    continue;

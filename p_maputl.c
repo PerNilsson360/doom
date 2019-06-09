@@ -41,6 +41,7 @@ rcsid[] = "$Id: p_maputl.c,v 1.5 1997/02/03 22:45:11 b1 Exp $";
 
 // State.
 #include "r_state.h"
+#include "Sector.hh"
 
 //
 // P_AproxDistance
@@ -164,9 +165,6 @@ double llowfloor;
 
 void P_LineOpening (line_t* linedef)
 {
-    sector_t*	front;
-    sector_t*	back;
-	
     if (linedef->sidenum[1] == -1)
     {
         // single sided line
@@ -174,8 +172,8 @@ void P_LineOpening (line_t* linedef)
         return;
     }
 	 
-    front = linedef->frontsector;
-    back = linedef->backsector;
+    Sector* front = linedef->frontsector;
+    Sector* back = linedef->backsector;
 	
     if (front->cceilingheight < back->cceilingheight)
         oopentop = front->cceilingheight;
@@ -261,7 +259,7 @@ void
 P_SetThingPosition (Mob* thing)
 {
     subsector_t*	ss;
-    sector_t*		sec;
+    Sector*		sec;
     int			blockx;
     int			blocky;
     Mob**		link;

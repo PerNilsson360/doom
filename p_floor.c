@@ -37,6 +37,7 @@ rcsid[] = "$Id: p_floor.c,v 1.4 1997/02/03 16:47:54 b1 Exp $";
 // Data.
 #include "sounds.h"
 #include <float.h>
+#include "Sector.hh"
 
 //
 // FLOORS
@@ -46,7 +47,7 @@ rcsid[] = "$Id: p_floor.c,v 1.4 1997/02/03 16:47:54 b1 Exp $";
 // Move a plane (floor or ceiling) and check for crushing
 //
 result_e
-TT_MovePlane(sector_t* sector,
+TT_MovePlane(Sector* sector,
              double speed,
              double dest,
              bool crush,
@@ -264,7 +265,7 @@ EV_DoFloor
     int			secnum;
     int			rtn;
     int			i;
-    sector_t*		sec;
+    Sector*		sec;
     floormove_t*	floor;
 
     secnum = -1;
@@ -402,7 +403,7 @@ EV_DoFloor
 	    {
 		if ( twoSided(secnum, i) )
 		{
-		    if (getSide(secnum,i,0)->sector-sectors == secnum)
+		    if (getSide(secnum,i,0)->sector-&sectors[0] == secnum)
 		    {
 			sec = getSector(secnum,i,1);
 
@@ -452,8 +453,8 @@ EV_BuildStairs
     int			ok;
     int			rtn;
     
-    sector_t*		sec;
-    sector_t*		tsec;
+    Sector*		sec;
+    Sector*		tsec;
 
     floormove_t*	floor;
     
@@ -507,13 +508,13 @@ EV_BuildStairs
 		    continue;
 					
 		tsec = (sec->lines[i])->frontsector;
-		newsecnum = tsec-sectors;
+		newsecnum = tsec - &sectors[0];
 		
 		if (secnum != newsecnum)
 		    continue;
 
 		tsec = (sec->lines[i])->backsector;
-		newsecnum = tsec - sectors;
+		newsecnum = tsec - &sectors[0];
 
 		if (tsec->floorpic != texture)
 		    continue;

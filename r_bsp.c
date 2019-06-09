@@ -39,16 +39,15 @@ rcsid[] = "$Id: r_bsp.c,v 1.4 1997/02/03 22:45:12 b1 Exp $";
 // State.
 #include "doomstat.h"
 #include "r_state.h"
-
-//#include "r_local.h"
+#include "Sector.hh"
 
 
 
 seg_t*		curline;
 side_t*		sidedef;
 line_t*		linedef;
-sector_t*	frontsector;
-sector_t*	backsector;
+Sector*	frontsector;
+Sector*	backsector;
 
 drawseg_t	drawsegs[MAXDRAWSEGS];
 drawseg_t*	ds_p;

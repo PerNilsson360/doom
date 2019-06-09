@@ -42,7 +42,7 @@ rcsid[] = "$Id: r_things.c,v 1.5 1997/02/03 16:47:56 b1 Exp $";
 #include "r_local.h"
 
 #include "doomstat.h"
-
+#include "Sector.hh"
 
 
 #define MINZ				4
@@ -570,7 +570,7 @@ void R_ProjectSprite (Mob* thing)
 // R_AddSprites
 // During BSP traversal, this adds sprites by sector.
 //
-void R_AddSprites (sector_t* sec)
+void R_AddSprites (Sector* sec)
 {
     Mob*		thing;
     int			lightnum;

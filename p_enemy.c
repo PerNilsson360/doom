@@ -46,6 +46,8 @@ rcsid[] = "$Id: p_enemy.c,v 1.5 1997/02/03 22:45:11 b1 Exp $";
 // Data.
 #include "sounds.h"
 #include "p_mobj.h"
+#include "Sector.hh"
+
 
 //
 // P_NewChaseDir related LUT.
@@ -83,12 +85,12 @@ Mob*		soundtarget;
 
 void
 P_RecursiveSound
-( sector_t*	sec,
+( Sector*	sec,
   int		soundblocks )
 {
     int		i;
     line_t*	check;
-    sector_t*	other;
+    Sector*	other;
 	
     // wake up all monsters in this sector
     if (sec->validcount == validcount
@@ -116,6 +118,7 @@ P_RecursiveSound
 	    other = sides[ check->sidenum[1] ] .sector;
 	else
 	    other = sides[ check->sidenum[0] ].sector;
+
 	
 	if (check->flags & ML_SOUNDBLOCK)
 	{

@@ -36,6 +36,7 @@ rcsid[] = "$Id: p_ceilng.c,v 1.4 1997/02/03 16:47:53 b1 Exp $";
 
 // Data.
 #include "sounds.h"
+#include "Sector.hh"
 
 //
 // CEILINGS
@@ -177,7 +178,7 @@ EV_DoCeiling
 {
     int		secnum;
     int		rtn;
-    sector_t*	sec;
+    Sector*	sec;
     ceiling_t*	ceiling;
 	
     secnum = -1;

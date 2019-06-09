@@ -48,6 +48,7 @@ rcsid[] = "$Id: r_data.c,v 1.4 1997/02/03 16:47:55 b1 Exp $";
 #include <stdint.h>
 
 #include "r_data.h"
+#include "Sector.hh"
 
 //
 // Graphics.
@@ -451,7 +452,7 @@ void R_InitTextures (void)
     for (i=0 ; i<nummappatches ; i++)
     {
         strncpy (name,name_p+i*8, 8);
-        patchlookup[i] = W_CheckNumForName (name);
+        patchlookup[i] = W_CheckNumForName (std::string(name, 8));
     }
     Z_Free (names);
     
@@ -677,7 +678,7 @@ int R_FlatNumForName (const char* name)
     int		i;
     char	namet[9];
 
-    i = W_CheckNumForName (name);
+    i = W_CheckNumForName (std::string(name, 8));
 
     if (i == -1)
     {
@@ -765,7 +766,7 @@ void R_PrecacheLevel (void)
     flatpresent = (char*)alloca(numflats);
     memset (flatpresent,0,numflats);	
 
-    for (i=0 ; i<numsectors ; i++)
+    for (size_t i = 0; i < sectors.size(); i++)
     {
 	flatpresent[sectors[i].floorpic] = 1;
 	flatpresent[sectors[i].ceilingpic] = 1;
