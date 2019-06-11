@@ -154,26 +154,6 @@ typedef struct line_s
     void*	specialdata;		
 } line_t;
 
-
-
-
-//
-// A SubSector.
-// References a Sector.
-// Basically, this is a list of LineSegs,
-//  indicating the visible walls that define
-//  (all or some) sides of a convex BSP leaf.
-//
-typedef struct subsector_s
-{
-    Sector*	sector;
-    short	numlines;
-    short	firstline;
-    
-} subsector_t;
-
-
-
 //
 // The LineSeg.
 //

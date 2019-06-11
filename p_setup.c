@@ -33,6 +33,7 @@ rcsid[] = "$Id: p_setup.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 #include "BlockMap.hh"
 #include "DataInput.hh"
 #include "Sector.hh"
+#include "SubSector.hh"
 
 #include "z_zone.h"
 
@@ -65,9 +66,7 @@ int		numsegs;
 seg_t*		segs;
 
 std::vector<Sector> sectors;
-
-int		numsubsectors;
-subsector_t*	subsectors;
+std::vector<SubSector> subsectors;
 
 std::vector<BspNode> nodes;
 
@@ -174,25 +173,14 @@ void P_LoadSegs (int lump)
 //
 void P_LoadSubsectors (int lump)
 {
-    byte*		data;
-    int			i;
-    mapsubsector_t*	ms;
-    subsector_t*	ss;
-	
-    numsubsectors = W_LumpLength (lump) / sizeof(mapsubsector_t);
-    subsectors = (subsector_t*)Z_Malloc (numsubsectors*sizeof(subsector_t),PU_LEVEL,0);	
-    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
-	
-    ms = (mapsubsector_t *)data;
-    memset (subsectors,0, numsubsectors*sizeof(subsector_t));
-    ss = subsectors;
-    
-    for (i=0 ; i<numsubsectors ; i++, ss++, ms++)
-    {
-	ss->numlines = SHORT(ms->numsegs);
-	ss->firstline = SHORT(ms->firstseg);
+    subsectors.clear();
+    int dataLength = W_LumpLength (lump);
+    int nSubSectors = dataLength / SubSector::getBinarySize();
+    byte* data = (byte*)W_CacheLumpNum(lump, PU_STATIC);
+    DataInput dataInput(data, dataLength);
+    for (int i = 0; i < nSubSectors; i++) {
+	subsectors.push_back(SubSector(dataInput));
     }
-	
     Z_Free (data);
 }
 
@@ -385,17 +373,14 @@ void P_GroupLines (void)
     int			j;
     int			total;
     line_t*		li;
-    subsector_t*	ss;
     seg_t*		seg;
     double		bbbox[4];
     int			block;
 	
     // look up sector number for each subsector
-    ss = subsectors;
-    for (i=0 ; i<numsubsectors ; i++, ss++)
-    {
-	seg = &segs[ss->firstline];
-	ss->sector = seg->sidedef->sector;
+    for (size_t i = 0; i < subsectors.size(); i++) {
+	seg = &segs[subsectors[i].firstline];
+	subsectors[i].sector = seg->sidedef->sector;
     }
 
     // count number of lines in each sector

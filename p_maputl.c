@@ -258,7 +258,7 @@ void P_UnsetThingPosition (Mob* thing)
 void
 P_SetThingPosition (Mob* thing)
 {
-    subsector_t*	ss;
+    SubSector*	ss;
     Sector*		sec;
     int			blockx;
     int			blocky;

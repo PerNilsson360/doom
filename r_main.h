@@ -86,14 +86,6 @@ extern void		(*colfunc) (void);
 extern void		(*basecolfunc) (void);
 extern void		(*fuzzcolfunc) (void);
 
-//
-// Utility functions.
-int
-R_PointOnSide(
-    double x,
-    double y,
-    BspNode* node);
-
 int
 RR_PointOnSegSide(
     double x,
@@ -102,7 +94,7 @@ RR_PointOnSegSide(
 
 double RR_ScaleFromGlobalAngle(const Angle& visangle);
 
-subsector_t*
+SubSector*
 RR_PointInSubsector(const Vertex& v);
 int R_ViewAngleToX(const Angle& a);
 

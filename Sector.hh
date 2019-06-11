@@ -105,7 +105,6 @@ class Sector
 public:
     Sector(DataInput& dataInput);
     static int getBinarySize() { return 5 * 2 + 2 * 8; }
-//private:
     double	ffloorheight;
     double      cceilingheight;
     short	floorpic;

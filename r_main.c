@@ -337,14 +337,14 @@ void R_Init (void)
 //
 // R_PointInSubsector
 //
-subsector_t*
+SubSector*
 RR_PointInSubsector(const Vertex& v)
 {
     // single subsector is a special case
     int numnodes = nodes.size();
     if (!numnodes) {
 	printf("RR_PointInSubsector: size 0 ?????");
-	return subsectors;
+	return &subsectors[0];
     }
     
     int nodenum = numnodes-1;

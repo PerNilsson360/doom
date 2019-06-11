@@ -327,7 +327,7 @@ Mob::zMovement()
 void
 P_NightmareRespawn (Mob* mobj)
 {
-    subsector_t*	ss; 
+    SubSector*	ss; 
     Mob*		mo;
     MapThing*		mthing;
 	
@@ -546,7 +546,7 @@ void P_RemoveMobj (Mob* mobj)
 //
 void P_RespawnSpecials (void)
 {
-    subsector_t*	ss; 
+    SubSector*	ss; 
     Mob*		mo;
     MapThing*		mthing;
     

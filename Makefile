@@ -84,6 +84,7 @@ OBJS=				\
 		$(O)/Vertex.o \
 		$(O)/Line.o \
 		$(O)/Sector.o \
+		$(O)/SubSector.o \
 
 
 all:	$(O)/linuxxdoom
@@ -129,6 +130,10 @@ $(O)/Line.o: Line.cc Line.hh
 
 $(O)/Sector.o: Sector.cc Sector.hh
 	$(CC) $(CFLAGS) $(LDFLAGS) -c Sector.cc -o $(O)/Sector.o
+
+$(O)/SubSector.o: SubSector.cc SubSector.hh
+	$(CC) $(CFLAGS) $(LDFLAGS) -c SubSector.cc -o $(O)/SubSector.o
+
 
 $(O)/%.o:	%.c
 	$(CC) $(CFLAGS) -c $< -o $@

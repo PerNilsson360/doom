@@ -178,6 +178,8 @@ typedef enum
 
 } mobjflag_t;
 
+class SubSector;
+
 // Map Object definition.
 class Mob
 {
@@ -209,7 +211,7 @@ public:
     Mob*	bnext;
     Mob*	bprev;
     
-    struct subsector_s*	subsector;
+    SubSector* subsector;
 
     // The closest interval over all contacted Sectors.
     double ffloorz;

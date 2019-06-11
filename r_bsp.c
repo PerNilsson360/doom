@@ -467,12 +467,12 @@ void R_Subsector (int num)
 {
     int			count;
     seg_t*		line;
-    subsector_t*	sub;
+    SubSector*	sub;
 #ifdef RANGECHECK
-    if (num>=numsubsectors)
+    if (num>=subsectors.size())
 	I_Error ("R_Subsector: ss %i with numss = %i",
 		 num,
-		 numsubsectors);
+		 subsectors.size());
 #endif
 
     sscount++;

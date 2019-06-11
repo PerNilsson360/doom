@@ -121,8 +121,6 @@ PP_TeleportMove(
     int			bx;
     int			by;
     
-    subsector_t*	newsubsec;
-    
     // kill anything occupying the position
     tmthing = thing;
     tmflags = thing->flags;
@@ -136,7 +134,7 @@ PP_TeleportMove(
     ttmbbox[BOXRIGHT] = x + tmthing->rradius;
     ttmbbox[BOXLEFT] = x - tmthing->rradius;
 
-    newsubsec = RR_PointInSubsector(v);
+    SubSector* newsubsec = RR_PointInSubsector(v);
     ceilingline = NULL;
     
     // The base floor/ceiling is from the subsector
@@ -378,7 +376,7 @@ PP_CheckPosition(
     int			yh;
     int			bx;
     int			by;
-    subsector_t*	newsubsec;
+    SubSector*	newsubsec;
     
     tmthing = thing;
     tmflags = thing->flags;
@@ -394,7 +392,7 @@ PP_CheckPosition(
     ttmbbox[BOXRIGHT] = x + tmthing->rradius;
     ttmbbox[BOXLEFT] = x - tmthing->rradius;
 
-    newsubsec = RR_PointInSubsector (v);
+    newsubsec = RR_PointInSubsector(v);
     ceilingline = NULL;
     
     // The base floor / ceiling is from the subsector

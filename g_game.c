@@ -843,7 +843,7 @@ G_CheckSpot
 ( int		playernum,
   MapThing*	mthing ) 
 { 
-    subsector_t*	ss; 
+    SubSector*	ss; 
     Mob*		mo; 
     int			i;
 	

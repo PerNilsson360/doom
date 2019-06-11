@@ -59,7 +59,7 @@ bool P_CrossSubsector (int num)
     int			s1;
     int			s2;
     int			count;
-    subsector_t*	sub;
+    SubSector*	        sub;
     Sector*		front;
     Sector*		back;
     double opentop;
@@ -69,10 +69,10 @@ bool P_CrossSubsector (int num)
     Vertex*		v2;
 	
 #ifdef RANGECHECK
-    if (num>=numsubsectors)
+    if (num>=subsectors.size())
 	I_Error ("P_CrossSubsector: ss %i with numss = %i",
 		 num,
-		 numsubsectors);
+		 subsectors.size());
 #endif
 
     sub = &subsectors[num];
