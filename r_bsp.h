@@ -28,9 +28,9 @@
 #endif
 
 
-extern seg_t*		curline;
-extern side_t*		sidedef;
-extern line_t*		linedef;
+extern seg_t* curline;
+extern Side* sidedef;
+extern Line* linedef;
 extern Sector*	frontsector;
 extern Sector*	backsector;
 

@@ -2,6 +2,8 @@
 
 #include "r_defs.h"
 #include "DataInput.hh"
+#include "Line.hh"
+
 #include "DivLine.hh"
 
 DivLine::DivLine() : x(0), y(0), dx(0), dy(0)
@@ -18,7 +20,7 @@ DivLine::DivLine(double x1, double x2, double y1, double y2) :
 {
 }
 
-DivLine::DivLine(const line_t& li) :
+DivLine::DivLine(const Line& li) :
     x(li.v1->getX()),
     y(li.v1->getY()),
     dx(li.ddx),

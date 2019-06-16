@@ -499,14 +499,61 @@
 #include "Vertex.hh"
 #include "r_defs.h"
 
+// Solid, is an obstacle.
+#define ML_BLOCKING		1
+
+// Blocks monsters only.
+#define ML_BLOCKMONSTERS	2
+
+// Backside will not be present at all
+//  if not two sided.
+#define ML_TWOSIDED		4
+
+// If a texture is pegged, the texture will have
+// the end exposed to air held constant at the
+// top or bottom of the texture (stairs or pulled
+// down things) and will move with a height change
+// of one of the neighbor sectors.
+// Unpegged textures allways have the first row of
+// the texture at the top pixel of the line for both
+// top and bottom textures (use next to windows).
+
+// upper texture unpegged
+#define ML_DONTPEGTOP		8
+
+// lower texture unpegged
+#define ML_DONTPEGBOTTOM	16	
+
+// In AutoMap: don't map as two sided: IT'S A SECRET!
+#define ML_SECRET		32
+
+// Sound rendering: don't let sound cross two of these.
+#define ML_SOUNDBLOCK		64
+
+// Don't draw on the automap at all.
+#define ML_DONTDRAW		128
+
+// Set if already seen, thus drawn in automap.
+#define ML_MAPPED		256
+
 class DataInput;
 class Sector;
 
 class Line
 {
 public:
-    Line(const DataInput& datainput);
+    Line();
+    Line(const DataInput& datainput,
+	 std::vector<Vertex>& vertices,
+	 std::vector<Side>& sides);
     static int getBinarySize() { return 7 * 2; }
+    enum SlopeType {
+	ST_HORIZONTAL,
+	ST_VERTICAL,
+	ST_POSITIVE,
+	ST_NEGATIVE
+    };
+
 //private:
     // Vertices, from v1 to v2.
     Vertex*	v1;
@@ -530,7 +577,7 @@ public:
     double bbbox[4];
 
     // To aid move clipping.
-    slopetype_t	slopetype;
+    SlopeType	slopetype;
 
     // Front and back sector.
     // Note: redundant? Can be retrieved from SideDefs.

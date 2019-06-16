@@ -55,7 +55,7 @@ int		sightcounts[2];
 bool P_CrossSubsector (int num)
 {
     seg_t*		seg;
-    line_t*		line;
+    Line*		line;
     int			s1;
     int			s2;
     int			count;
@@ -102,7 +102,7 @@ bool P_CrossSubsector (int num)
 	
 	divl = DivLine(*v1, *v2);
 
-	s1 = divl.pointOnSide(strace.moveX(0), strace.moveY(0));
+	s1 = divl.pointOnSide(strace.getVertex(0));
 	s2 = divl.pointOnSide(tt2x, tt2y);
 
 	// line isn't crossed?

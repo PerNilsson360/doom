@@ -51,13 +51,13 @@ void    P_UpdateSpecials (void);
 bool
 P_UseSpecialLine
 ( Mob*	thing,
-  line_t*	line,
+  Line*	line,
   int		side );
 
 void
 P_ShootSpecialLine
 ( Mob*	thing,
-  line_t*	line );
+  Line*	line );
 
 void
 P_CrossSpecialLine
@@ -78,7 +78,7 @@ getSector
   int		line,
   int		side );
 
-side_t*
+Side*
 getSide
 ( int		currentSector,
   int		line,
@@ -95,7 +95,7 @@ double PP_FindHighestCeilingSurrounding(Sector* sec);
 
 int
 P_FindSectorFromLineTag
-( line_t*	line,
+( Line*	line,
   int		start );
 
 int
@@ -105,14 +105,14 @@ P_FindMinSurroundingLight
 
 Sector*
 getNextSector
-( line_t*	line,
+( Line*	line,
   Sector*	sec );
 
 
 //
 // SPECIAL
 //
-int EV_DoDonut(line_t* line);
+int EV_DoDonut(Line* line);
 
 
 
@@ -187,12 +187,12 @@ P_SpawnStrobeFlash
   int		fastOrSlow,
   int		inSync );
 
-void    EV_StartLightStrobing(line_t* line);
-void    EV_TurnTagLightsOff(line_t* line);
+void    EV_StartLightStrobing(Line* line);
+void    EV_TurnTagLightsOff(Line* line);
 
 void
 EV_LightTurnOn
-( line_t*	line,
+( Line*	line,
   int		bright );
 
 void    T_Glow(glow_t* g);
@@ -224,7 +224,7 @@ typedef enum
 
 typedef struct
 {
-    line_t*	line;
+    Line*	line;
     bwhere_e	where;
     int		btexture;
     int		btimer;
@@ -248,7 +248,7 @@ extern button_t	buttonlist[MAXBUTTONS];
 
 void
 P_ChangeSwitchTexture
-( line_t*	line,
+( Line*	line,
   int		useAgain );
 
 void P_InitSwitchList(void);
@@ -310,13 +310,13 @@ void    T_PlatRaise(plat_t*	plat);
 
 int
 EV_DoPlat
-( line_t*	line,
+( Line*	line,
   plattype_e	type,
   int		amount );
 
 void    P_AddActivePlat(plat_t* plat);
 void    P_RemoveActivePlat(plat_t* plat);
-void    EV_StopPlat(line_t* line);
+void    EV_StopPlat(Line* line);
 void    P_ActivateInStasis(int tag);
 
 
@@ -364,17 +364,17 @@ typedef struct
 
 void
 EV_VerticalDoor
-( line_t*	line,
+( Line*	line,
   Mob*	thing );
 
 int
 EV_DoDoor
-( line_t*	line,
+( Line*	line,
   vldoor_e	type );
 
 int
 EV_DoLockedDoor
-( line_t*	line,
+( Line*	line,
   vldoor_e	type,
   Mob*	thing );
 
@@ -417,7 +417,7 @@ typedef struct
 {
     thinker_t	thinker;
     sdt_e	type;
-    line_t*	line;
+    Line*	line;
     int		frame;
     int		whichDoorIndex;
     int		timer;
@@ -466,7 +466,7 @@ void P_InitSlidingDoorFrames(void);
 
 void
 EV_SlidingDoor
-( line_t*	line,
+( Line*	line,
   Mob*	thing );
 #endif
 
@@ -519,14 +519,14 @@ extern ceiling_t*	activeceilings[MAXCEILINGS];
 
 int
 EV_DoCeiling
-( line_t*	line,
+( Line*	line,
   ceiling_e	type );
 
 void    T_MoveCeiling (ceiling_t* ceiling);
 void    P_AddActiveCeiling(ceiling_t* c);
 void    P_RemoveActiveCeiling(ceiling_t* c);
-int	EV_CeilingCrushStop(line_t* line);
-void    P_ActivateInStasisCeiling(line_t* line);
+int	EV_CeilingCrushStop(Line* line);
+void    P_ActivateInStasisCeiling(Line* line);
 
 
 //
@@ -615,12 +615,12 @@ TT_MovePlane(Sector*	sector,
 
 int
 EV_BuildStairs
-( line_t*	line,
+( Line*	line,
   stair_e	type );
 
 int
 EV_DoFloor
-( line_t*	line,
+( Line*	line,
   floor_e	floortype );
 
 void T_MoveFloor( floormove_t* floor);
@@ -630,7 +630,7 @@ void T_MoveFloor( floormove_t* floor);
 //
 int
 EV_Teleport
-( line_t*	line,
+( Line*	line,
   int		side,
   Mob*	thing );
 

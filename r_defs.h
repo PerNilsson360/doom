@@ -33,6 +33,7 @@
 // SECTORS do store MObjs anyway.
 #include "Mob.hh"
 #include "Vertex.hh"
+#include "Side.hh"
 
 #include <stdint.h>
 
@@ -41,7 +42,7 @@
 #endif
 
 class Sector;
-
+class Line;
 
 // Silhouette, needed for clipping Segs (mainly)
 // and sprites representing things.
@@ -59,9 +60,6 @@ class Sector;
 //  used by play and refresh
 //
 
-// Forward of LineDefs, for Sectors.
-struct line_s;
-
 // Each sector has a degenmobj_t in its center
 //  for sound origin purposes.
 // I suppose this does not handle sound from
@@ -77,84 +75,6 @@ typedef struct
 
 } degenmobj_t;
 
-//
-// The SideDef.
-//
-
-typedef struct
-{
-    // add this to the calculated texture column
-    double ttextureoffset;
-    
-    // add this to the calculated texture top
-    double rrowoffset;
-
-    // Texture indices.
-    // We do not maintain names here. 
-    short	toptexture;
-    short	bottomtexture;
-    short	midtexture;
-
-    // Sector the SideDef is facing.
-    Sector*	sector;
-    
-} side_t;
-
-
-
-//
-// Move clipping aid for LineDefs.
-//
-typedef enum
-{
-    ST_HORIZONTAL,
-    ST_VERTICAL,
-    ST_POSITIVE,
-    ST_NEGATIVE
-
-} slopetype_t;
-
-
-
-typedef struct line_s
-{
-    // Vertices, from v1 to v2.
-    Vertex*	v1;
-    Vertex*	v2;
-
-    // Precalculated v2 - v1 for side checking.
-    double ddx;
-    double ddy;
-
-    // Animation related.
-    short	flags;
-    short	special;
-    short	tag;
-
-    // Visual appearance: SideDefs.
-    //  sidenum[1] will be -1 if one sided
-    short	sidenum[2];			
-
-    // Neat. Another bounding box, for the extent
-    //  of the LineDef.
-    double bbbox[4];
-
-    // To aid move clipping.
-    slopetype_t	slopetype;
-
-    // Front and back sector.
-    // Note: redundant? Can be retrieved from SideDefs.
-    Sector*	frontsector;
-    Sector*	backsector;
-
-    // if == validcount, already checked
-    int		validcount;
-
-    // thinker_t for reversable actions
-    void*	specialdata;		
-} line_t;
-
-//
 // The LineSeg.
 //
 typedef struct
@@ -166,8 +86,8 @@ typedef struct
 
     Angle	aangle;
 
-    side_t*	sidedef;
-    line_t*	linedef;
+    Side*	sidedef;
+    Line*	linedef;
 
     // Sector references.
     // Could be retrieved from linedef, too.

@@ -64,7 +64,7 @@ PP_AproxDistance(
 int
 P_PointOnLineSide(
     const Vertex& v,
-    line_t* line)
+    Line* line)
 {
     double x = v.getX();
     double y = v.getY();
@@ -108,14 +108,14 @@ P_PointOnLineSide(
 int
 PP_BoxOnLineSide(
     double* tmbox,
-    line_t*	ld)
+    Line*	ld)
 {
     int		p1;
     int		p2;
 	
     switch (ld->slopetype)
     {
-    case ST_HORIZONTAL:
+    case Line::ST_HORIZONTAL:
         p1 = tmbox[BOXTOP] > ld->v1->getY();
         p2 = tmbox[BOXBOTTOM] > ld->v1->getY();
         if (ld->ddx < 0)
@@ -125,7 +125,7 @@ PP_BoxOnLineSide(
         }
         break;
 	
-    case ST_VERTICAL:
+    case Line::ST_VERTICAL:
         p1 = tmbox[BOXRIGHT] < ld->v1->getX();
         p2 = tmbox[BOXLEFT] < ld->v1->getX();
         if (ld->ddy < 0)
@@ -135,12 +135,12 @@ PP_BoxOnLineSide(
         }
         break;
         
-    case ST_POSITIVE:
+    case Line::ST_POSITIVE:
         p1 = P_PointOnLineSide(Vertex(tmbox[BOXLEFT], tmbox[BOXTOP]), ld);
         p2 = P_PointOnLineSide(Vertex(tmbox[BOXRIGHT], tmbox[BOXBOTTOM]), ld);
 	break;
 	
-    case ST_NEGATIVE:
+    case Line::ST_NEGATIVE:
         p1 = P_PointOnLineSide(Vertex(tmbox[BOXRIGHT], tmbox[BOXTOP]), ld);
         p2 = P_PointOnLineSide(Vertex(tmbox[BOXLEFT], tmbox[BOXBOTTOM]), ld);
         break;
@@ -163,7 +163,7 @@ double oopenrange;
 double llowfloor;
 
 
-void P_LineOpening (line_t* linedef)
+void P_LineOpening (Line* linedef)
 {
     if (linedef->sidenum[1] == -1)
     {
@@ -336,11 +336,11 @@ bool
 P_BlockLinesIterator
 ( int			x,
   int			y,
-  bool(*func)(line_t*) )
+  bool(*func)(Line*) )
 {
     int			offset;
     short*		list;
-    line_t*		ld;
+    Line*		ld;
 	
     if (x<0
         || y<0
@@ -423,7 +423,7 @@ int		ptflags;
 // Returns true if earlyout and a solid line hit.
 //
 bool
-PIT_AddLineIntercepts (line_t* ld)
+PIT_AddLineIntercepts (Line* ld)
 {
     int			s1;
     int			s2;

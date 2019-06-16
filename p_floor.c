@@ -259,7 +259,7 @@ void T_MoveFloor(floormove_t* floor)
 //
 int
 EV_DoFloor
-( line_t*	line,
+( Line*	line,
   floor_e	floortype )
 {
     int			secnum;
@@ -367,7 +367,7 @@ EV_DoFloor
 	  case raiseToTexture:
 	  {
 	      double	minsize = DBL_MAX;
-	      side_t*	side;
+	      Side*	side;
 				
 	      floor->direction = 1;
 	      floor->sector = sec;
@@ -442,7 +442,7 @@ EV_DoFloor
 //
 int
 EV_BuildStairs
-( line_t*	line,
+( Line*	line,
   stair_e	type )
 {
     int			secnum;

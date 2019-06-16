@@ -153,7 +153,7 @@ void P_InitSwitchList(void)
 //
 void
 P_StartButton
-( line_t*	line,
+( Line*	line,
   bwhere_e	w,
   int		texture,
   int		time )
@@ -199,7 +199,7 @@ P_StartButton
 //
 void
 P_ChangeSwitchTexture
-( line_t*	line,
+( Line*	line,
   int 		useAgain )
 {
     printf("P_ChangeSwitchTexture\n");
@@ -276,7 +276,7 @@ P_ChangeSwitchTexture
 bool
 P_UseSpecialLine
 ( Mob*	thing,
-  line_t*	line,
+  Line*	line,
   int		side )
 {               
     // Err...

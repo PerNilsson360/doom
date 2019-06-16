@@ -89,7 +89,7 @@ P_RecursiveSound
   int		soundblocks )
 {
     int		i;
-    line_t*	check;
+    Line*	check;
     Sector*	other;
 	
     // wake up all monsters in this sector
@@ -250,12 +250,12 @@ double yyspeed[8] = {0,0.717163,1,0.717163,0,-0.717163,-1,-0.717163};
 
 #define MAXSPECIALCROSS	8
 
-extern	line_t*	spechit[MAXSPECIALCROSS];
+extern	Line*	spechit[MAXSPECIALCROSS];
 extern	int	numspechit;
 
 bool P_Move (Mob*	actor)
 {
-    line_t*	ld;
+    Line*	ld;
     
     // warning: 'catch', 'throw', and 'try'
     // are all C++ reserved words
@@ -532,7 +532,7 @@ void A_KeenDie (Mob* mo)
 {
     thinker_t*	th;
     Mob*	mo2;
-    line_t	junk;
+    Line	junk;
 
     A_Fall (mo);
     
@@ -1516,7 +1516,7 @@ void A_BossDeath (Mob* mo)
 {
     thinker_t*	th;
     Mob*	mo2;
-    line_t	junk;
+    Line	junk;
     int		i;
 		
     if ( gamemode == commercial)

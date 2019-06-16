@@ -207,7 +207,7 @@ void T_VerticalDoor (vldoor_t* door)
 
 int
 EV_DoLockedDoor
-( line_t*	line,
+( Line*	line,
   vldoor_e	type,
   Mob*	thing )
 {
@@ -264,7 +264,7 @@ EV_DoLockedDoor
 
 int
 EV_DoDoor
-( line_t*	line,
+( Line*	line,
   vldoor_e	type )
 {
     int		secnum,rtn;
@@ -354,7 +354,7 @@ EV_DoDoor
 //
 void
 EV_VerticalDoor
-( line_t*	line,
+( Line*	line,
   Mob*	thing )
 {
     player_t*	player;

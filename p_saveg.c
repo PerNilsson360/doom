@@ -116,8 +116,8 @@ void P_ArchiveWorld (void)
 {
     int                 i;
     int			j;
-    line_t*		li;
-    side_t*		si;
+    Line*		li;
+    Side*		si;
     short*		put;
 	
     put = (short *)save_p;
@@ -136,7 +136,7 @@ void P_ArchiveWorld (void)
 
     
     // do lines
-    for (i=0, li = lines ; i<numlines ; i++,li++)
+    for (i=0, li = &lines[0] ; i<lines.size(); i++,li++)
     {
 	*put++ = li->flags;
 	*put++ = li->special;
@@ -168,8 +168,8 @@ void P_UnArchiveWorld (void)
 {
     int                 i;
     int			j;
-    line_t*		li;
-    side_t*		si;
+    Line*		li;
+    Side*		si;
     short*		get;
 	
     get = (short *)save_p;
@@ -189,7 +189,7 @@ void P_UnArchiveWorld (void)
     }
     
     // do lines
-    for (i=0, li = lines ; i<numlines ; i++,li++)
+    for (i=0, li = &lines[0] ; i<lines.size() ; i++,li++)
     {
 	li->flags = *get++;
 	li->special = *get++;

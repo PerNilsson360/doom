@@ -135,7 +135,7 @@ public:
     void*	specialdata;
 
     int			linecount;
-    struct line_s**	lines;	// [linecount] size
+    Line**	lines;	// [linecount] size
 };
 
 #endif

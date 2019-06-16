@@ -60,13 +60,13 @@ double ttmdropoffz;
 
 // keep track of the line that lowers the ceiling,
 // so missiles don't explode against sky hack walls
-line_t*	ceilingline;
+Line*	ceilingline;
 
 // keep track of special lines as they are hit,
 // but don't process them until the move is proven valid
 #define MAXSPECIALCROSS		8
 
-line_t*		spechit[MAXSPECIALCROSS];
+Line*		spechit[MAXSPECIALCROSS];
 int		numspechit;
 
 
@@ -181,7 +181,7 @@ PP_TeleportMove(
 // PIT_CheckLine
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 //
-bool PIT_CheckLine (line_t* ld)
+bool PIT_CheckLine (Line* ld)
 {
     if (ttmbbox[BOXRIGHT] <= ld->bbbox[BOXLEFT]
         || ttmbbox[BOXLEFT] >= ld->bbbox[BOXRIGHT]
@@ -450,7 +450,7 @@ PP_TryMove(
 {
     int		side;
     int		oldside;
-    line_t*	ld;
+    Line*	ld;
     
     floatok = false;
     if (!PP_CheckPosition (thing, v))
@@ -499,7 +499,7 @@ PP_TryMove(
             if (side != oldside)
             {
                 if (ld->special)
-                    P_CrossSpecialLine (ld-lines, oldside, thing);
+                    P_CrossSpecialLine (ld-&lines[0], oldside, thing);
             }
         }
     }
@@ -557,8 +557,8 @@ bool P_ThingHeightClip (Mob* thing)
 double bbestslidefrac;
 double ssecondslidefrac;
 
-line_t*		bestslideline;
-line_t*		secondslideline;
+Line*		bestslideline;
+Line*		secondslideline;
 
 Mob*		slidemo;
 
@@ -572,15 +572,15 @@ double ttmymove;
 // Adjusts the xmove / ymove
 // so that the next move will slide along the wall.
 //
-void P_HitSlideLine (line_t* ld)
+void P_HitSlideLine (Line* ld)
 {
-    if (ld->slopetype == ST_HORIZONTAL)
+    if (ld->slopetype == Line::ST_HORIZONTAL)
     {
 	ttmymove = 0;
 	return;
     }
     
-    if (ld->slopetype == ST_VERTICAL)
+    if (ld->slopetype == Line::ST_VERTICAL)
     {
 	ttmxmove = 0;
 	return;
@@ -617,7 +617,7 @@ void P_HitSlideLine (line_t* ld)
 //
 bool PTR_SlideTraverse (intercept_t* in)
 {
-    line_t*	li;
+    Line*	li;
 	
     if (!in->isaline)
         I_Error ("PTR_SlideTraverse: not a line?");
@@ -797,7 +797,7 @@ extern double bbottomslope;
 bool
 PTR_AimTraverse (intercept_t* in)
 {
-    line_t*		li;
+    Line*		li;
     Mob*		th;
 		
     if (in->isaline)
@@ -891,7 +891,7 @@ bool PTR_ShootTraverse (intercept_t* in)
     double z;
     double frac;
     
-    line_t*		li;
+    Line*		li;
     
     Mob*		th;
     double dist;

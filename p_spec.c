@@ -139,7 +139,7 @@ anim_t*		lastanim;
 #define MAXLINEANIMS            64
 
 extern  short	numlinespecials;
-extern  line_t*	linespeciallist[MAXLINEANIMS];
+extern  Line*	linespeciallist[MAXLINEANIMS];
 
 
 
@@ -194,11 +194,11 @@ void P_InitPicAnims (void)
 
 //
 // getSide()
-// Will return a side_t*
+// Will return a Side*
 //  given the number of the current sector,
 //  the line number, and the side (0/1) that you want.
 //
-side_t*
+Side*
 getSide
 ( int		currentSector,
   int		line,
@@ -247,7 +247,7 @@ twoSided
 //
 Sector*
 getNextSector
-( line_t*	line,
+( Line*	line,
   Sector*	sec )
 {
     if (!(line->flags & ML_TWOSIDED))
@@ -270,7 +270,7 @@ double
 PP_FindLowestFloorSurrounding(Sector* sec)
 {
     int			i;
-    line_t*		check;
+    Line*		check;
     double		floor = sec->ffloorheight;
 	
     for (i=0 ;i < sec->linecount ; i++)
@@ -297,7 +297,7 @@ double
 PP_FindHighestFloorSurrounding(Sector *sec)
 {
     int			i;
-    line_t*		check;
+    Line*		check;
     double floor = -500;
 	
     for (i=0 ;i < sec->linecount ; i++)
@@ -330,7 +330,7 @@ PP_FindNextHighestFloor(Sector* sec, double currentheight)
     int			i;
     int			h;
     int			min;
-    line_t*		check;
+    Line*		check;
     double height = currentheight;
 
     
@@ -378,7 +378,7 @@ double
 PP_FindLowestCeilingSurrounding(Sector* sec)
 {
     int			i;
-    line_t*		check;
+    Line*		check;
     double		height = INT_MAX;
 	
     for (i=0 ;i < sec->linecount ; i++)
@@ -403,7 +403,7 @@ double
 PP_FindHighestCeilingSurrounding(Sector* sec)
 {
     int		i;
-    line_t*	check;
+    Line*	check;
     double height = 0;
 	
     for (i=0 ;i < sec->linecount ; i++)
@@ -427,7 +427,7 @@ PP_FindHighestCeilingSurrounding(Sector* sec)
 //
 int
 P_FindSectorFromLineTag
-( line_t*	line,
+( Line*	line,
   int		start )
 {
     int	i;
@@ -452,7 +452,7 @@ P_FindMinSurroundingLight
 {
     int		i;
     int		min;
-    line_t*	line;
+    Line*	line;
 	
     min = max;
     for (i=0 ; i < sector->linecount ; i++)
@@ -488,7 +488,7 @@ P_CrossSpecialLine
   int		side,
   Mob*	thing )
 {
-    line_t*	line;
+    Line*	line;
     int		ok;
 
     line = &lines[linenum];
@@ -952,7 +952,7 @@ P_CrossSpecialLine
 void
 P_ShootSpecialLine
 ( Mob*	thing,
-  line_t*	line )
+  Line*	line )
 {
     int		ok;
     
@@ -1077,7 +1077,7 @@ void P_UpdateSpecials (void)
     anim_t*	anim;
     int		pic;
     int		i;
-    line_t*	line;
+    Line*	line;
 
     
     //	LEVEL TIMER
@@ -1152,7 +1152,7 @@ void P_UpdateSpecials (void)
 //
 // Special Stuff that can not be categorized
 //
-int EV_DoDonut(line_t*	line)
+int EV_DoDonut(Line*	line)
 {
     Sector*		s1;
     Sector*		s2;
@@ -1224,7 +1224,7 @@ int EV_DoDonut(line_t*	line)
 //  that spawn thinkers
 //
 short		numlinespecials;
-line_t*		linespeciallist[MAXLINEANIMS];
+Line*		linespeciallist[MAXLINEANIMS];
 
 
 // Parses command line parameters.
@@ -1318,7 +1318,7 @@ void P_SpawnSpecials (void)
     
     //	Init line EFFECTs
     numlinespecials = 0;
-    for (i = 0;i < numlines; i++)
+    for (size_t i = 0, len = lines.size(); i < len; i++)
     {
 	switch(lines[i].special)
 	{

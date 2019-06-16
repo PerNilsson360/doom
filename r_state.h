@@ -28,6 +28,7 @@
 
 #include "BspNode.hh"
 #include "SubSector.hh"
+#include "Line.hh"
 #include "d_player.h"
 #include "r_data.h"
 
@@ -86,13 +87,8 @@ extern seg_t*		segs;
 extern std::vector<Sector> sectors;
 extern std::vector<SubSector> subsectors;
 extern std::vector<BspNode> nodes;
-
-extern int		numlines;
-extern line_t*		lines;
-
-extern int		numsides;
-extern side_t*		sides;
-
+extern std::vector<Line> lines;
+extern std::vector<Side> sides;
 
 //
 // POV data.

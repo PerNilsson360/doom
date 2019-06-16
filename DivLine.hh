@@ -11,7 +11,7 @@ public:
     DivLine();
     DivLine(const Vertex& v1, const Vertex& v2);
     DivLine(double x1, double x2, double y1, double y2);
-    DivLine(const line_t& li);
+    DivLine(const Line& li);
     DivLine(const DataInput& dataInput);
     Vertex getVertex(double fraction);
     int moveX(double fraction) const;

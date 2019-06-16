@@ -213,7 +213,7 @@ P_SpawnStrobeFlash
 //
 // Start strobing lights (usually from a trigger)
 //
-void EV_StartLightStrobing(line_t*	line)
+void EV_StartLightStrobing(Line*	line)
 {
     int		secnum;
     Sector*	sec;
@@ -234,12 +234,12 @@ void EV_StartLightStrobing(line_t*	line)
 //
 // TURN LINE'S TAG LIGHTS OFF
 //
-void EV_TurnTagLightsOff(line_t* line)
+void EV_TurnTagLightsOff(Line* line)
 {
     int			i;
     int			min;
     Sector*		tsec;
-    line_t*		templine;
+    Line*		templine;
 	
     for (size_t j = 0;j < sectors.size(); j++)
     {
@@ -266,11 +266,11 @@ void EV_TurnTagLightsOff(line_t* line)
 //
 void
 EV_LightTurnOn
-( line_t*	line,
+( Line*	line,
   int		bright )
 {
     int		j;
-    line_t*	templine;
+    Line*	templine;
 	
 	
     for (size_t i=0;i<sectors.size();i++)

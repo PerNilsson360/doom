@@ -140,7 +140,7 @@ typedef struct
     bool	isaline;
     union {
 	Mob*	thing;
-	line_t*	line;
+	Line*	line;
     }			d;
 } intercept_t;
 
@@ -152,17 +152,17 @@ extern intercept_t*	intercept_p;
 typedef bool (*traverser_t) (intercept_t *in);
 
 double PP_AproxDistance(double dx, double dy);
-int P_PointOnLineSide (const Vertex& v, line_t* line);
-int PP_BoxOnLineSide (double* tmbox, line_t* ld);
+int P_PointOnLineSide (const Vertex& v, Line* line);
+int PP_BoxOnLineSide (double* tmbox, Line* ld);
 
 extern double oopentop;
 extern double oopenbottom;
 extern double oopenrange;
 extern double llowfloor;
 
-void P_LineOpening (line_t* linedef);
+void P_LineOpening (Line* linedef);
 
-bool P_BlockLinesIterator (int x, int y, bool(*func)(line_t*) );
+bool P_BlockLinesIterator (int x, int y, bool(*func)(Line*) );
 bool P_BlockThingsIterator (int x, int y, bool(*func)(Mob*) );
 
 #define PT_ADDLINES		1
@@ -193,7 +193,7 @@ extern double		ttmfloorz;
 extern double		ttmceilingz;
 
 
-extern	line_t*		ceilingline;
+extern Line*		ceilingline;
 
 bool PP_CheckPosition (Mob *thing, const Vertex& v);
 bool PP_TryMove (Mob* thing, const Vertex& v);

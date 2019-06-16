@@ -145,7 +145,7 @@ void T_PlatRaise(plat_t* plat)
 //
 int
 EV_DoPlat
-( line_t*	line,
+( Line*	line,
   plattype_e	type,
   int		amount )
 {
@@ -277,7 +277,7 @@ void P_ActivateInStasis(int tag)
 	}
 }
 
-void EV_StopPlat(line_t* line)
+void EV_StopPlat(Line* line)
 {
     int		j;
 	

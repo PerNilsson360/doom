@@ -34,6 +34,8 @@ rcsid[] = "$Id: p_setup.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 #include "DataInput.hh"
 #include "Sector.hh"
 #include "SubSector.hh"
+#include "Side.hh"
+#include "Line.hh"
 
 #include "z_zone.h"
 
@@ -67,14 +69,9 @@ seg_t*		segs;
 
 std::vector<Sector> sectors;
 std::vector<SubSector> subsectors;
-
 std::vector<BspNode> nodes;
-
-int		numlines;
-line_t*		lines;
-
-int		numsides;
-side_t*		sides;
+std::vector<Line> lines;
+std::vector<Side> sides;
 
 
 // BLOCKMAP
@@ -134,7 +131,7 @@ void P_LoadSegs (int lump)
     int			i;
     mapseg_t*		ml;
     seg_t*		li;
-    line_t*		ldef;
+    Line*		ldef;
     int			linedef;
     int			side;
 	
@@ -158,9 +155,9 @@ void P_LoadSegs (int lump)
 	side = SHORT(ml->side);
 	li->sidedef = &sides[ldef->sidenum[side]];
 	li->frontsector = sides[ldef->sidenum[side]].sector;
-	if (ldef-> flags & ML_TWOSIDED)
+	if (ldef->flags & ML_TWOSIDED) {
 	    li->backsector = sides[ldef->sidenum[side^1]].sector;
-	else
+	} else 
 	    li->backsector = 0;
     }
 	
@@ -254,79 +251,14 @@ void P_LoadThings (int lump)
 //
 void P_LoadLineDefs (int lump)
 {
-    byte*		data;
-    int			i;
-    maplinedef_t*	mld;
-    line_t*		ld;
-    Vertex*		v1;
-    Vertex*		v2;
-	
-    numlines = W_LumpLength (lump) / sizeof(maplinedef_t);
-    lines = (line_t*)Z_Malloc (numlines*sizeof(line_t),PU_LEVEL,0);	
-    memset (lines, 0, numlines*sizeof(line_t));
-    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
-	
-    mld = (maplinedef_t *)data;
-    ld = lines;
-    for (i=0 ; i<numlines ; i++, mld++, ld++)
-    {
-	ld->flags = SHORT(mld->flags);
-	ld->special = SHORT(mld->special);
-	ld->tag = SHORT(mld->tag);
-	v1 = ld->v1 = &vertexes[SHORT(mld->v1)];
-	v2 = ld->v2 = &vertexes[SHORT(mld->v2)];
-	ld->ddx
-	    = v2->getX() - v1->getX();
-	ld->ddy = v2->getY() - v1->getY();
-	
-	if (ld->ddx == 0)
-	    ld->slopetype = ST_VERTICAL;
-	else if (ld->ddy == 0)
-	    ld->slopetype = ST_HORIZONTAL;
-	else
-	{
-	    if (ld->ddy / ld->ddx > 0)
-            ld->slopetype = ST_POSITIVE;
-	    else
-            ld->slopetype = ST_NEGATIVE;
-	}
-		
-	if (v1->getX() < v2->getX())
-	{
-	    ld->bbbox[BOXLEFT] = v1->getX();
-	    ld->bbbox[BOXRIGHT] = v2->getX();
-	}
-	else
-	{
-	    ld->bbbox[BOXLEFT] = v2->getX();
-	    ld->bbbox[BOXRIGHT] = v1->getX();
-	}
-
-	if (v1->getY() < v2->getY())
-	{
-	    ld->bbbox[BOXBOTTOM] = v1->getY();
-	    ld->bbbox[BOXTOP] = v2->getY();
-	}
-	else
-	{
-	    ld->bbbox[BOXBOTTOM] = v2->getY();
-	    ld->bbbox[BOXTOP] = v1->getY();
-	}
-
-	ld->sidenum[0] = SHORT(mld->sidenum[0]);
-	ld->sidenum[1] = SHORT(mld->sidenum[1]);
-
-	if (ld->sidenum[0] != -1)
-	    ld->frontsector = sides[ld->sidenum[0]].sector;
-	else
-	    ld->frontsector = 0;
-
-	if (ld->sidenum[1] != -1)
-	    ld->backsector = sides[ld->sidenum[1]].sector;
-	else
-	    ld->backsector = 0;
+    lines.clear();
+    int dataLength = W_LumpLength(lump);
+    int nLines = dataLength / Line::getBinarySize();
+    byte* data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
+    DataInput dataInput(data, dataLength);
+    for (int i = 0; i < nLines; i++) {
+	lines.push_back(Line(dataInput, vertexes, sides));
     }
-	
     Z_Free (data);
 }
 
@@ -336,28 +268,14 @@ void P_LoadLineDefs (int lump)
 //
 void P_LoadSideDefs (int lump)
 {
-    byte*		data;
-    int			i;
-    mapsidedef_t*	msd;
-    side_t*		sd;
-	
-    numsides = W_LumpLength (lump) / sizeof(mapsidedef_t);
-    sides = (side_t*)Z_Malloc (numsides*sizeof(side_t),PU_LEVEL,0);	
-    memset (sides, 0, numsides*sizeof(side_t));
-    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
-	
-    msd = (mapsidedef_t *)data;
-    sd = sides;
-    for (i=0 ; i<numsides ; i++, msd++, sd++)
-    {
-	sd->ttextureoffset = SHORT(msd->textureoffset);
-	sd->rrowoffset = SHORT(msd->rowoffset);
-	sd->toptexture = R_TextureNumForName(msd->toptexture);
-	sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
-	sd->midtexture = R_TextureNumForName(msd->midtexture);
-	sd->sector = &sectors[SHORT(msd->sector)];
+    sides.clear();
+    int dataLength = W_LumpLength (lump);
+    int numSides = dataLength / Side::getBinarySize();
+    byte* data = (byte*)W_CacheLumpNum(lump, PU_STATIC);
+    DataInput dataInput(data, dataLength);
+    for (int i = 0; i < numSides; i++) {
+	sides.push_back(Side(dataInput, sectors));
     }
-	
     Z_Free (data);
 }
 
@@ -368,11 +286,7 @@ void P_LoadSideDefs (int lump)
 //
 void P_GroupLines (void)
 {
-    line_t**		linebuffer;
-    int			i;
-    int			j;
     int			total;
-    line_t*		li;
     seg_t*		seg;
     double		bbbox[4];
     int			block;
@@ -384,9 +298,9 @@ void P_GroupLines (void)
     }
 
     // count number of lines in each sector
-    li = lines;
+    Line* li = &lines[0];
     total = 0;
-    for (i=0 ; i<numlines ; i++, li++)
+    for (size_t i = 0; i < lines.size(); i++, li++)
     {
 	total++;
 	li->frontsector->linecount++;
@@ -398,16 +312,14 @@ void P_GroupLines (void)
 	}
     }
 	
-    // build line tables for each sector	
-    linebuffer = (line_t**)Z_Malloc (total*8, PU_LEVEL, 0);
-    for (int i = 0, len = sectors.size(); i < len; i++)
-    {
+    // build line tables for each sector
+    Line** linebuffer = (Line**)Z_Malloc (total*8, PU_LEVEL, 0);
+    for (int i = 0, len = sectors.size(); i < len; i++) {
 	Sector* sector = &sectors[i];
 	MM_ClearBox (bbbox);
 	sector->lines = linebuffer;
-	li = lines;
-	for (j=0 ; j<numlines ; j++, li++)
-	{
+	li = &lines[0];
+	for (size_t j = 0, len = lines.size(); j < len; j++, li++) {
 	    if (li->frontsector == sector || li->backsector == sector)
 	    {
 		*linebuffer++ = li;
@@ -415,6 +327,7 @@ void P_GroupLines (void)
 		MM_AddToBox (bbbox, li->v2->getX(), li->v2->getY());
 	    }
 	}
+	printf("line Count : %d\n",  sector->linecount);
 	/*
 	if (linebuffer - sector->lines != sector->linecount)
 	    I_Error ("P_GroupLines: miscounted");

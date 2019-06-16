@@ -44,8 +44,8 @@ rcsid[] = "$Id: r_bsp.c,v 1.4 1997/02/03 22:45:12 b1 Exp $";
 
 
 seg_t*		curline;
-side_t*		sidedef;
-line_t*		linedef;
+Side*		sidedef;
+Line*		linedef;
 Sector*	frontsector;
 Sector*	backsector;
 
