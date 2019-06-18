@@ -36,6 +36,7 @@ rcsid[] = "$Id: p_setup.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 #include "SubSector.hh"
 #include "Side.hh"
 #include "Line.hh"
+#include "Seg.hh"
 
 #include "z_zone.h"
 
@@ -63,10 +64,7 @@ void	P_SpawnMapThing (MapThing*	mthing);
 // Store VERTEXES, LINEDEFS, SIDEDEFS, etc.
 //
 std::vector<Vertex> vertexes;
-
-int		numsegs;
-seg_t*		segs;
-
+std::vector<Seg> segs;
 std::vector<Sector> sectors;
 std::vector<SubSector> subsectors;
 std::vector<BspNode> nodes;
@@ -100,10 +98,6 @@ MapThing	deathmatchstarts[MAX_DEATHMATCH_STARTS];
 MapThing*	deathmatch_p;
 MapThing	playerstarts[MAXPLAYERS];
 
-
-
-
-
 //
 // P_LoadVertexes
 //
@@ -120,50 +114,21 @@ void P_LoadVertexes (int lump)
     Z_Free (data);
 }
 
-
-
 //
 // P_LoadSegs
 //
 void P_LoadSegs (int lump)
 {
-    byte*		data;
-    int			i;
-    mapseg_t*		ml;
-    seg_t*		li;
-    Line*		ldef;
-    int			linedef;
-    int			side;
-	
-    numsegs = W_LumpLength (lump) / sizeof(mapseg_t);
-    segs = (seg_t*)Z_Malloc (numsegs*sizeof(seg_t),PU_LEVEL,0);	
-    memset (segs, 0, numsegs*sizeof(seg_t));
-    data = (byte*)W_CacheLumpNum (lump,PU_STATIC);
-	
-    ml = (mapseg_t *)data;
-    li = segs;
-    for (i=0 ; i<numsegs ; i++, li++, ml++)
-    {
-	li->v1 = &vertexes[SHORT(ml->v1)];
-	li->v2 = &vertexes[SHORT(ml->v2)];
-					
-	li->aangle = Angle(SHORT(ml->angle) * Angle::A360 / 65536);
-	li->ooffset = (SHORT(ml->offset));
-	linedef = SHORT(ml->linedef);
-	ldef = &lines[linedef];
-	li->linedef = ldef;
-	side = SHORT(ml->side);
-	li->sidedef = &sides[ldef->sidenum[side]];
-	li->frontsector = sides[ldef->sidenum[side]].sector;
-	if (ldef->flags & ML_TWOSIDED) {
-	    li->backsector = sides[ldef->sidenum[side^1]].sector;
-	} else 
-	    li->backsector = 0;
+    segs.clear();
+    int dataLength = W_LumpLength(lump);
+    int nSegs = dataLength / Seg::getBinarySize();
+    byte* data = (byte*)W_CacheLumpNum(lump, PU_STATIC);
+    DataInput dataInput(data, dataLength);
+    for (int i = 0; i < nSegs; i++) {
+	segs.push_back(Seg(dataInput, vertexes, lines, sides));
     }
-	
     Z_Free (data);
 }
-
 
 //
 // P_LoadSubsectors
@@ -181,8 +146,6 @@ void P_LoadSubsectors (int lump)
     Z_Free (data);
 }
 
-
-
 //
 // P_LoadSectors
 //
@@ -199,7 +162,6 @@ void P_LoadSectors (int lump)
     Z_Free (data);
 }
 
-
 //
 // P_LoadNodes
 //
@@ -215,7 +177,6 @@ void P_LoadNodes (int lump)
     }
     Z_Free (data);
 }
-
 
 //
 // P_LoadThings
@@ -243,7 +204,6 @@ void P_LoadThings (int lump)
 	
     Z_Free (data);
 }
-
 
 //
 // P_LoadLineDefs
@@ -287,7 +247,7 @@ void P_LoadSideDefs (int lump)
 void P_GroupLines (void)
 {
     int			total;
-    seg_t*		seg;
+    Seg*		seg;
     double		bbbox[4];
     int			block;
 	
@@ -352,8 +312,7 @@ void P_GroupLines (void)
 	block = (bbbox[BOXLEFT]-blockMap.oorgx-MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
 	block = block < 0 ? 0 : block;
 	sector->blockbox[BOXLEFT]=block;
-    }
-	
+    }	
 }
 
 

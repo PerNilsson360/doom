@@ -80,10 +80,7 @@ extern int		numsprites;
 extern spritedef_t*	sprites;
 
 extern std::vector<Vertex> vertexes;
-
-extern int		numsegs;
-extern seg_t*		segs;
-
+extern std::vector<Seg> segs;
 extern std::vector<Sector> sectors;
 extern std::vector<SubSector> subsectors;
 extern std::vector<BspNode> nodes;

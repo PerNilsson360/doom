@@ -33,6 +33,7 @@ rcsid[] = "$Id: p_sight.c,v 1.3 1997/01/28 22:08:28 b1 Exp $";
 // State.
 #include "r_state.h"
 #include "Sector.hh"
+#include "Seg.hh"
 
 //
 // P_CheckSight
@@ -54,7 +55,7 @@ int		sightcounts[2];
 //
 bool P_CrossSubsector (int num)
 {
-    seg_t*		seg;
+    Seg*		seg;
     Line*		line;
     int			s1;
     int			s2;

@@ -40,10 +40,9 @@ rcsid[] = "$Id: r_bsp.c,v 1.4 1997/02/03 22:45:12 b1 Exp $";
 #include "doomstat.h"
 #include "r_state.h"
 #include "Sector.hh"
+#include "Seg.hh"
 
-
-
-seg_t*		curline;
+Seg*		curline;
 Side*		sidedef;
 Line*		linedef;
 Sector*	frontsector;
@@ -255,7 +254,7 @@ void R_ClearClipSegs (void)
 // Clips the given segment
 // and adds any visible pieces to the line list.
 //
-void R_AddLine (seg_t*	line)
+void R_AddLine (Seg*	line)
 {
     curline = line;
 
@@ -466,7 +465,7 @@ RR_CheckBBox(const double* bspcoord)
 void R_Subsector (int num)
 {
     int			count;
-    seg_t*		line;
+    Seg*		line;
     SubSector*	sub;
 #ifdef RANGECHECK
     if (num>=subsectors.size())

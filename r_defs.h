@@ -43,6 +43,7 @@
 
 class Sector;
 class Line;
+class Seg;
 
 // Silhouette, needed for clipping Segs (mainly)
 // and sprites representing things.
@@ -75,34 +76,6 @@ typedef struct
 
 } degenmobj_t;
 
-// The LineSeg.
-//
-typedef struct
-{
-    Vertex*	v1;
-    Vertex*	v2;
-    
-    double	ooffset;
-
-    Angle	aangle;
-
-    Side*	sidedef;
-    Line*	linedef;
-
-    // Sector references.
-    // Could be retrieved from linedef, too.
-    // backsector is NULL for one sided lines
-    Sector*	frontsector;
-    Sector*	backsector;
-    
-} seg_t;
-
-
-
-//
-// BSP node.
-//
-
 // posts are runs of non masked source pixels
 typedef struct
 {
@@ -130,7 +103,7 @@ typedef byte	lighttable_t;
 //
 typedef struct drawseg_s
 {
-    seg_t*		curline;
+    Seg*		curline;
     int			x1;
     int			x2;
 

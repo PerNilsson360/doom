@@ -90,7 +90,7 @@ int
 RR_PointOnSegSide(
     double x,
     double y,
-    seg_t* line );
+    Seg* line );
 
 double RR_ScaleFromGlobalAngle(const Angle& visangle);
 
