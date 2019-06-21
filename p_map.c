@@ -27,7 +27,6 @@ rcsid[] = "$Id: p_map.c,v 1.5 1997/02/03 22:45:11 b1 Exp $";
 
 #include <stdlib.h>
 
-#include "m_bbox.h"
 #include "m_random.h"
 #include "i_system.h"
 
@@ -1285,8 +1284,8 @@ P_ChangeSector
     crushchange = crunch;
            
     // re-check heights for all things near the moving sector
-    for (x=sector->blockbox[BOXLEFT] ; x<= sector->blockbox[BOXRIGHT] ; x++)
-	for (y=sector->blockbox[BOXBOTTOM];y<= sector->blockbox[BOXTOP] ; y++)
+    for (x=sector->box.getXl(); x<= sector->box.getXh() ; x++)
+	for (y=sector->box.getYl(); y<= sector->box.getYh(); y++)
 	    P_BlockThingsIterator (x, y, PIT_ChangeSector);
 	
 	

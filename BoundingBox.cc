@@ -24,7 +24,7 @@ BoundingBox::BoundingBox(const Vertex& v1, const Vertex& v2)
 }
 
 bool
-BoundingBox::disjunct(const BoundingBox& box)
+BoundingBox::disjunct(const BoundingBox& box) const
 {
     return
 	_xh <= box._xl ||

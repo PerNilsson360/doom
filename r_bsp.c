@@ -28,8 +28,6 @@ rcsid[] = "$Id: r_bsp.c,v 1.4 1997/02/03 22:45:12 b1 Exp $";
 
 #include "doomdef.h"
 
-#include "m_bbox.h"
-
 #include "i_system.h"
 
 #include "r_main.h"
@@ -363,7 +361,7 @@ int	checkcoord[12][4] =
 
 
 bool
-RR_CheckBBox(const double* bspcoord)
+RR_CheckBBox(const BoundingBox& box)
 {
     int			boxx;
     int			boxy;
@@ -373,16 +371,16 @@ RR_CheckBBox(const double* bspcoord)
 
     // Find the corners of the box
     // that define the edges from current viewpoint.
-    if (view.getX() <= bspcoord[BOXLEFT])
+    if (view.getX() <= box.getXl())
 	boxx = 0;
-    else if (view.getX() < bspcoord[BOXRIGHT])
+    else if (view.getX() < box.getXh())
 	boxx = 1;
     else
 	boxx = 2;
 		
-    if (view.getY() >= bspcoord[BOXTOP])
+    if (view.getY() >= box.getYh())
 	boxy = 0;
-    else if (view.getY() > bspcoord[BOXBOTTOM])
+    else if (view.getY() > box.getYl())
 	boxy = 1;
     else
 	boxy = 2;
@@ -391,10 +389,10 @@ RR_CheckBBox(const double* bspcoord)
     if (boxpos == 5)
 	return true;
 	
-    double x1 = bspcoord[checkcoord[boxpos][0]];
-    double y1 = bspcoord[checkcoord[boxpos][1]];
-    double x2 = bspcoord[checkcoord[boxpos][2]];
-    double y2 = bspcoord[checkcoord[boxpos][3]];
+    double x1 = box.get(checkcoord[boxpos][0]);
+    double y1 = box.get(checkcoord[boxpos][1]);
+    double x2 = box.get(checkcoord[boxpos][2]);
+    double y2 = box.get(checkcoord[boxpos][3]);
     
     // check clip list for an open space
     Angle angle1 = Angle(view.getX(), view.getY(), x1, y1) - vviewangle;

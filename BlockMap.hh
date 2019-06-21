@@ -9,7 +9,9 @@ class BlockMap
 public:
     void load(int lump);
     Vertex getLineDistance(const Vertex& v);
-    const BoundingBox getBox(const Vertex& position, double extent);
+    BoundingBox getBox(const Vertex& position, double extent) const;
+    // Returns a box in map block coordinates
+    BoundingBox getBox(const BoundingBox& box) const; 
 //private:
     int width;
     int height;	// size in mapblocks

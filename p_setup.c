@@ -41,7 +41,6 @@ rcsid[] = "$Id: p_setup.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 #include "z_zone.h"
 
 #include "m_swap.h"
-#include "m_bbox.h"
 
 #include "g_game.h"
 
@@ -248,8 +247,6 @@ void P_GroupLines (void)
 {
     int			total;
     Seg*		seg;
-    double		bbbox[4];
-    int			block;
 	
     // look up sector number for each subsector
     for (size_t i = 0; i < subsectors.size(); i++) {
@@ -276,42 +273,26 @@ void P_GroupLines (void)
     Line** linebuffer = (Line**)Z_Malloc (total*8, PU_LEVEL, 0);
     for (int i = 0, len = sectors.size(); i < len; i++) {
 	Sector* sector = &sectors[i];
-	MM_ClearBox (bbbox);
+	BoundingBox box;
 	sector->lines = linebuffer;
 	li = &lines[0];
 	for (size_t j = 0, len = lines.size(); j < len; j++, li++) {
-	    if (li->frontsector == sector || li->backsector == sector)
-	    {
+	    if (li->frontsector == sector || li->backsector == sector) {
 		*linebuffer++ = li;
-		MM_AddToBox (bbbox, li->v1->getX(), li->v1->getY());
-		MM_AddToBox (bbbox, li->v2->getX(), li->v2->getY());
+		box = BoundingBox(*(li->v1), *(li->v2));
 	    }
 	}
-	printf("line Count : %d\n",  sector->linecount);
 	/*
 	if (linebuffer - sector->lines != sector->linecount)
 	    I_Error ("P_GroupLines: miscounted");
 	*/		
 	// set the degenmobj_t to the middle of the bounding box
-	sector->soundorg.xx = (bbbox[BOXRIGHT]+bbbox[BOXLEFT])/2;
-	sector->soundorg.yy = (bbbox[BOXTOP]+bbbox[BOXBOTTOM])/2;
-		
+	sector->soundorg.xx = (box.getXl() + box.getXh())/2;
+	sector->soundorg.yy = (box.getYl() + box.getYh())/2;
+
+	
 	// adjust bounding box to map blocks
-	block = (bbbox[BOXTOP]-blockMap.oorgy+MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
-	block = block >= blockMap.height ? blockMap.height-1 : block;
-	sector->blockbox[BOXTOP]=block;
-
-	block = (bbbox[BOXBOTTOM]-blockMap.oorgy-MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
-	block = block < 0 ? 0 : block;
-	sector->blockbox[BOXBOTTOM]=block;
-
-	block = (bbbox[BOXRIGHT]-blockMap.oorgx+MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
-	block = block >= blockMap.width ? blockMap.width-1 : block;
-	sector->blockbox[BOXRIGHT]=block;
-
-	block = (bbbox[BOXLEFT]-blockMap.oorgx-MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
-	block = block < 0 ? 0 : block;
-	sector->blockbox[BOXLEFT]=block;
+	sector->box = blockMap.getBox(box);
     }	
 }
 

@@ -2,6 +2,7 @@
 #define _BSP_NODE_HH_
 
 #include "DivLine.hh"
+#include "BoundingBox.hh"
 
 class DataInput;
 
@@ -19,10 +20,10 @@ public:
     // Data consists of 14 short values.
     static int getBinarySize() { return 14 * 2; }
     unsigned short getChild(int side) const { return children[side]; }
-    const double* getBBox(int side) const { return bbbox[side]; }
+    const BoundingBox& getBBox(int side) const { return _box[side]; }
 private:
     // Bounding box for each child.
-    double bbbox[2][4];
+    BoundingBox _box[2];
 
     // If NF_SUBSECTOR its a subsector.
     unsigned short children[2];   

@@ -120,7 +120,7 @@ public:
     Mob*	soundtarget;
 
     // mapblock bounding box for height changes
-    int		blockbox[4];
+    BoundingBox box;
 
     // origin for any sounds played by the sector
     degenmobj_t	soundorg;

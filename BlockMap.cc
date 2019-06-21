@@ -43,8 +43,8 @@ BlockMap::getLineDistance(const Vertex& v)
     return Vertex(x, y);
 }
 
-const BoundingBox
-BlockMap::getBox(const Vertex& position, double extent)
+BoundingBox
+BlockMap::getBox(const Vertex& position, double extent) const
 {
     int x = position.getX();
     int y = position.getY();
@@ -52,5 +52,27 @@ BlockMap::getBox(const Vertex& position, double extent)
     int xh = (x - oorgx + extent) / DOUBLE_MAPBLOCKS_DIV;
     int yl = (y - oorgy - extent) / DOUBLE_MAPBLOCKS_DIV;
     int yh = (y - oorgy + extent) / DOUBLE_MAPBLOCKS_DIV;
+    return BoundingBox(xl, xh, yl, yh);
+}
+
+BoundingBox
+BlockMap::getBox(const BoundingBox& box) const
+{
+    double xl = (box.getXl() - blockMap.oorgx - MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
+    if (xl < 0 ) {
+	xl = 0;
+    }
+    double xh = (box.getXh() - blockMap.oorgx + MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
+    if (xh >= blockMap.width) {
+	xh = blockMap.width - 1;
+    }
+    double yl  = (box.getYl() - blockMap.oorgy - MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
+    if (yl < 0) {
+	yl = 0;
+    }
+    double yh = (box.getYh() - blockMap.oorgy + MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
+    if (yh >= blockMap.height) {
+	yh = blockMap.height - 1;
+    }
     return BoundingBox(xl, xh, yl, yh);
 }
