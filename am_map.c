@@ -1028,9 +1028,9 @@ void AM_drawGrid(int color)
     MLine ml;
 
     // Figure out start of vertical gridlines
-    double start = mm_x;
-    if (fmod(start - blockMap.oorgx, MAPBLOCKUNITS))
-	start += MAPBLOCKUNITS - fmod(start- blockMap.oorgx, MAPBLOCKUNITS);
+
+    Vertex lineDistance = blockMap.getLineDistance(Vertex(mm_x, mm_y));
+    double start = mm_x + lineDistance.getX();
     double end = mm_x + mm_w;
 
     // draw vertical gridlines
@@ -1044,9 +1044,7 @@ void AM_drawGrid(int color)
     }
 
     // Figure out start of horizontal gridlines
-    start = mm_y;
-    if (fmod(start - blockMap.oorgy, MAPBLOCKUNITS))
-	start += MAPBLOCKUNITS - fmod(start - blockMap.oorgy, MAPBLOCKUNITS);
+    start = mm_y + lineDistance.getY();
     end = mm_y + mm_h;
 
     // draw horizontal gridlines

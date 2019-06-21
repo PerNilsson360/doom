@@ -43,7 +43,7 @@ rcsid[] = "$Id: p_map.c,v 1.5 1997/02/03 22:45:11 b1 Exp $";
 #include "sounds.h"
 #include "Sector.hh"
 
-static double ttmbbox[4];
+static BoundingBox tmpBox;
 static Mob*	tmthing;
 static int tmflags;
 static double ttmx;
@@ -129,10 +129,7 @@ PP_TeleportMove(
     ttmx = x;
     ttmy = y;
 	
-    ttmbbox[BOXTOP] = y + tmthing->rradius;
-    ttmbbox[BOXBOTTOM] = y - tmthing->rradius;
-    ttmbbox[BOXRIGHT] = x + tmthing->rradius;
-    ttmbbox[BOXLEFT] = x - tmthing->rradius;
+    tmpBox = BoundingBox(x, y, tmthing->rradius);
 
     SubSector* newsubsec = RR_PointInSubsector(v);
     ceilingline = NULL;
@@ -148,10 +145,10 @@ PP_TeleportMove(
     numspechit = 0;
     
     // stomp on any things contacted
-    xl = (ttmbbox[BOXLEFT] - blockMap.oorgx - MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
-    xh = (ttmbbox[BOXRIGHT] - blockMap.oorgx + MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
-    yl = (ttmbbox[BOXBOTTOM] - blockMap.oorgy - MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
-    yh = (ttmbbox[BOXTOP] - blockMap.oorgy + MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
+    xl = (tmpBox.getXl() - blockMap.oorgx - MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
+    xh = (tmpBox.getXh() - blockMap.oorgx + MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
+    yl = (tmpBox.getYl() - blockMap.oorgy - MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
+    yh = (tmpBox.getYh() - blockMap.oorgy + MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
     
     for (bx=xl ; bx<=xh ; bx++)
         for (by=yl ; by<=yh ; by++)
@@ -183,13 +180,13 @@ PP_TeleportMove(
 //
 bool PIT_CheckLine (Line* ld)
 {
-    if (ttmbbox[BOXRIGHT] <= ld->bbbox[BOXLEFT]
-        || ttmbbox[BOXLEFT] >= ld->bbbox[BOXRIGHT]
-        || ttmbbox[BOXTOP] <= ld->bbbox[BOXBOTTOM]
-        || ttmbbox[BOXBOTTOM] >= ld->bbbox[BOXTOP] )
+    if (tmpBox.getXh() <= ld->bbbox[BOXLEFT]
+        || tmpBox.getXl() >= ld->bbbox[BOXRIGHT]
+        || tmpBox.getYh() <= ld->bbbox[BOXBOTTOM]
+        || tmpBox.getYl() >= ld->bbbox[BOXTOP] )
         return true;
     
-    if (PP_BoxOnLineSide (ttmbbox, ld) != -1)
+    if (ld->boxOnLineSide(tmpBox) != -1)
         return true;
 		
     // A line has been hit
@@ -387,11 +384,7 @@ PP_CheckPosition(
     ttmx = x;
     ttmy = y;
 	
-    ttmbbox[BOXTOP] = y + tmthing->rradius;
-    ttmbbox[BOXBOTTOM] = y - tmthing->rradius;
-    ttmbbox[BOXRIGHT] = x + tmthing->rradius;
-    ttmbbox[BOXLEFT] = x - tmthing->rradius;
-
+    tmpBox = BoundingBox(x, y, tmthing->rradius);
     newsubsec = RR_PointInSubsector(v);
     ceilingline = NULL;
     
@@ -413,10 +406,10 @@ PP_CheckPosition(
     // because mobj_ts are grouped into mapblocks
     // based on their origin point, and can overlap
     // into adjacent blocks by up to MAXRADIUS units.
-    xl = (ttmbbox[BOXLEFT] - blockMap.oorgx - MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
-    xh = (ttmbbox[BOXRIGHT] - blockMap.oorgx + MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
-    yl = (ttmbbox[BOXBOTTOM] - blockMap.oorgy - MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
-    yh = (ttmbbox[BOXTOP] - blockMap.oorgy + MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
+    xl = (tmpBox.getXl() - blockMap.oorgx - MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
+    xh = (tmpBox.getXh() - blockMap.oorgx + MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
+    yl = (tmpBox.getYl() - blockMap.oorgy - MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
+    yh = (tmpBox.getYh() - blockMap.oorgy + MMAXRADIUS) / DOUBLE_MAPBLOCKS_DIV;
 
     for (bx=xl ; bx<=xh ; bx++)
         for (by=yl ; by<=yh ; by++)
@@ -424,10 +417,10 @@ PP_CheckPosition(
                 return false;
     
     // check lines
-    xl = (ttmbbox[BOXLEFT] - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV;
-    xh = (ttmbbox[BOXRIGHT] - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV;
-    yl = (ttmbbox[BOXBOTTOM] - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV;
-    yh = (ttmbbox[BOXTOP] - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV;
+    xl = (tmpBox.getXl() - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV;
+    xh = (tmpBox.getXh() - blockMap.oorgx) / DOUBLE_MAPBLOCKS_DIV;
+    yl = (tmpBox.getYl() - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV;
+    yh = (tmpBox.getYh() - blockMap.oorgy) / DOUBLE_MAPBLOCKS_DIV;
     
     for (bx=xl ; bx<=xh ; bx++)
         for (by=yl ; by<=yh ; by++)

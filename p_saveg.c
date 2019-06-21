@@ -336,7 +336,7 @@ enum
     tc_glow,
     tc_endspecials
 
-} specials_e;	
+};	
 
 
 

@@ -1,6 +1,7 @@
 #include "z_zone.h"
 #include "w_wad.h"
 #include "m_swap.h"
+#include "p_local.h"
 
 #include "BlockMap.hh"
 
@@ -28,3 +29,28 @@ BlockMap::load(int lump_num)
     memset (blocklinks, 0, count);
 }
 
+
+Vertex
+BlockMap::getLineDistance(const Vertex& v)
+{
+    double x(0);
+    if (fmod(v.getX() - oorgx, MAPBLOCKUNITS)) {
+	x = MAPBLOCKUNITS - fmod(v.getX() - oorgx, MAPBLOCKUNITS);
+    }
+    double y(0);
+    if (fmod(v.getY() - blockMap.oorgy, MAPBLOCKUNITS))
+	y= MAPBLOCKUNITS - fmod(v.getY() - oorgy, MAPBLOCKUNITS);
+    return Vertex(x, y);
+}
+
+const BoundingBox
+BlockMap::getBox(const Vertex& position, double extent)
+{
+    int x = position.getX();
+    int y = position.getY();
+    int xl = (x - oorgx - extent) / DOUBLE_MAPBLOCKS_DIV;
+    int xh = (x - oorgx + extent) / DOUBLE_MAPBLOCKS_DIV;
+    int yl = (y - oorgy - extent) / DOUBLE_MAPBLOCKS_DIV;
+    int yh = (y - oorgy + extent) / DOUBLE_MAPBLOCKS_DIV;
+    return BoundingBox(xl, xh, yl, yh);
+}

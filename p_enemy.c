@@ -1064,8 +1064,7 @@ void A_SkelFist (Mob*	actor)
 //
 Mob*		corpsehit;
 Mob*		vileobj;
-double vviletryx;
-double vviletryy;
+Vertex viletry;
 
 bool PIT_VileCheck (Mob*	thing)
 {
@@ -1084,8 +1083,8 @@ bool PIT_VileCheck (Mob*	thing)
     
     maxdist = thing->info->rradius + mobjinfo[MT_VILE].rradius;
 	
-    if (fabs(thing->position.getX() - vviletryx) > maxdist
-        || fabs(thing->position.getY() - vviletryy) > maxdist)
+    if (fabs(thing->position.getX() - viletry.getX()) > maxdist
+        || fabs(thing->position.getY() - viletry.getY()) > maxdist)
         return true;		// not actually touching
     
     corpsehit = thing;
@@ -1108,14 +1107,6 @@ bool PIT_VileCheck (Mob*	thing)
 //
 void A_VileChase (Mob* actor)
 {
-    int			xl;
-    int			xh;
-    int			yl;
-    int			yh;
-    
-    int			bx;
-    int			by;
-
     mobjinfo_t*		info;
     Mob*		temp;
 
@@ -1125,18 +1116,15 @@ void A_VileChase (Mob* actor)
     {
         // check for corpses to raise
         // @todo check the actor speed thing below
-        vviletryx = actor->position.getX() + actor->info->speed*xxspeed[actor->movedir];
-        vviletryy = actor->position.getY() + actor->info->speed*yyspeed[actor->movedir];
-        
-        xl = (vviletryx - blockMap.oorgx - MMAXRADIUS*2) / DOUBLE_MAPBLOCKS_DIV;
-        xh = (vviletryx - blockMap.oorgx + MMAXRADIUS*2) / DOUBLE_MAPBLOCKS_DIV;
-        yl = (vviletryy - blockMap.oorgy - MMAXRADIUS*2) / DOUBLE_MAPBLOCKS_DIV;
-        yh = (vviletryy - blockMap.oorgy + MMAXRADIUS*2) / DOUBLE_MAPBLOCKS_DIV;
+        viletry = actor->position + Vertex(actor->info->speed*xxspeed[actor->movedir] ,
+					   actor->info->speed*yyspeed[actor->movedir]);
+
+	BoundingBox box = blockMap.getBox(viletry, MMAXRADIUS*2);
         
 	vileobj = actor;
-	for (bx=xl ; bx<=xh ; bx++)
+	for (int bx = box.getXl(); bx <= box.getXh(); bx++)
 	{
-	    for (by=yl ; by<=yh ; by++)
+	    for (int by = box.getYl(); by <= box.getYh(); by++)
 	    {
 		// Call PIT_VileCheck to check
 		// whether object is a corpse

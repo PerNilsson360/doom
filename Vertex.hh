@@ -52,6 +52,11 @@ inline Vertex operator - (const Vertex& left, const Vertex& right) {
 		  left.getY() - right.getY()); 
 }
 
+inline Vertex operator + (const Vertex& left, const Vertex& right) {
+    return Vertex(left.getX() + right.getX(),
+		  left.getY() + right.getY()); 
+}
+
 inline bool operator == (const Vertex& left, const Vertex& right) {
     return left.getX() == right.getX() && left.getY() == right.getY(); 
 }

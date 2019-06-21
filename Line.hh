@@ -497,6 +497,7 @@
 */
 
 #include "Vertex.hh"
+#include "BoundingBox.hh"
 #include "r_defs.h"
 
 // Solid, is an obstacle.
@@ -542,18 +543,19 @@ class Sector;
 class Line
 {
 public:
-    Line();
-    Line(const DataInput& datainput,
-	 std::vector<Vertex>& vertices,
-	 std::vector<Side>& sides);
-    static int getBinarySize() { return 7 * 2; }
     enum SlopeType {
 	ST_HORIZONTAL,
 	ST_VERTICAL,
 	ST_POSITIVE,
 	ST_NEGATIVE
     };
-
+    Line();
+    Line(const DataInput& datainput,
+	 std::vector<Vertex>& vertices,
+	 std::vector<Side>& sides);
+    static int getBinarySize() { return 7 * 2; }
+    int boxOnLineSide(const BoundingBox& box);
+    
 //private:
     // Vertices, from v1 to v2.
     Vertex*	v1;
@@ -575,7 +577,8 @@ public:
     // Neat. Another bounding box, for the extent
     //  of the LineDef.
     double bbbox[4];
-
+    BoundingBox box;
+    
     // To aid move clipping.
     SlopeType	slopetype;
 

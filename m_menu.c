@@ -234,12 +234,10 @@ void M_ClearMenus (void);
 
 
 
-
 //
 // DOOM MENU
 //
-enum
-{
+enum {
     newgame = 0,
     options,
     loadgame,
@@ -247,7 +245,8 @@ enum
     readthis,
     quitdoom,
     main_end
-} main_e;
+};
+
 
 menuitem_t MainMenu[]=
 {
@@ -274,14 +273,13 @@ menu_t MainDef =
 //
 // EPISODE SELECT
 //
-enum
-{
+enum {
     ep1,
     ep2,
     ep3,
     ep4,
     ep_end
-} episodes_e;
+};
 
 menuitem_t EpisodeMenu[]=
 {
@@ -304,15 +302,14 @@ menu_t  EpiDef =
 //
 // NEW GAME
 //
-enum
-{
+enum {
     killthings,
     toorough,
     hurtme,
     violence,
     nightmare,
     newg_end
-} newgame_e;
+};
 
 menuitem_t NewGameMenu[]=
 {
@@ -338,8 +335,7 @@ menu_t  NewDef =
 //
 // OPTIONS MENU
 //
-enum
-{
+enum {
     endgame,
     messages,
     scrnsize,
@@ -348,7 +344,7 @@ enum
     option_empty2,
     soundvol,
     opt_end
-} options_e;
+};
 
 menuitem_t OptionsMenu[]=
 {
@@ -374,11 +370,10 @@ menu_t  OptionsDef =
 //
 // Read This! MENU 1 & 2
 //
-enum
-{
+enum {
     rdthsempty1,
     read1_end
-} read_e;
+};
 
 menuitem_t ReadMenu1[] =
 {
@@ -395,11 +390,10 @@ menu_t  ReadDef1 =
     0
 };
 
-enum
-{
+enum {
     rdthsempty2,
     read2_end
-} read_e2;
+};
 
 menuitem_t ReadMenu2[]=
 {
@@ -419,14 +413,13 @@ menu_t  ReadDef2 =
 //
 // SOUND VOLUME MENU
 //
-enum
-{
+enum {
     sfx_vol,
     sfx_empty1,
     music_vol,
     sfx_empty2,
     sound_end
-} sound_e;
+};
 
 menuitem_t SoundMenu[]=
 {
@@ -449,8 +442,7 @@ menu_t  SoundDef =
 //
 // LOAD GAME MENU
 //
-enum
-{
+enum {
     load1,
     load2,
     load3,
@@ -458,7 +450,7 @@ enum
     load5,
     load6,
     load_end
-} load_e;
+};
 
 menuitem_t LoadMenu[]=
 {

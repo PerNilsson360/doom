@@ -153,7 +153,6 @@ typedef bool (*traverser_t) (intercept_t *in);
 
 double PP_AproxDistance(double dx, double dy);
 int P_PointOnLineSide (const Vertex& v, Line* line);
-int PP_BoxOnLineSide (double* tmbox, Line* ld);
 
 extern double oopentop;
 extern double oopenbottom;

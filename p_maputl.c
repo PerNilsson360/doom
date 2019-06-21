@@ -57,10 +57,6 @@ PP_AproxDistance(
 }
 
 
-//
-// P_PointOnLineSide
-// Returns 0 or 1
-//
 int
 P_PointOnLineSide(
     const Vertex& v,
@@ -96,59 +92,6 @@ P_PointOnLineSide(
     if (right < left)
 	return 0;		// front side
     return 1;			// back side
-}
-
-
-
-//
-// P_BoxOnLineSide
-// Considers the line to be infinite
-// Returns side 0 or 1, -1 if box crosses the line.
-//
-int
-PP_BoxOnLineSide(
-    double* tmbox,
-    Line*	ld)
-{
-    int		p1;
-    int		p2;
-	
-    switch (ld->slopetype)
-    {
-    case Line::ST_HORIZONTAL:
-        p1 = tmbox[BOXTOP] > ld->v1->getY();
-        p2 = tmbox[BOXBOTTOM] > ld->v1->getY();
-        if (ld->ddx < 0)
-        {
-            p1 ^= 1;
-            p2 ^= 1;
-        }
-        break;
-	
-    case Line::ST_VERTICAL:
-        p1 = tmbox[BOXRIGHT] < ld->v1->getX();
-        p2 = tmbox[BOXLEFT] < ld->v1->getX();
-        if (ld->ddy < 0)
-        {
-            p1 ^= 1;
-            p2 ^= 1;
-        }
-        break;
-        
-    case Line::ST_POSITIVE:
-        p1 = P_PointOnLineSide(Vertex(tmbox[BOXLEFT], tmbox[BOXTOP]), ld);
-        p2 = P_PointOnLineSide(Vertex(tmbox[BOXRIGHT], tmbox[BOXBOTTOM]), ld);
-	break;
-	
-    case Line::ST_NEGATIVE:
-        p1 = P_PointOnLineSide(Vertex(tmbox[BOXRIGHT], tmbox[BOXTOP]), ld);
-        p2 = P_PointOnLineSide(Vertex(tmbox[BOXLEFT], tmbox[BOXBOTTOM]), ld);
-        break;
-    }
-    
-    if (p1 == p2)
-        return p1;
-    return -1;
 }
 
 //

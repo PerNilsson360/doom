@@ -1,4 +1,6 @@
 #include "m_bbox.h"
+#include "p_local.h"
+
 #include "DataInput.hh" 
 
 #include "Line.hh"
@@ -67,4 +69,43 @@ Line::Line(const DataInput& dataInput,
     else
 	backsector = nullptr;
 
+}
+
+int
+Line::boxOnLineSide(const BoundingBox& box)
+{
+    int		p1;
+    int		p2;
+    switch (slopetype) {
+    case Line::ST_HORIZONTAL:
+        p1 = box.getYh() > v1->getY();
+        p2 = box.getYl() > v1->getY();
+        if (ddx < 0) {
+            p1 ^= 1;
+            p2 ^= 1;
+        }
+        break;
+    case Line::ST_VERTICAL:
+        p1 = box.getXh() < v1->getX();
+        p2 = box.getXl() < v1->getX();
+        if (ddy < 0) {
+            p1 ^= 1;
+            p2 ^= 1;
+        }
+        break;
+        
+    case Line::ST_POSITIVE:
+        p1 = P_PointOnLineSide(Vertex(box.getXl(), box.getYh()), this);
+        p2 = P_PointOnLineSide(Vertex(box.getXh(), box.getYl()), this);
+	break;
+	
+    case Line::ST_NEGATIVE:
+        p1 = P_PointOnLineSide(Vertex(box.getXh(), box.getYh()), this);
+        p2 = P_PointOnLineSide(Vertex(box.getXl(), box.getYl()), this);
+        break;
+    }
+    
+    if (p1 == p2)
+        return p1;
+    return -1;
 }

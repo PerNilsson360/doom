@@ -2,14 +2,15 @@
 #define _BLOCK_MAP_HH_
 
 #include "Mob.hh"
+#include "BoundingBox.hh"
 
 class BlockMap 
 {
 public:
     void load(int lump);
-
+    Vertex getLineDistance(const Vertex& v);
+    const BoundingBox getBox(const Vertex& position, double extent);
 //private:
-
     int width;
     int height;	// size in mapblocks
     short*  blockmap;	// int for larger maps
