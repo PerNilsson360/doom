@@ -180,10 +180,7 @@ PP_TeleportMove(
 //
 bool PIT_CheckLine (Line* ld)
 {
-    if (tmpBox.getXh() <= ld->bbbox[BOXLEFT]
-        || tmpBox.getXl() >= ld->bbbox[BOXRIGHT]
-        || tmpBox.getYh() <= ld->bbbox[BOXBOTTOM]
-        || tmpBox.getYl() >= ld->bbbox[BOXTOP] )
+    if (tmpBox.disjunct(ld->box))
         return true;
     
     if (ld->boxOnLineSide(tmpBox) != -1)

@@ -36,22 +36,8 @@ Line::Line(const DataInput& dataInput,
             slopetype = ST_NEGATIVE;
 	}
     }
-		
-    if (v1->getX() < v2->getX()) {
-	bbbox[BOXLEFT] = v1->getX();
-	bbbox[BOXRIGHT] = v2->getX();
-    } else {
-	bbbox[BOXLEFT] = v2->getX();
-	bbbox[BOXRIGHT] = v1->getX();
-    }
 
-    if (v1->getY() < v2->getY()) {
-	bbbox[BOXBOTTOM] = v1->getY();
-	bbbox[BOXTOP] = v2->getY();
-    } else {
-	bbbox[BOXBOTTOM] = v2->getY();
-	bbbox[BOXTOP] = v1->getY();
-    }
+    box = BoundingBox(*v1, *v2);
 
     flags = dataInput.readShort();
     special = dataInput.readShort();;

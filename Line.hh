@@ -576,7 +576,6 @@ public:
 
     // Neat. Another bounding box, for the extent
     //  of the LineDef.
-    double bbbox[4];
     BoundingBox box;
     
     // To aid move clipping.

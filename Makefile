@@ -87,6 +87,7 @@ OBJS=				\
 		$(O)/SubSector.o \
 		$(O)/Side.o \
 		$(O)/Seg.o \
+		$(O)/BoundingBox.o \
 
 all:	$(O)/linuxxdoom
 
@@ -140,6 +141,9 @@ $(O)/Side.o: Side.cc Side.hh
 
 $(O)/Seg.o: Seg.cc Seg.hh
 	$(CC) $(CFLAGS) $(LDFLAGS) -c Seg.cc -o $(O)/Seg.o
+
+$(O)/BoundingBox.o: BoundingBox.cc BoundingBox.hh
+	$(CC) $(CFLAGS) $(LDFLAGS) -c BoundingBox.cc -o $(O)/BoundingBox.o
 
 
 $(O)/%.o:	%.c
