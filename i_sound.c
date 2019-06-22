@@ -35,6 +35,7 @@ rcsid[] = "$Id: i_unix.c,v 1.5 1997/02/03 22:45:10 b1 Exp $";
 #include <sys/types.h>
 
 #include <string>
+#include <iostream>
 
 #ifndef LINUX
 #include <sys/filio.h>
@@ -670,7 +671,12 @@ void
 I_SubmitSound(void)
 {
   // Write it to DSP device.
-  write(audio_fd, mixbuffer, SAMPLECOUNT*BUFMUL);
+    int count = SAMPLECOUNT*BUFMUL;
+    ssize_t nBytes = write(audio_fd, mixbuffer, count);
+    if (nBytes != count) {
+	std::cerr << "I_SubmitSound: to few bytes writen: " << nBytes
+		  << std::endl; 
+    }
 }
 
 
@@ -932,7 +938,12 @@ void I_HandleSoundTimer( int ignore )
   {
     // See I_SubmitSound().
     // Write it to DSP device.
-    write(audio_fd, mixbuffer, SAMPLECOUNT*BUFMUL);
+      int count = SAMPLECOUNT*BUFMUL;
+      ssize_t nBytes = write(audio_fd, mixbuffer, count);
+      if (nBytes != count) {
+	  std::cerr << "I_HandleSoundTimer: to few bytes writen: " << nBytes
+		    << std::endl; 
+      }
 
     // Reset flag counter.
     flag = 0;

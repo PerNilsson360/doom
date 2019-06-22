@@ -652,13 +652,11 @@ S_ChangeMusic
     musicinfo_t*	music;
     char		namebuf[9];
 
-    if ( (musicnum <= mus_None)
-	 || (musicnum >= NUMMUSIC) )
-    {
+    if (musicnum <= mus_None || musicnum >= NUMMUSIC) {
 	I_Error("Bad music number %d", musicnum);
     }
-    else
-	music = &S_music[musicnum];
+    
+    music = &S_music[musicnum];
 
     if (mus_playing == music)
 	return;
