@@ -53,7 +53,7 @@ void R_SortVisSprites (void);
 void R_AddSprites (Sector* sec);
 void R_AddPSprites (void);
 void R_DrawSprites (void);
-void R_InitSprites (const char** namelist);
+void R_InitSprites(const std::vector<std::string>& names);
 void R_ClearSprites (void);
 void R_DrawMasked (void);
 

@@ -24,6 +24,9 @@
 #ifndef __INFO__
 #define __INFO__
 
+#include <vector>
+#include <string>
+
 // Needed for action function pointer handling.
 #include "d_think.h"
 
@@ -1155,9 +1158,7 @@ typedef struct
 } state_t;
 
 extern state_t	states[NUMSTATES];
-extern const char *sprnames[NUMSPRITES];
-
-
+extern std::vector<std::string> sprnames;
 
 typedef enum {
     MT_PLAYER,

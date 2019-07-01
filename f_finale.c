@@ -573,8 +573,7 @@ void V_DrawPatchFlipped (int x, int y, int scrn, patch_t *patch);
 
 void F_CastDrawer (void)
 {
-    spritedef_t*	sprdef;
-    spriteframe_t*	sprframe;
+    AnimatedSprite*	sprdef;
     int			lump;
     bool		flip;
     patch_t*		patch;
@@ -586,7 +585,7 @@ void F_CastDrawer (void)
     
     // draw the current frame in the middle of the screen
     sprdef = &sprites[caststate->sprite];
-    sprframe = &sprdef->spriteframes[ caststate->frame & FF_FRAMEMASK];
+    SpriteFrame* sprframe = &sprdef->_frames[ caststate->frame & FF_FRAMEMASK];
     lump = sprframe->lump[0];
     flip = (bool)sprframe->flip[0];
 			

@@ -757,7 +757,6 @@ void R_PrecacheLevel (void)
     
     texture_t*		texture;
     thinker_t*		th;
-    spriteframe_t*	sf;
 
     if (demoplayback)
 	return;
@@ -820,6 +819,7 @@ void R_PrecacheLevel (void)
     }
     
     // Precache sprites.
+    size_t numsprites = sprites.size();
     spritepresent = (char*)alloca(numsprites);
     memset (spritepresent,0, numsprites);
 	
@@ -830,17 +830,17 @@ void R_PrecacheLevel (void)
     }
 	
     spritememory = 0;
-    for (i=0 ; i<numsprites ; i++)
+    for (size_t i = 0; i < numsprites; i++)
     {
 	if (!spritepresent[i])
 	    continue;
 
-	for (j=0 ; j<sprites[i].numframes ; j++)
+	for (size_t j = 0; j < sprites[i]._frames.size(); j++)
 	{
-	    sf = &sprites[i].spriteframes[j];
+	    const SpriteFrame& sf = sprites[i]._frames[j];
 	    for (k=0 ; k<8 ; k++)
 	    {
-		lump = firstspritelump + sf->lump[k];
+		lump = firstspritelump + sf.lump[k];
 		spritememory += lumpinfo[lump].size;
 		W_CacheLumpNum(lump , PU_CACHE);
 	    }

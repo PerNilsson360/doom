@@ -29,6 +29,7 @@
 #include "BspNode.hh"
 #include "SubSector.hh"
 #include "Line.hh"
+#include "AnimatedSprite.hh"
 #include "d_player.h"
 #include "r_data.h"
 
@@ -76,9 +77,7 @@ extern int		numspritelumps;
 //
 // Lookup tables for map data.
 //
-extern int		numsprites;
-extern spritedef_t*	sprites;
-
+extern std::vector<AnimatedSprite> sprites;
 extern std::vector<Vertex> vertexes;
 extern std::vector<Seg> segs;
 extern std::vector<Sector> sectors;

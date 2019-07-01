@@ -6,7 +6,7 @@
 #
 CC=  g++  # gcc or g++
 
-CFLAGS=-g -O1 -Wall -DNORMALUNIX -DLINUX -fpermissive -std=gnu++14
+CFLAGS=-g -O4 -Wall -DNORMALUNIX -DLINUX -fpermissive -std=gnu++14
 LDFLAGS=-L/usr/X11R6/lib
 LIBS=-lXext -lX11  -lm #-lnsl
 
@@ -87,6 +87,8 @@ OBJS=				\
 		$(O)/Side.o \
 		$(O)/Seg.o \
 		$(O)/BoundingBox.o \
+		$(O)/SpriteFrame.o \
+		$(O)/AnimatedSprite.o \
 
 all:	$(O)/linuxxdoom
 
@@ -143,6 +145,12 @@ $(O)/Seg.o: Seg.cc Seg.hh
 
 $(O)/BoundingBox.o: BoundingBox.cc BoundingBox.hh
 	$(CC) $(CFLAGS) $(LDFLAGS) -c BoundingBox.cc -o $(O)/BoundingBox.o
+
+$(O)/SpriteFrame.o: SpriteFrame.cc SpriteFrame.hh
+	$(CC) $(CFLAGS) $(LDFLAGS) -c SpriteFrame.cc -o $(O)/SpriteFrame.o
+
+$(O)/AnimatedSprite.o: AnimatedSprite.cc AnimatedSprite.hh
+	$(CC) $(CFLAGS) $(LDFLAGS) -c AnimatedSprite.cc -o $(O)/AnimatedSprite.o
 
 
 $(O)/%.o:	%.c

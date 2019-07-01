@@ -23,10 +23,9 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: info.c,v 1.3 1997/01/26 07:45:00 b1 Exp $";
+#include <string>
+#include <vector>
 
-// Data.
 #include "sounds.h"
 
 #ifdef __GNUG__
@@ -37,7 +36,7 @@ rcsid[] = "$Id: info.c,v 1.3 1997/01/26 07:45:00 b1 Exp $";
 #include "d_player.h"
 #include "Mob.hh"
 
-const char *sprnames[NUMSPRITES] = {
+std::vector<std::string> sprnames = {
     "TROO","SHTG","PUNG","PISG","PISF","SHTF","SHT2","CHGG","CHGF","MISG",
     "MISF","SAWG","PLSG","PLSF","BFGG","BFGF","BLUD","PUFF","BAL1","BAL2",
     "PLSS","PLSE","MISL","BFS1","BFE1","BFE2","TFOG","IFOG","PLAY","POSS",
