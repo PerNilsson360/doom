@@ -28,11 +28,7 @@
 #pragma interface
 #endif
 
-#define MAXVISSPRITES  	128
-
-extern vissprite_t	vissprites[MAXVISSPRITES];
-extern vissprite_t*	vissprite_p;
-extern vissprite_t	vsprsortedhead;
+#include "Sprite.hh"
 
 // Constant arrays used for psprite clipping
 //  and initializing clipping.
@@ -46,10 +42,6 @@ extern double		spryscale;
 extern double		sprtopscreen;
 
 void R_DrawMaskedColumn (column_t* column);
-
-
-void R_SortVisSprites (void);
-
 void R_AddSprites (Sector* sec);
 void R_AddPSprites (void);
 void R_DrawSprites (void);

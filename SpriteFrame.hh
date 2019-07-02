@@ -1,5 +1,5 @@
-#ifndef _SPRITE_HH_
-#define _SPRITE_HH_
+#ifndef _SPRITE_FRAME_HH_
+#define _SPRITE_FRAME_HH_
 
 /*
 [5-1]: Picture Format

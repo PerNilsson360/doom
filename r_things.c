@@ -27,6 +27,7 @@ rcsid[] = "$Id: r_things.c,v 1.5 1997/02/03 16:47:56 b1 Exp $";
 
 #include <iostream>
 #include <string>
+#include <map>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,7 +73,6 @@ short		screenheightarray[SCREENWIDTH];
 // variables used to look up
 //  and range check thing_t sprites patches
 std::vector<AnimatedSprite>  sprites;
-
 
 //
 // R_InitSpriteDefs
@@ -150,11 +150,7 @@ void R_InitSpriteDefs (const std::vector<std::string>& names)
 //
 // GAME FUNCTIONS
 //
-vissprite_t	vissprites[MAXVISSPRITES];
-vissprite_t*	vissprite_p;
-int		newvissprite;
-
-
+std::multimap<double, Sprite*> sortedSprites;
 
 //
 // R_InitSprites
@@ -181,24 +177,11 @@ R_InitSprites(const std::vector<std::string>& names)
 //
 void R_ClearSprites (void)
 {
-    vissprite_p = vissprites;
+    for (std::pair<double, Sprite*> e : sortedSprites) {
+	delete e.second;
+    }
+    sortedSprites.clear();
 }
-
-
-//
-// R_NewVisSprite
-//
-vissprite_t	overflowsprite;
-
-vissprite_t* R_NewVisSprite (void)
-{
-    if (vissprite_p == &vissprites[MAXVISSPRITES])
-	return &overflowsprite;
-    vissprite_p++;
-    return vissprite_p-1;
-}
-
-
 
 //
 // R_DrawMaskedColumn
@@ -258,7 +241,7 @@ void R_DrawMaskedColumn (column_t* column)
 //
 void
 R_DrawVisSprite
-( vissprite_t*		vis,
+( Sprite*		vis,
   int			x1,
   int			x2 )
 {
@@ -321,7 +304,7 @@ void R_ProjectSprite (Mob* thing)
     
     int			index;
 
-    vissprite_t*	vis;
+    Sprite*	vis;
     
     // transform the origin point
     double tr_x = thing->position.getX() - view.getX();
@@ -391,7 +374,7 @@ void R_ProjectSprite (Mob* thing)
 	return;
     
     // store information in a vissprite
-    vis = R_NewVisSprite ();
+    vis = new Sprite();
     vis->mobjflags = thing->flags;
     vis->sscale = xscale;
     vis->ggx = thing->position.getX();
@@ -443,7 +426,8 @@ void R_ProjectSprite (Mob* thing)
 	    index = MAXLIGHTSCALE-1;
 
 	vis->colormap = spritelights[index];
-    }	
+    }
+    sortedSprites.insert(std::make_pair(vis->sscale, vis));
 }
 
 //
@@ -490,8 +474,8 @@ void R_DrawPSprite (pspdef_t* psp)
 {
     AnimatedSprite*	sprdef;
     int			lump;
-    vissprite_t*	vis;
-    vissprite_t		avis;
+    Sprite*	vis;
+    Sprite		avis;
     
     // decide which patch to use
 #ifdef RANGECHECK
@@ -588,71 +572,10 @@ void R_DrawPlayerSprites (void)
     }
 }
 
-
-
-
-//
-// R_SortVisSprites
-//
-vissprite_t	vsprsortedhead;
-
-
-void R_SortVisSprites (void)
-{
-    int			i;
-    int			count;
-    vissprite_t*	ds;
-    vissprite_t*	best;
-    vissprite_t		unsorted;
-
-    count = vissprite_p - vissprites;
-	
-    unsorted.next = unsorted.prev = &unsorted;
-
-    if (!count)
-	return;
-		
-    for (ds=vissprites ; ds<vissprite_p ; ds++)
-    {
-	ds->next = ds+1;
-	ds->prev = ds-1;
-    }
-    
-    vissprites[0].prev = &unsorted;
-    unsorted.next = &vissprites[0];
-    (vissprite_p-1)->next = &unsorted;
-    unsorted.prev = vissprite_p-1;
-    
-    // pull the vissprites out by scale
-    //best = 0;		// shut up the compiler warning
-    vsprsortedhead.next = vsprsortedhead.prev = &vsprsortedhead;
-    double bestscale;
-    for (i=0 ; i<count ; i++)
-    {
-	bestscale = DBL_MAX;
-	for (ds=unsorted.next ; ds!= &unsorted ; ds=ds->next)
-	{
-	    if (ds->sscale < bestscale)
-	    {
-		bestscale = ds->sscale;
-		best = ds;
-	    }
-	}
-	best->next->prev = best->prev;
-	best->prev->next = best->next;
-	best->next = &vsprsortedhead;
-	best->prev = vsprsortedhead.prev;
-	vsprsortedhead.prev->next = best;
-	vsprsortedhead.prev = best;
-    }
-}
-
-
-
 //
 // R_DrawSprite
 //
-void R_DrawSprite (vissprite_t* spr)
+void R_DrawSprite(Sprite* spr)
 {
     drawseg_t*		ds;
     short		clipbot[SCREENWIDTH];
@@ -770,21 +693,10 @@ void R_DrawSprite (vissprite_t* spr)
 //
 void R_DrawMasked (void)
 {
-    vissprite_t*	spr;
     drawseg_t*		ds;
-	
-    R_SortVisSprites ();
 
-    if (vissprite_p > vissprites)
-    {
-	// draw all vissprites back to front
-	for (spr = vsprsortedhead.next ;
-	     spr != &vsprsortedhead ;
-	     spr=spr->next)
-	{
-	    
-	    R_DrawSprite (spr);
-	}
+    for (std::pair<double, Sprite*> e : sortedSprites) {
+	R_DrawSprite(e.second);
     }
     
     // render any remaining masked mid textures

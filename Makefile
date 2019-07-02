@@ -6,7 +6,7 @@
 #
 CC=  g++  # gcc or g++
 
-CFLAGS=-g -O4 -Wall -DNORMALUNIX -DLINUX -fpermissive -std=gnu++14
+CFLAGS=-g -Wall -DNORMALUNIX -DLINUX -fpermissive -std=gnu++14
 LDFLAGS=-L/usr/X11R6/lib
 LIBS=-lXext -lX11  -lm #-lnsl
 
@@ -151,6 +151,9 @@ $(O)/SpriteFrame.o: SpriteFrame.cc SpriteFrame.hh
 
 $(O)/AnimatedSprite.o: AnimatedSprite.cc AnimatedSprite.hh
 	$(CC) $(CFLAGS) $(LDFLAGS) -c AnimatedSprite.cc -o $(O)/AnimatedSprite.o
+
+$(O)/Sprite.o: Sprite.cc Sprite.hh
+	$(CC) $(CFLAGS) $(LDFLAGS) -c Sprite.cc -o $(O)/Sprite.o
 
 
 $(O)/%.o:	%.c
