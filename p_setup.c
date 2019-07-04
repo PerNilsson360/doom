@@ -247,7 +247,6 @@ void P_GroupLines (void)
 {
     int			total;
     Seg*		seg;
-	
     // look up sector number for each subsector
     for (size_t i = 0; i < subsectors.size(); i++) {
 	seg = &segs[subsectors[i].firstline];
@@ -279,18 +278,20 @@ void P_GroupLines (void)
 	for (size_t j = 0, len = lines.size(); j < len; j++, li++) {
 	    if (li->frontsector == sector || li->backsector == sector) {
 		*linebuffer++ = li;
-		box = BoundingBox(*(li->v1), *(li->v2));
+		box.add(li->v1->getX(), li->v1->getY());
+		box.add(li->v2->getX(), li->v2->getY());
 	    }
 	}
+	
 	/*
 	if (linebuffer - sector->lines != sector->linecount)
 	    I_Error ("P_GroupLines: miscounted");
-	*/		
+	*/
 	// set the degenmobj_t to the middle of the bounding box
+
 	sector->soundorg.xx = (box.getXl() + box.getXh())/2;
 	sector->soundorg.yy = (box.getYl() + box.getYh())/2;
 
-	
 	// adjust bounding box to map blocks
 	sector->box = blockMap.getBox(box);
     }	

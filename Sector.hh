@@ -122,6 +122,7 @@ public:
     // mapblock bounding box for height changes
     BoundingBox box;
 
+    
     // origin for any sounds played by the sector
     degenmobj_t	soundorg;
 

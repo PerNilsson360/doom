@@ -11,15 +11,16 @@ class BoundingBox
 public:
     BoundingBox() :
 	_xl(std::numeric_limits<double>::max()),
-	_xh(std::numeric_limits<double>::max()),
+	_xh(std::numeric_limits<double>::min()),
 	_yl(std::numeric_limits<double>::max()),
-	_yh(std::numeric_limits<double>::max()) {}
+	_yh(std::numeric_limits<double>::min()) {}
     BoundingBox(const Vertex& v1, const Vertex& v2);
     BoundingBox(double x, double y, double distance) :
 	_xl(x - distance), _xh(x + distance),
 	_yl(y - distance), _yh(y + distance) {}
     BoundingBox(double xl, double xh, double yl, double yh) :
 	_xl(xl), _xh(xh), _yl(yl), _yh(yh) {}
+    void add(double x, double y);
     bool disjunct(const BoundingBox& box) const;
     double getXl() const { return _xl; }
     double getXh() const { return _xh; }

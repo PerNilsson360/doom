@@ -32,3 +32,16 @@ BoundingBox::disjunct(const BoundingBox& box) const
 	_yh <= box._yl ||
 	_yl >= box._yh;
 }
+
+void
+BoundingBox::add(double x, double y)
+{
+    if (x < _xl)
+	_xl = x;
+    else if (x > _xh)
+	_xh = x;
+    if (y < _yl)
+	_yl = y;
+    else if (y > _yh)
+	_yh = y;
+}

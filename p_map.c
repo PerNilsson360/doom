@@ -1288,7 +1288,6 @@ P_ChangeSector
 	for (y=sector->box.getYl(); y<= sector->box.getYh(); y++)
 	    P_BlockThingsIterator (x, y, PIT_ChangeSector);
 	
-	
     return nofit;
 }
 
