@@ -732,7 +732,11 @@ void FindResponseFile (void)
 	    size = ftell(handle);
 	    fseek (handle,0,SEEK_SET);
 	    file = (char*)malloc (size);
-	    fread (file,size,1,handle);
+	    size_t count = fread (file,size,1,handle);
+	    if (count != 1) {
+		std::cerr << "FindResponseFile: could not read file: "
+			  << file <<  std::endl;
+	    }
 	    fclose (handle);
 			
 	    // KEEP ALL CMDLINE ARGS FOLLOWING @RESPONSEFILE ARG

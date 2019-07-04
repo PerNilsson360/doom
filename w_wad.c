@@ -51,6 +51,7 @@ rcsid[] = "$Id: w_wad.c,v 1.5 1997/02/03 16:47:57 b1 Exp $";
 #endif
 #include "w_wad.h"
 
+#include <iostream>
 
 
 
@@ -168,7 +169,6 @@ void W_AddFile (char *filename)
 	return;
     }
 
-    printf (" adding %s\n",filename);
     startlump = numlumps;
 	
     if (strcmpi (filename+strlen(filename)-3 , "wad" ) )
@@ -183,7 +183,12 @@ void W_AddFile (char *filename)
     else 
     {
 	// WAD file
-	read (handle, &header, sizeof(header));
+	ssize_t count = read (handle, &header, sizeof(header));
+	if (count < 0) {
+	    std::cerr << "W_AddFile: could not read from handle: "
+		      << handle <<  std::endl;
+	}
+
 	if (strncmp(header.identification,"IWAD",4))
 	{
 	    // Homebrew levels?
@@ -200,7 +205,12 @@ void W_AddFile (char *filename)
 	length = header.numlumps*sizeof(filelump_t);
 	fileinfo = (filelump_t*)alloca (length);
 	lseek (handle, header.infotableofs, SEEK_SET);
-	read (handle, fileinfo, length);
+	count = read (handle, fileinfo, length);
+	if (count < 0) {
+	    std::cerr << "W_AddFile: could not read from handle: "
+		      << handle <<  std::endl;
+	}
+
 	numlumps += header.numlumps;
     }
 
@@ -250,13 +260,23 @@ void W_Reload (void)
     if ( (handle = open (reloadname,O_RDONLY | O_BINARY)) == -1)
 	I_Error ("W_Reload: couldn't open %s",reloadname);
 
-    read (handle, &header, sizeof(header));
+    ssize_t count = read (handle, &header, sizeof(header));
+    if (count < 0) {
+	std::cerr << "W_Reload: could not read from handle: "
+		  << handle <<  std::endl;
+    }
+
     lumpcount = LONG(header.numlumps);
     header.infotableofs = LONG(header.infotableofs);
     length = lumpcount*sizeof(filelump_t);
     fileinfo = (filelump_t*)alloca (length);
     lseek (handle, header.infotableofs, SEEK_SET);
-    (void)read (handle, fileinfo, length);
+    count = read (handle, fileinfo, length);
+    if (count < 0) {
+	std::cerr << "W_Reload: could not read from handle: "
+		  << handle <<  std::endl;
+    }
+
     
     // Fill in lumpinfo
     lump_p = &lumpinfo[reloadlump];

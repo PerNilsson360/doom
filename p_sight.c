@@ -70,7 +70,7 @@ bool P_CrossSubsector (int num)
     Vertex*		v2;
 	
 #ifdef RANGECHECK
-    if (num>=subsectors.size())
+    if (num>=(int)subsectors.size())
 	I_Error ("P_CrossSubsector: ss %i with numss = %i",
 		 num,
 		 subsectors.size());
