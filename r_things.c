@@ -45,6 +45,7 @@ rcsid[] = "$Id: r_things.c,v 1.5 1997/02/03 16:47:56 b1 Exp $";
 
 #include "doomstat.h"
 #include "Sector.hh"
+#include "Picture.hh"
 
 
 #define MINZ				4
@@ -72,7 +73,7 @@ short		screenheightarray[SCREENWIDTH];
 
 // variables used to look up
 //  and range check thing_t sprites patches
-std::vector<AnimatedSprite>  sprites;
+std::vector<AnimatedSprite*>  sprites;
 
 //
 // R_InitSpriteDefs
@@ -107,7 +108,7 @@ void R_InitSpriteDefs (const std::vector<std::string>& names)
     // scan all the lump names for each of the names,
     //  noting the highest frame letter.
     for (size_t i = 0; i < names.size(); i++) {
-	AnimatedSprite sprite;
+	AnimatedSprite* sprite = new AnimatedSprite();
 	const std::string& name = names[i];
 	// scan the lumps,
 	//  filling in the frames for whatever is found
@@ -123,23 +124,23 @@ void R_InitSpriteDefs (const std::vector<std::string>& names)
 		else
 		    patched = l;
 		
-		sprite.installLump(name, patched, frame, rotation, false);
+		sprite->installLump(name, patched, frame, rotation, false);
 		
 		if (lumpinfo[l].name[6]) {
 		    frame = lumpinfo[l].name[6] - 'A';
 		    rotation = lumpinfo[l].name[7] - '0';
-		    sprite.installLump(name, l, frame, rotation, true);
+		    sprite->installLump(name, l, frame, rotation, true);
 		}
 	    }
 	}
 
-	size_t nFrames = sprite._frames.size();
+	size_t nFrames = sprite->_frames.size();
 	// check the frames that were found for completeness
 	if (nFrames == 0) {
 	    std::cout << "no frames" << std::endl;
 	    continue;
 	}
-	sprite.validate(name);
+	sprite->validate(name);
 	sprites.push_back(sprite);
     }
 }
@@ -250,7 +251,7 @@ R_DrawVisSprite
     patch_t*		patch;
 	
 	
-    patch = (patch_t*)W_CacheLumpNum (vis->patch+firstspritelump, PU_CACHE);
+    patch = vis->picture->getData();
 
     dc_colormap = vis->colormap;
     
@@ -298,7 +299,6 @@ R_DrawVisSprite
 void R_ProjectSprite (Mob* thing)
 {
     AnimatedSprite*	sprdef;
-    int			lump;
     
     bool		flip;
     
@@ -335,38 +335,39 @@ void R_ProjectSprite (Mob* thing)
 	I_Error ("R_ProjectSprite: invalid sprite number %i ",
 		 thing->sprite);
 #endif
-    sprdef = &sprites[thing->sprite];
+    sprdef = sprites[thing->sprite];
 #ifdef RANGECHECK
     if ( (thing->frame&FF_FRAMEMASK) >= sprdef->_frames.size() )
 	I_Error ("R_ProjectSprite: invalid sprite frame %i : %i ",
 		 thing->sprite, thing->frame);
 #endif
-    const SpriteFrame& sprframe = sprdef->_frames[thing->frame & FF_FRAMEMASK];
-
-    if (*sprframe.getRotate())
+    const SpriteFrame* sprframe = sprdef->_frames[thing->frame & FF_FRAMEMASK];
+    Picture* picture;
+    if (*(sprframe->getRotate()))
     {
         Angle ang(view, thing->position);
 	double magic((Angle::A45/2)*9);
 	int direction = (((double)Angle(ang - thing->_angle + magic)) / Angle::A45);
-	lump = sprframe.lump[direction];
-	flip = (bool)sprframe.flip[direction];
+	
+	picture = sprframe->pictures[direction];
+	flip = (bool)sprframe->flip[direction];
     }
     else
     {
 	// use single rotation for all views
-	lump = sprframe.lump[0];
-	flip = (bool)sprframe.flip[0];
+	picture = sprframe->pictures[0];
+	flip = (bool)sprframe->flip[0];
     }
     
     // calculate edges of the shape
-    tx -= sspriteoffset[lump];	
+    tx -= picture->getLeftOffset();	
     int x1 = centerx + (tx * xscale);
 
     // off the right side?
     if (x1 > SCREENWIDTH)
 	return;
     
-    tx +=  sspritewidth[lump];
+    tx += picture->getWidth();
     int x2 = int(centerx + (tx * xscale)) - 1;
 
     // off the left side
@@ -380,7 +381,7 @@ void R_ProjectSprite (Mob* thing)
     vis->ggx = thing->position.getX();
     vis->ggy = thing->position.getY();
     vis->ggz = thing->zz;
-    vis->ggzt = thing->zz + sspritetopoffset[lump];
+    vis->ggzt = thing->zz + picture->getTopOffset();;
     vis->ttexturemid = vis->ggzt - vviewz;
     vis->x1 = x1 < 0 ? 0 : x1;
     vis->x2 = x2 >= SCREENWIDTH ? SCREENWIDTH-1 : x2;	
@@ -388,7 +389,7 @@ void R_ProjectSprite (Mob* thing)
 
     if (flip)
     {
-	vis->sstartfrac = sspritewidth[lump] - 1;
+	vis->sstartfrac = picture->getWidth() - 1;
 	vis->xxiscale = -iscale;
     }
     else
@@ -399,7 +400,7 @@ void R_ProjectSprite (Mob* thing)
 
     if (vis->x1 > x1)
 	vis->sstartfrac += vis->xxiscale * (vis->x1-x1);
-    vis->patch = lump;
+    vis->picture = picture;
     
     // get light level
     if (thing->flags & MF_SHADOW)
@@ -473,7 +474,6 @@ void R_AddSprites (Sector* sec)
 void R_DrawPSprite (pspdef_t* psp)
 {
     AnimatedSprite*	sprdef;
-    int			lump;
     Sprite*	vis;
     Sprite		avis;
     
@@ -483,32 +483,32 @@ void R_DrawPSprite (pspdef_t* psp)
 	I_Error ("R_ProjectSprite: invalid sprite number %i ",
 		 psp->state->sprite);
 #endif
-    sprdef = &sprites[psp->state->sprite];
+    sprdef = sprites[psp->state->sprite];
 #ifdef RANGECHECK
     if ( (psp->state->frame & FF_FRAMEMASK)  >= sprdef->_frames.size())
 	I_Error ("R_ProjectSprite: invalid sprite frame %i : %i ",
 		 psp->state->sprite, psp->state->frame);
 #endif
-    const SpriteFrame& sprframe = sprdef->_frames[ psp->state->frame & FF_FRAMEMASK ];
+    const SpriteFrame* sprframe = sprdef->_frames[ psp->state->frame & FF_FRAMEMASK ];
 
-    lump = sprframe.lump[0];
+    Picture* picture = sprframe->pictures[0];
         
     // store information in a vissprite
     vis = &avis;
     vis->mobjflags = 0;
-    int weaponoffset = psp->ssy - 1.3 * sspritetopoffset[lump];
+    int weaponoffset = psp->ssy - 1.3 * picture->getTopOffset();
     vis->ttexturemid = BASEYCENTER - weaponoffset;
 
     double tx = psp->ssx - WEAPONSCALE * 160;
-    tx -= WEAPONSCALE * sspriteoffset[lump];
+    tx -= WEAPONSCALE * picture->getLeftOffset();
     vis->x1 = centerx + tx;
-    tx += WEAPONSCALE * sspritewidth[lump];
+    tx += WEAPONSCALE * picture->getWidth();
     vis->x2 = int(centerx + tx) - 1;
     
     vis->sscale = WEAPONSCALE;
     vis->xxiscale = 1/vis->sscale;
     vis->sstartfrac = 0;
-    vis->patch = lump;
+    vis->picture = picture;
 
     if (viewplayer->powers[pw_invisibility] > 4*32
 	|| viewplayer->powers[pw_invisibility] & 8)

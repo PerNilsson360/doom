@@ -156,11 +156,6 @@ byte**			texturecomposite;
 int*		flattranslation;
 int*		texturetranslation;
 
-// needed for pre rendering
-double*	sspritewidth;	
-double*	sspriteoffset;
-double* sspritetopoffset;
-
 lighttable_t	*colormaps;
 
 
@@ -605,27 +600,9 @@ void R_InitFlats (void)
 //
 void R_InitSpriteLumps (void)
 {
-    int		i;
-    patch_t	*patch;
-	
     firstspritelump = W_GetNumForName ("S_START") + 1;
     lastspritelump = W_GetNumForName ("S_END") - 1;
-    
     numspritelumps = lastspritelump - firstspritelump + 1;
-    sspritewidth = (double*)Z_Malloc (numspritelumps*sizeof(double), PU_STATIC, 0);
-    sspriteoffset = (double*)Z_Malloc (numspritelumps*sizeof(double), PU_STATIC, 0);
-    sspritetopoffset = (double*)Z_Malloc (numspritelumps*sizeof(double), PU_STATIC, 0);
-	
-    for (i=0 ; i< numspritelumps ; i++)
-    {
-	if (!(i&63))
-	    printf (".");
-
-	patch = (patch_t*)W_CacheLumpNum (firstspritelump+i, PU_CACHE);
-	sspritewidth[i] = SHORT(patch->width);
-	sspriteoffset[i] = SHORT(patch->leftoffset);
-	sspritetopoffset[i] = SHORT(patch->topoffset);
-    }
 }
 
 
@@ -742,13 +719,11 @@ int	R_TextureNumForName (const char* name)
 //
 int		flatmemory;
 int		texturememory;
-int		spritememory;
 
 void R_PrecacheLevel (void)
 {
     char*		flatpresent;
     char*		texturepresent;
-    char*		spritepresent;
 
     int			i;
     int			j;
@@ -815,35 +790,6 @@ void R_PrecacheLevel (void)
 	    lump = texture->patches[j].patch;
 	    texturememory += lumpinfo[lump].size;
 	    W_CacheLumpNum(lump , PU_CACHE);
-	}
-    }
-    
-    // Precache sprites.
-    size_t numsprites = sprites.size();
-    spritepresent = (char*)alloca(numsprites);
-    memset (spritepresent,0, numsprites);
-	
-    for (th = thinkercap.next ; th != &thinkercap ; th=th->next)
-    {
-	if (th->function.acp1 == (actionf_p1)P_MobjThinker)
-	    spritepresent[((Mob *)th)->sprite] = 1;
-    }
-	
-    spritememory = 0;
-    for (size_t i = 0; i < numsprites; i++)
-    {
-	if (!spritepresent[i])
-	    continue;
-
-	for (size_t j = 0; j < sprites[i]._frames.size(); j++)
-	{
-	    const SpriteFrame& sf = sprites[i]._frames[j];
-	    for (k=0 ; k<8 ; k++)
-	    {
-		lump = firstspritelump + sf.lump[k];
-		spritememory += lumpinfo[lump].size;
-		W_CacheLumpNum(lump , PU_CACHE);
-	    }
 	}
     }
 }

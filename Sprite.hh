@@ -26,7 +26,7 @@ public:
     double		xxiscale;	
 
     double		ttexturemid;
-    int			patch;
+    Picture*		picture;
 
     // for color translation and shadow draw,
     //  maxbright frames as well

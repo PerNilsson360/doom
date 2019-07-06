@@ -61,12 +61,15 @@ fact the README says it can), but it can't.
 
 #include <vector>
 
-#include "SpriteFrame.hh"
+class SpriteFrame;
 
 class AnimatedSprite
 {
 public:
+    ~AnimatedSprite();
+private:
     SpriteFrame& getFrame(size_t i);
+public:
     void installLump(const std::string& name,
 		    int lump,
 		    unsigned frameIndex,
@@ -74,7 +77,7 @@ public:
 		    bool flipped);
     void validate(const std::string& name);
 //private:
-    std::vector<SpriteFrame> _frames;
+    std::vector<SpriteFrame*> _frames;
 };
 
 #endif

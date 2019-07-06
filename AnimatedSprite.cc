@@ -1,6 +1,20 @@
+#include <iostream>
+
+#include "z_zone.h"
 #include "i_system.h"
 #include "r_state.h"
+#include "w_wad.h"
+
+#include "Picture.hh"
 #include "AnimatedSprite.hh"
+
+AnimatedSprite::~AnimatedSprite()
+{
+    for (SpriteFrame* s : _frames) {
+	delete s;
+    }
+    _frames.clear();
+}
 
 SpriteFrame&
 AnimatedSprite::getFrame(size_t i)
@@ -8,7 +22,12 @@ AnimatedSprite::getFrame(size_t i)
     if (i >= _frames.size()) {
 	_frames.resize(i + 1);
     }
-    return _frames[i];
+    SpriteFrame* result = _frames[i];
+    if (result == nullptr) {
+	result = new SpriteFrame();
+	_frames[i] = result;
+    }
+    return *result;
 }
 
 void
@@ -24,6 +43,8 @@ AnimatedSprite::installLump(const std::string& name,
     
     SpriteFrame& frame = getFrame(frameIndex);
     bool* rotate = frame.getRotate();
+    patch_t* patch =  (patch_t*)W_CacheLumpNum(lump, PU_CACHE);
+    Picture* picture = new Picture(patch->width, patch->leftoffset, patch->topoffset, patch);
     if (rotation == 0) {
         // the lump should be used for all rotations
         if (rotate != nullptr && *rotate == false)
@@ -36,7 +57,7 @@ AnimatedSprite::installLump(const std::string& name,
 
         frame.setRotate(false);
         for (size_t r = 0; r < 8; r++) {
-            frame.lump[r] = lump - firstspritelump;
+            frame.pictures[r] = picture;
             frame.flip[r] = (byte)flipped;
         }
         return;
@@ -53,12 +74,12 @@ AnimatedSprite::installLump(const std::string& name,
     // make 0 based
     rotation--;
 
-    if (frame.lump[rotation] != -1)
+    if (frame.pictures[rotation] != nullptr)
         I_Error ("R_InitSprites: Sprite %s : %c : %c "
                  "has two lumps mapped to it",
                  name.c_str(), 'A'+frameIndex, '1'+rotation);
 
-    frame.lump[rotation] = lump - firstspritelump;
+    frame.pictures[rotation] = picture;
     frame.flip[rotation] = (byte)flipped;
 }
 
@@ -67,19 +88,24 @@ void
 AnimatedSprite::validate(const std::string& name)
 {
     for (size_t i = 0, len = _frames.size(); i < len; i++) {
-	const SpriteFrame& f = _frames[i];
-	bool* rotate = f.getRotate();
+	const SpriteFrame* f = _frames[i];
+	if (f == nullptr) {
+	}
+	bool* rotate = f->getRotate();
 	if (rotate == nullptr) { 
-	    // no rotations were found for that frame at all
-	    I_Error ("R_InitSprites: No patches found "
-		     "for %s frame %c", name.c_str(), i+'A');
+	    std::cerr << "AnimatedSprite::validate: No patches found"
+		      << " for " << name << "frame"  << i+'A'
+		      << std::endl;
+	    exit(1);
 	} else if (*rotate) {
 	    // must have all 8 frames
 	    for (size_t j = 0; j < 8; j++) {
-		if (f.lump[j] == -1) {
-		    I_Error ("R_InitSprites: Sprite %s"
-			     "is missing rotations",
-			     name.c_str(), i+'A');
+		if (f->pictures[j] == nullptr) {
+		    std::cerr << "AnimatedSprite::validate: "
+			      << "missing rotation"<< " for "
+			      << name  << "frame"  << i+'A'
+			      << std::endl;
+		    exit(1);
 		}
 	    }
 	} else {

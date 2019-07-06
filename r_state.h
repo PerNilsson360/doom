@@ -49,12 +49,6 @@
 // needed for texture pegging
 extern double*		ttextureheight;
 
-// needed for pre rendering (fracs)
-extern double*		sspritewidth;
-
-extern double*		sspriteoffset;
-extern double*		sspritetopoffset;
-
 extern lighttable_t*	colormaps;
 
 extern int		viewwidth;
@@ -77,7 +71,7 @@ extern int		numspritelumps;
 //
 // Lookup tables for map data.
 //
-extern std::vector<AnimatedSprite> sprites;
+extern std::vector<AnimatedSprite* > sprites;
 extern std::vector<Vertex> vertexes;
 extern std::vector<Seg> segs;
 extern std::vector<Sector> sectors;

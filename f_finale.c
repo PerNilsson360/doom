@@ -41,6 +41,7 @@ rcsid[] = "$Id: f_finale.c,v 1.5 1997/02/03 21:26:34 b1 Exp $";
 
 #include "doomstat.h"
 #include "r_state.h"
+#include "Picture.hh"
 
 // Stage of animation:
 //  0 = text, 1 = art screen, 2 = character cast
@@ -574,7 +575,6 @@ void V_DrawPatchFlipped (int x, int y, int scrn, patch_t *patch);
 void F_CastDrawer (void)
 {
     AnimatedSprite*	sprdef;
-    int			lump;
     bool		flip;
     patch_t*		patch;
     
@@ -584,12 +584,12 @@ void F_CastDrawer (void)
     F_CastPrint (castorder[castnum].name);
     
     // draw the current frame in the middle of the screen
-    sprdef = &sprites[caststate->sprite];
-    SpriteFrame* sprframe = &sprdef->_frames[ caststate->frame & FF_FRAMEMASK];
-    lump = sprframe->lump[0];
+    sprdef = sprites[caststate->sprite];
+    SpriteFrame* sprframe = sprdef->_frames[ caststate->frame & FF_FRAMEMASK];
+    Picture* picture = sprframe->pictures[0];
     flip = (bool)sprframe->flip[0];
 			
-    patch = (patch_t*)W_CacheLumpNum (lump+firstspritelump, PU_CACHE);
+    patch = picture->getData();
     if (flip)
 	V_DrawPatchFlipped (160,170,0,patch);
     else
