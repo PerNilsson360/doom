@@ -6,6 +6,7 @@
 
 const double Angle::A0(0.0);
 const double Angle::A5(M_PI/36);
+const double Angle::A30(M_PI/6);
 const double Angle::A45(M_PI/4);
 const double Angle::A90(M_PI/2);
 const double Angle::A180(M_PI);

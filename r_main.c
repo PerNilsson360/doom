@@ -220,7 +220,7 @@ void R_InitTextureMapping (void)
 // Only inits the zlight table,
 //  because the scalelight table changes with view size.
 //
-#define DISTMAP		2
+#define DISTMAP		4
 
 void R_InitLightTables (void)
 {
@@ -233,20 +233,20 @@ void R_InitLightTables (void)
     //  for each level / distance combination.
     for (i=0 ; i< LIGHTLEVELS ; i++)
     {
-	startmap = ((LIGHTLEVELS-1-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
+	startmap = (LIGHTLEVELS-1-i);
 	for (j=0 ; j<MAXLIGHTZ ; j++)
 	{
-	    double sscale = (SCREENWIDTH/2) / double(((j+1) * DOUBLE_LIGHT_SCALE_MUL));
-	    sscale = sscale * DOUBLE_LIGHT_SCALE_MUL;
+	    double sscale = (SCREENWIDTH/2) / double(((j+1) * LIGHTLEVELS));
+	    sscale = sscale * LIGHTLEVELS;
 	    
 	    level = startmap - sscale/DISTMAP;
 	    
 	    if (level < 0)
 		level = 0;
 
-	    if (level >= NUMCOLORMAPS)
+	    if (level >= NUMCOLORMAPS) 
 		level = NUMCOLORMAPS-1;
-
+	    
 	    zlight[i][j] = colormaps + level*256;
 	}
     }
@@ -279,7 +279,6 @@ void R_ExecuteSetViewSize (void)
     // planes
     for (i=0 ; i<SCREENHEIGHT ; i++)
     {
-	// todo fishy 1 / 2 (integer division always 0??)
         double dy = i - (SCREENHEIGHT / 2) + (1.0 / 2);
         dy = fabs(dy);
         yslope[i] = (SCREENWIDTH / 2) / dy;
@@ -295,7 +294,8 @@ void R_ExecuteSetViewSize (void)
     //  for each level / scale combination.
     for (i=0 ; i< LIGHTLEVELS ; i++)
     {
-        startmap = ((LIGHTLEVELS-1-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
+	//startmap = ((LIGHTLEVELS-1-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
+        startmap = LIGHTLEVELS-1-i;
         for (j=0 ; j<MAXLIGHTSCALE ; j++)
         {
             level = startmap - j/DISTMAP;

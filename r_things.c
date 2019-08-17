@@ -421,7 +421,7 @@ void R_ProjectSprite (Mob* thing)
     else
     {
 	// diminished light
-	index = xscale * DOUBLE_LIGHT_SCALE_MUL;
+	index = xscale * LIGHTLEVELS;
 
 	if (index >= MAXLIGHTSCALE) 
 	    index = MAXLIGHTSCALE-1;
@@ -450,7 +450,7 @@ void R_AddSprites (Sector* sec)
     // Well, now it will be done.
     sec->validcount = validcount;
 	
-    lightnum = (sec->lightlevel >> LIGHTSEGSHIFT)+extralight;
+    lightnum = (sec->lightlevel / LIGHTLEVEL_DIV)+extralight;
 
     if (lightnum < 0)		
 	spritelights = scalelight[0];
@@ -548,7 +548,7 @@ void R_DrawPlayerSprites (void)
     
     // get light level
     lightnum =
-	(viewplayer->mo->subsector->sector->lightlevel >> LIGHTSEGSHIFT) 
+	(viewplayer->mo->subsector->sector->lightlevel / LIGHTLEVEL_DIV) 
 	+extralight;
 
     if (lightnum < 0)		

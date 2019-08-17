@@ -120,7 +120,7 @@ R_RenderMaskedSegRange
     backsector = curline->backsector;
     texnum = texturetranslation[curline->sidedef->midtexture];
 	
-    lightnum = (frontsector->lightlevel >> LIGHTSEGSHIFT)+extralight;
+    lightnum = (frontsector->lightlevel / LIGHTLEVEL_DIV)+extralight;
 
     if (curline->v1->getY() == curline->v2->getY())
 	lightnum--;
@@ -167,7 +167,7 @@ R_RenderMaskedSegRange
 	{
 	    if (!fixedcolormap)
 	    {
-		index = spryscale * DOUBLE_LIGHT_SCALE_MUL;
+		index = spryscale * LIGHTLEVELS;
 
 		if (index >=  MAXLIGHTSCALE )
 		    index = MAXLIGHTSCALE-1;
@@ -263,7 +263,7 @@ void R_RenderSegLoop (void)
 	    // @todo figure out why you need to deduct 90 degrees below
 	    texturecolumn = rw_offset - tan((double)angle - Angle::A90) * rw_distance;
 	    // calculate lighting
-	    index =  rw_scale * DOUBLE_LIGHT_SCALE_MUL;
+	    index =  rw_scale * LIGHTLEVELS;
 	    
 	    if (index >=  MAXLIGHTSCALE )
 	      index = MAXLIGHTSCALE-1;
@@ -620,7 +620,7 @@ R_StoreWallRange
 	// OPTIMIZE: get rid of LIGHTSEGSHIFT globally
 	if (!fixedcolormap)
 	{
-	    lightnum = (frontsector->lightlevel >> LIGHTSEGSHIFT)+extralight;
+	    lightnum = (frontsector->lightlevel / LIGHTLEVEL_DIV)+extralight;
 
 	    if (curline->v1->getY() == curline->v2->getY())
 		lightnum--;

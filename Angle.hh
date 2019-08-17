@@ -59,6 +59,7 @@ public:
     // @todo these should Angle's not double I guess
     static const double A0;
     static const double A5;
+    static const double A30;
     static const double A45;
     static const double A90;
     static const double A180;

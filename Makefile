@@ -91,6 +91,7 @@ OBJS=				\
 		$(O)/AnimatedSprite.o \
 
 all:	$(O)/linuxxdoom
+	find . -name "*.[chCH]" -print | etags -
 
 clean:
 	rm -f *.o *~ *.flc

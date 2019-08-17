@@ -621,7 +621,7 @@ void R_InitColormaps (void)
     colormaps = (lighttable_t*)Z_Malloc (length, PU_STATIC, 0);
     // @todo below is strange why is it done?
     //colormaps = (byte *)( ((int)colormaps + 255)&~0xff);
-    W_ReadLump (lump,colormaps); 
+    W_ReadLump (lump,colormaps);
 }
 
 

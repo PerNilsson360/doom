@@ -161,7 +161,7 @@ R_MapPlane
 	ds_colormap = fixedcolormap;
     else
     {
-	index = distance / DOUBLE_LIGHT_DIV;
+	index = distance / LIGHTLEVEL_DIV;
 
 	if (index >= MAXLIGHTZ )
 	    index = MAXLIGHTZ-1;
@@ -422,7 +422,7 @@ void R_DrawPlanes (void)
 				   PU_STATIC);
 	
 	planeheight = fabs(pl->hheight - vviewz);
-	light = (pl->lightlevel >> LIGHTSEGSHIFT)+extralight;
+	light = (pl->lightlevel / LIGHTLEVEL_DIV)+extralight;
 
 	if (light >= LIGHTLEVELS)
 	    light = LIGHTLEVELS-1;
