@@ -96,8 +96,6 @@ bool         nomonsters;	// checkparm of -nomonsters
 bool         respawnparm;	// checkparm of -respawn
 bool         fastparm;	// checkparm of -fast
 
-bool         drone;
-
 bool		singletics = false; // debug flag to cancel adaptiveness
 
 

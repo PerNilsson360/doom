@@ -236,8 +236,8 @@ void R_InitLightTables (void)
 	startmap = (LIGHTLEVELS-1-i);
 	for (j=0 ; j<MAXLIGHTZ ; j++)
 	{
-	    double sscale = (SCREENWIDTH/2) / double(((j+1) * LIGHTLEVELS));
-	    sscale = sscale * LIGHTLEVELS;
+	    double sscale = (SCREENWIDTH/2) / double(j+1);
+	    sscale = sscale;
 	    
 	    level = startmap - sscale/DISTMAP;
 	    
@@ -248,6 +248,7 @@ void R_InitLightTables (void)
 		level = NUMCOLORMAPS-1;
 	    
 	    zlight[i][j] = colormaps + level*256;
+	    printf("i %d, j %d, zlight %d\n", i, j, level);
 	}
     }
 }

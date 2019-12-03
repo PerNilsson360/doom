@@ -15,7 +15,6 @@
 #include "s_sound.h"
 
 #include "doomstat.h"
-#include "p_mobj.h"
 #include "d_player.h"
 #include "Sector.hh"
 

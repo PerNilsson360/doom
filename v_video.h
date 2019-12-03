@@ -46,12 +46,8 @@
 
 extern	byte*		screens[5];
 
-extern  double	ddirtybox[4];
-
 extern	byte	gammatable[5][256];
 extern	int	usegamma;
-
-
 
 // Allocates buffer screens, call before R_Init.
 void V_Init (void);

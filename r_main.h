@@ -60,7 +60,7 @@ extern int		loopcount;
 #define LIGHTLEVEL_DIV          (256 / LIGHTLEVELS)
 
 #define MAXLIGHTSCALE		48
-#define MAXLIGHTZ	       128
+#define MAXLIGHTZ	       1024
 
 extern lighttable_t*	scalelight[LIGHTLEVELS][MAXLIGHTSCALE];
 extern lighttable_t*	scalelightfixed[MAXLIGHTSCALE];

@@ -161,10 +161,11 @@ R_MapPlane
 	ds_colormap = fixedcolormap;
     else
     {
-	index = distance / LIGHTLEVEL_DIV;
-
-	if (index >= MAXLIGHTZ )
+	index = distance;
+	printf("index %f\n", distance);
+	if (index >= MAXLIGHTZ ) {
 	    index = MAXLIGHTZ-1;
+	}
 
 	ds_colormap = planezlight[index];
     }
