@@ -180,7 +180,5 @@ void I_Error (const char *error, ...)
     D_QuitNetGame ();
     I_ShutdownGraphics();
     
-    //exit(-1);
-    // @todo maybe not crash is appropriate
-    assert(false);
+    exit(-1);
 }

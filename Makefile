@@ -8,7 +8,7 @@ CC=  g++  # gcc or g++
 
 CFLAGS=-g -O4 -Wall -DNORMALUNIX -DLINUX -fpermissive -std=gnu++14
 LDFLAGS=-L/usr/X11R6/lib
-LIBS=-lXext -lX11  -lm #-lnsl
+LIBS=-lX11  -lm #-lnsl
 
 # subdirectory for objects
 O=linux

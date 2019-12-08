@@ -454,9 +454,8 @@ void G_DoLoadLevel (void)
 
     // DOOM determines the sky texture to be used
     // depending on the current episode, and the game version.
-    if ( (gamemode == commercial)
-	 || ( gamemode == pack_tnt )
-	 || ( gamemode == pack_plut ) )
+    if (gamemode == commercial ||
+	gamemission == pack_tnt || gamemission == pack_plut)
     {
 	skytexture = R_TextureNumForName ("SKY3");
 	if (gamemap < 12)
@@ -1567,21 +1566,11 @@ void G_DeferedPlayDemo (const char* name)
 void G_DoPlayDemo (void) 
 { 
     skill_t skill; 
-    int             i, episode, map, version; 
+    int             i, episode, map; 
 	 
     gameaction = ga_nothing; 
     demobuffer = demo_p = (byte*)W_CacheLumpName (defdemoname, PU_STATIC); 
-    version = *demo_p++;
-    if (version != VERSION)
-    {
-      fprintf(stderr, 
-              "Demo is from a different game version %d != %d!\n",
-              version,
-          VERSION);
-
-      gameaction = ga_nothing;
-      return;
-    }    
+    /*version =*/  demo_p++;
     skill = (skill_t)*demo_p++; 
     episode = *demo_p++; 
     map = *demo_p++; 

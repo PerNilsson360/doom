@@ -639,6 +639,7 @@ void IdentifyVersion (void)
     if ( !access (doom2fwad,R_OK) )
     {
 	gamemode = commercial;
+	gamemission = doom2;
 	// C'est ridicule!
 	// Let's handle languages in config files, okay?
 	language = french;
@@ -650,6 +651,7 @@ void IdentifyVersion (void)
     if ( !access (doom2wad,R_OK) )
     {
 	gamemode = commercial;
+	gamemission = doom2;
 	D_AddFile (doom2wad);
 	return;
     }
@@ -657,6 +659,7 @@ void IdentifyVersion (void)
     if ( !access (plutoniawad, R_OK ) )
     {
       gamemode = commercial;
+      gamemission = pack_plut;
       D_AddFile (plutoniawad);
       return;
     }
@@ -664,6 +667,7 @@ void IdentifyVersion (void)
     if ( !access ( tntwad, R_OK ) )
     {
       gamemode = commercial;
+      gamemission = pack_tnt;
       D_AddFile (tntwad);
       return;
     }
@@ -671,6 +675,7 @@ void IdentifyVersion (void)
     if ( !access (doomuwad,R_OK) )
     {
       gamemode = retail;
+      gamemission = doom;
       D_AddFile (doomuwad);
       return;
     }
@@ -678,6 +683,7 @@ void IdentifyVersion (void)
     if ( !access (doomwad,R_OK) )
     {
       gamemode = registered;
+      gamemission = doom;
       D_AddFile (doomwad);
       return;
     }
@@ -685,16 +691,13 @@ void IdentifyVersion (void)
     if ( !access (doom1wad,R_OK) )
     {
       gamemode = shareware;
+      gamemission = doom;
       D_AddFile (doom1wad);
       return;
     }
 
     printf("Game mode indeterminate.\n");
     gamemode = indetermined;
-
-    // We don't abort. Let's see what the PWAD contains.
-    //exit(1);
-    //I_Error ("Game mode indeterminate\n");
 }
 
 //

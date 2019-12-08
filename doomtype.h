@@ -24,7 +24,6 @@
 #ifndef __DOOMTYPE__
 #define __DOOMTYPE__
 
-#define __BYTEBOOL__
 typedef unsigned char byte;
 
 // Predefined with some OS.

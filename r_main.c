@@ -162,8 +162,8 @@ RR_ScaleFromGlobalAngle(const Angle& visangle)
     Angle angleb(Angle::A90 + (visangle - rrw_normalangle));
 
     // both sines are allways positive
-    double sinea = sin(anglea);	
-    double sineb = sin(angleb);
+    double sinea = sin((double)anglea);	
+    double sineb = sin((double)angleb);
     double num = pprojection * sineb;
     double den = rw_distance * sinea;
     scale = num / den;
@@ -181,7 +181,7 @@ int
 R_ViewAngleToX(const Angle& a)
 {
     double focalLength = SCREENWIDTH / (2 * tan(((double)ANGLEOFVIEW)/2));
-    double t = tan(a);
+    double t = tan((double)a);
     int x;
     if (t > Angle::A90)
         x = 0;
@@ -287,7 +287,7 @@ void R_ExecuteSetViewSize (void)
 	
     for (i=0 ; i<SCREENWIDTH ; i++)
     {
-	double cosadj = fabs(cos(xxtoviewangle[i]));
+	double cosadj = fabs(cos((double)xxtoviewangle[i]));
         ddistscale[i] = 1 / cosadj;
     }
     
@@ -372,8 +372,8 @@ void R_SetupFrame (player_t* player)
     extralight = player->extralight;
 
     vviewz = player->vviewz;
-    vviewsin = sin(vviewangle);
-    vviewcos = cos(vviewangle);
+    vviewsin = sin((double)vviewangle);
+    vviewcos = cos((double)vviewangle);
 
     sscount = 0;
 	

@@ -162,7 +162,6 @@ R_MapPlane
     else
     {
 	index = distance;
-	printf("index %f\n", distance);
 	if (index >= MAXLIGHTZ ) {
 	    index = MAXLIGHTZ-1;
 	}
